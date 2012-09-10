@@ -51,10 +51,10 @@ void SDL_controller::redraw()
   SDL_Flip(screen);
 }
 
-bool SDL_controller::check_ranges(int x, int y)
-{
-  if ( x < 0 || x >= SCREEN_WIDTH ||
-      y < 0 || y >= SCREEN_HEIGTH )
-    return false;
-  return true;
-}
+// bool SDL_controller::check_ranges(int x, int y)
+// {
+//   if ( x < 0 || x >= SCREEN_WIDTH ||
+//       y < 0 || y >= SCREEN_HEIGTH )
+//     return false;
+//   return true;
+// }

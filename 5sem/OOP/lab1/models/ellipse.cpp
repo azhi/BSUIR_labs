@@ -3,7 +3,7 @@
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL.h>
 
-Ellipse::Ellipse(int x, int y, int rx, int ry) : Figure(FG_ELLIPSE), rx(rx), ry(ry)
+Ellipse::Ellipse(int x, int y, int rx, int ry) : Figure(), rx(rx), ry(ry)
 {
   center = Point(x, y);
 }

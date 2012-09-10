@@ -6,6 +6,10 @@
 
 using namespace std;
 
+#define MO_LINE 1
+#define MO_RECTANGLE 2
+#define MO_ELLIPSE 3
+
 class Main_controller
 {
   public:
@@ -15,6 +19,7 @@ class Main_controller
 
   private:
     SDL_controller* sdl_controller;
+    short draw_mode;
     Scene* scene;
 
 };

@@ -15,7 +15,7 @@ class SDL_controller
     virtual ~SDL_controller();
 
     void init();
-    bool check_ranges(int x, int y);
+    // bool check_ranges(int x, int y);
     SDL_Event get_event();
     SDL_Surface* get_surface();
 
