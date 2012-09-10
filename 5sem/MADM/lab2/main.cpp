@@ -37,6 +37,7 @@ struct Point
 {
   int x, y;
   int cluster;
+  bool is_core;
 };
 
 struct Cluster
@@ -52,7 +53,7 @@ Point points[1000000];
 int countPoints = 0;
 
 Cluster clusters[100];
-int cluster_count;
+int cluster_count = 0;
 int gen_points_count;
 
 void init_sdl()
@@ -92,37 +93,33 @@ void add_to_cluster(int point, int cluster_index)
   cluster->points_list[ cluster->points_count++ ] = point;
 }
 
-void init_clusters(int count)
-{ 
-  for ( int i = 0; i < count; i++ )
-  {
-    clusters[i].core = points[i];
-    clusters[i].max_points_count = 100;
-    clusters[i].points_list = (int*) malloc( sizeof(int) * clusters[i].max_points_count );
-    clusters[i].points_count = 0;
-    clusters[i].color = i;
-  }
+void init_cluster(int point_index)
+{
+  clusters[cluster_count].core = points[point_index];
+  points[point_index].is_core = true;
+  clusters[cluster_count].max_points_count = 100;
+  clusters[cluster_count].points_list = (int*) malloc( sizeof(int) * clusters[cluster_count].max_points_count );
+  clusters[cluster_count].points_count = 0;
+  clusters[cluster_count].color = cluster_count;
+  cluster_count++;
 }
 
-void change_core(int cluster_index, int point_index)
-{
-  Cluster* cluster = &clusters[cluster_index];
-  int core_index = 0;
-  for (int i = 0; i < countPoints; i++)
+void init_clusters()
+{ 
+  init_cluster(0);
+  double max_distance = 0;
+  int max_distance_index = 0;
+  int i;
+  for (i = 1; i < countPoints; i++)
   {
-    Point p = points[i];
-    if ( ( p.x - cluster->core.x ) == 0 && ( p.y - cluster->core.y ) == 0 )
+    double distance = ( points[i].x - points[0].x ) * ( points[i].x - points[0].x ) + ( points[i].y - points[0].y ) * ( points[i].y - points[0].y );
+    if ( distance > max_distance )
     {
-      core_index = i;
-      break;
+      max_distance = distance;
+      max_distance_index = i;
     }
   }
-  add_to_cluster(core_index, cluster_index);
-
-  cluster->core = points[ cluster->points_list[ point_index ] ];
-  for (int i = point_index; i < cluster->points_count - 1; i++)
-    cluster->points_list[i] = cluster->points_list[i+1];
-  cluster->points_count--;
+  init_cluster(max_distance_index);
 }
 
 void draw_cluster(Cluster* cluster)
@@ -132,7 +129,7 @@ void draw_cluster(Cluster* cluster)
     Point p = points[ cluster->points_list[i] ];
     putPoint(p.x, p.y, cluster->color + 1); 
   }
-  putPoint(cluster->core.x, cluster->core.y, 0);
+  drawCircle(cluster->core.x, cluster->core.y, 9, colors[0]);
 }
 
 void render()
@@ -177,40 +174,55 @@ void regenerate_clusters()
   }
 }
 
-bool recalculate_cores()
+bool maximin_clusters()
 {
   bool res = false;
-  for ( int i = 0; i < cluster_count; i++ )
-  {
-    double sumx = 0.0f, sumy = 0.0f;
-    Cluster* cluster = &clusters[i];
-    for ( int j = 0; j < cluster->points_count; j++ )
+  double maximin_distance = 0;
+  int maximin_distance_index = 0;
+  for ( int j = 0; j < countPoints; j++ )
+    if ( !points[j].is_core )
     {
-      sumx += points[ cluster->points_list[j] ].x;
-      sumy += points[ cluster->points_list[j] ].y;
-    }
-    sumx += cluster->core.x; sumy += cluster->core.y;
-    double avx = sumx / (cluster->points_count + 1), avy = sumy / (cluster->points_count + 1);
-    
-    double min_distance = 9999999;
-    int min_distance_index = 0;
-    for ( int j = 0; j < cluster->points_count; j++ )
-    {
-      double distance = ( points[ cluster->points_list[j] ].x - avx ) * ( points[ cluster->points_list[j] ].x - avx ) + 
-        ( points[ cluster->points_list[j] ].y - avy ) * ( points[ cluster->points_list[j] ].y - avy );
-      if ( distance < min_distance )
+      double min_distance = 9999999;
+      int min_distance_index = 0;
+      for ( int i = 0; i < cluster_count; i++ )
       {
-        min_distance = distance;
-        min_distance_index = j;
+        Cluster* cluster = &clusters[i];
+        double distance = ( points[j].x - cluster->core.x ) * ( points[j].x - cluster->core.x ) + 
+          ( points[j].y - cluster->core.y ) * ( points[j].y - cluster->core.y );
+        if ( distance < min_distance && distance > EPS ) 
+        {
+          min_distance = distance;
+          min_distance_index = j;
+        }
+      }
+
+      if ( min_distance > maximin_distance )
+      {
+        maximin_distance = min_distance;
+        maximin_distance_index = min_distance_index;
       }
     }
-    double core_distance = ( cluster->core.x - avx ) * ( cluster->core.x - avx ) + 
-      ( cluster->core.y - avy ) * ( cluster->core.y - avy );
-    if ( min_distance < core_distance )
-    {
-      change_core(i, min_distance_index);
-      res = true;
-    }
+
+  int count = 0;
+  double sum = 0;
+  for ( int i = 0; i < cluster_count; i++ )
+    for ( int j = 0; j < cluster_count; j++ )
+      if ( i != j )
+      {
+        count++;
+        sum += sqrt( (clusters[i].core.x - clusters[j].core.x) * (clusters[i].core.x - clusters[j].core.x) + 
+          (clusters[i].core.y - clusters[j].core.y) * (clusters[i].core.y - clusters[j].core.y) );
+      }
+  double av_distance = sum / count;
+
+  if ( sqrt(maximin_distance) > av_distance / 2 )
+  {
+    res = true;
+    init_cluster(maximin_distance_index);
+  }
+  else
+  {
+    res = false;
   }
   return !res;
 }
@@ -218,12 +230,11 @@ bool recalculate_cores()
 int main(int argc, char** argv)
 {
   gen_points_count = atoi(argv[1]);
-  cluster_count = atoi(argv[2]);
   init_sdl();
   bool quit = false, done = false;
   int iterations = 0;
   genPoints();
-  init_clusters(cluster_count);
+  init_clusters();
   regenerate_clusters();
   while ( !quit )
   {
@@ -237,7 +248,7 @@ int main(int argc, char** argv)
     }
     if ( !done )
     {
-      done = recalculate_cores();
+      done = maximin_clusters();
       regenerate_clusters();
 
       if ( done )
