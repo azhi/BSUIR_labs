@@ -1,5 +1,12 @@
 #include "main_controller.h"
 
+#include <fstream>
+#include <SDL/SDL_gfxPrimitives.h>
+
+BOOST_CLASS_EXPORT_IMPLEMENT(Ellipse)
+BOOST_CLASS_EXPORT_IMPLEMENT(Line)
+BOOST_CLASS_EXPORT_IMPLEMENT(Rectangle)
+
 Main_controller::Main_controller()
 {
   sdl_controller = new SDL_controller();
@@ -22,6 +29,7 @@ void Main_controller::main_loop()
   while ( !quit )
   {
     SDL_Event event = sdl_controller->get_event();
+    sdl_controller->clear();
     switch ( event.type )
     {
       case SDL_KEYDOWN:
@@ -36,6 +44,28 @@ void Main_controller::main_loop()
           case SDLK_e:
             draw_mode = MO_ELLIPSE;
             break;
+          case SDLK_s:
+            {
+              std::ofstream ofs("test.xml", std::ios::out);
+              boost::archive::text_oarchive xml_arch(ofs);
+              // xml_arch.register_type<Figure>();
+              // xml_arch.register_type<Rectangle>();
+              // xml_arch.register_type<Line>();
+              // xml_arch.register_type<Ellipse>();
+              xml_arch << BOOST_SERIALIZATION_NVP(scene);
+              ofs.close();
+            }
+            break;
+          case SDLK_l:
+            {
+              std::ifstream ifs("test.xml", std::ios::in);
+              boost::archive::text_iarchive xml_arch(ifs);
+              delete scene;
+              xml_arch >> BOOST_SERIALIZATION_NVP(scene);
+              printf("objs: %u\n", scene->get_size());
+              ifs.close();
+            }
+            break;
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
@@ -48,6 +78,7 @@ void Main_controller::main_loop()
             case MO_ELLIPSE:  
               down.x = event.button.x; 
               down.y = event.button.y;
+              in_drawing = true;
               break;
               // printf("in button down!\n");
               // if ( !in_drawing )
@@ -61,12 +92,35 @@ void Main_controller::main_loop()
           }
         }
         break;
+      case SDL_MOUSEMOTION:
+        if ( in_drawing )
+        {
+          Point up;
+          up.x = event.motion.x; 
+          up.y = event.motion.y;
+          switch ( draw_mode )
+          {
+            case MO_LINE:
+              lineRGBA(sdl_controller->get_surface(), down.x, down.y, up.x, up.y, 0, 0, 0, 255);
+              break;
+            case MO_RECTANGLE:
+              rectangleRGBA(sdl_controller->get_surface(), down.x, down.y, up.x, up.y, 0, 0, 0, 255);
+              break;
+            case MO_ELLIPSE:  
+              int rx = abs(up.x - down.x);
+              int ry = abs(up.y - down.y);
+              ellipseRGBA(sdl_controller->get_surface(), down.x, down.y, rx, ry, 0, 0, 0, 255);
+              break;
+          }
+        }
+        break;
       case SDL_MOUSEBUTTONUP:
         if ( event.button.button == SDL_BUTTON_LEFT )
         {
           Point up;
           up.x = event.button.x; 
           up.y = event.button.y;
+          in_drawing = false;
           switch ( draw_mode )
           {
             case MO_LINE:
@@ -99,7 +153,6 @@ void Main_controller::main_loop()
         quit = true;
         break;
     }
-    sdl_controller->clear();
     scene->draw_all();
     sdl_controller->redraw();
   }

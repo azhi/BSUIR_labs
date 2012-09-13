@@ -1,5 +1,6 @@
 #include "scene.h"
 #include <stdio.h>
+#include <fstream>
 
 Scene::Scene()
 {
@@ -27,5 +28,8 @@ void Scene::draw_all()
 {
   vector<Figure*>::iterator cur_figure;
   for ( cur_figure = figures->begin(); cur_figure != figures->end(); ++cur_figure )
+  {
     (*cur_figure)->draw();
+  }
 }
+

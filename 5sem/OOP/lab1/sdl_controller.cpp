@@ -32,7 +32,7 @@ void SDL_controller::init()
 SDL_Event SDL_controller::get_event()
 {
   SDL_Event event;
-  SDL_PollEvent(&event);
+  SDL_WaitEvent(&event);
   return event;
 }
 

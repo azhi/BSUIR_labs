@@ -3,6 +3,12 @@
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL.h>
 
+Rectangle::Rectangle() : Figure()
+{
+  p1 = Point();
+  p2 = Point();
+}
+
 Rectangle::Rectangle(int x1, int y1, int x2, int y2) : Figure()
 {
   p1 = Point(x1, y1);
