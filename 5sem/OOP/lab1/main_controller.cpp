@@ -1,6 +1,7 @@
 #include "main_controller.h"
 
 #include <fstream>
+#include <string>
 #include <SDL/SDL_gfxPrimitives.h>
 
 BOOST_CLASS_EXPORT_IMPLEMENT(Ellipse)
@@ -46,23 +47,29 @@ void Main_controller::main_loop()
             break;
           case SDLK_s:
             {
-              std::ofstream ofs("test.xml", std::ios::out);
-              boost::archive::text_oarchive xml_arch(ofs);
-              // xml_arch.register_type<Figure>();
-              // xml_arch.register_type<Rectangle>();
-              // xml_arch.register_type<Line>();
-              // xml_arch.register_type<Ellipse>();
+              system("kdialog --getsavefilename $(pwd) '*.xml' > /tmp/filename.tmp");
+              std::ifstream ifs("/tmp/filename.tmp", std::ios::in);
+              std::string filename;
+              ifs >> filename;
+              ifs.close();
+              std::ofstream ofs(filename.c_str(), std::ios::out);
+              boost::archive::xml_oarchive xml_arch(ofs);
               xml_arch << BOOST_SERIALIZATION_NVP(scene);
               ofs.close();
             }
             break;
           case SDLK_l:
             {
-              std::ifstream ifs("test.xml", std::ios::in);
-              boost::archive::text_iarchive xml_arch(ifs);
+              system("kdialog --getopenfilename $(pwd) '*.xml' > /tmp/filename.tmp");
+              std::ifstream ifs("/tmp/filename.tmp", std::ios::in);
+              std::string filename;
+              ifs >> filename;
+              ifs.close();
+              ifs.open(filename.c_str(), std::ios::in);
+              boost::archive::xml_iarchive xml_arch(ifs);
               delete scene;
               xml_arch >> BOOST_SERIALIZATION_NVP(scene);
-              printf("objs: %u\n", scene->get_size());
+              scene->set_working_surface( sdl_controller->get_surface() );
               ifs.close();
             }
             break;
