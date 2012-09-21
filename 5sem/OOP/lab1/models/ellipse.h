@@ -8,10 +8,11 @@ class Ellipse : public Figure
 {
   public:
     Ellipse();
-    Ellipse(int x, int y, int rx, int ry);
+    Ellipse(vector<Point>* points);
     virtual ~Ellipse() {};
 
     void draw();
+    void move_point2(Point p);
 
     template<class Archive>
       void serialize(Archive& ar, const unsigned int version)
@@ -29,5 +30,14 @@ class Ellipse : public Figure
 
 };
 
+extern "C"
+{
+  Figure* maker(vector<Point>* points)
+  {
+    return (Figure*) new Ellipse(points);
+  }
+}
+
 BOOST_CLASS_EXPORT_KEY(Ellipse)
+BOOST_CLASS_EXPORT_IMPLEMENT(Ellipse)
 #endif // ELLIPSE_H

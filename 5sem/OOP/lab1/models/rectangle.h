@@ -8,10 +8,12 @@ class Rectangle : public Figure
 {
   public:
     Rectangle();
-    Rectangle(int x1, int y1, int x2, int y2);
+    Rectangle(vector<Point>* points);
     virtual ~Rectangle() {};
 
     void draw();
+    void move_point2(Point p);
+
     template<class Archive>
       void serialize(Archive& ar, const unsigned int version)
       {
@@ -27,5 +29,14 @@ class Rectangle : public Figure
 
 };
 
+extern "C"
+{
+  Figure* maker(vector<Point>* points)
+  {
+    return (Figure*) new Rectangle(points);
+  }
+}
+
 BOOST_CLASS_EXPORT_KEY(Rectangle)
+BOOST_CLASS_EXPORT_IMPLEMENT(Rectangle)
 #endif // RECTANGLE_H

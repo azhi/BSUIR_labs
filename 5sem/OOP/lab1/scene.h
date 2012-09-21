@@ -4,9 +4,6 @@
 #include <vector>
 
 #include "models/figure.h"
-#include "models/line.h"
-#include "models/rectangle.h"
-#include "models/ellipse.h"
 
 using namespace std;
 
@@ -23,6 +20,8 @@ class Scene
       {
         ar & BOOST_SERIALIZATION_NVP(figures);
       }
+    void save_to_file(const char* path);
+    void load_from_file(const char* path);
     
   private:
     vector<Figure*>* figures;

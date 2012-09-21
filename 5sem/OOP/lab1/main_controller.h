@@ -3,12 +3,11 @@
 
 #include "sdl_controller.h"
 #include "scene.h"
+#include <map>
 
 using namespace std;
 
-#define MO_LINE 1
-#define MO_RECTANGLE 2
-#define MO_ELLIPSE 3
+typedef Figure* (*maker_function)(vector<Point>* points);
 
 class Main_controller
 {
@@ -16,9 +15,11 @@ class Main_controller
     Main_controller();
     virtual ~Main_controller();
     void main_loop();
+		void add_figure_creator(maker_function maker);
 
   private:
     SDL_controller* sdl_controller;
+		vector<maker_function> factory;
     short draw_mode;
     Scene* scene;
 

@@ -8,10 +8,11 @@ class Line : public Figure
 {
   public:
     Line();
-    Line(int x1, int y1, int x2, int y2);
+    Line(vector<Point>* points);
     virtual ~Line() {};
 
     void draw();
+    void move_point2(Point p);
 
     template<class Archive>
       void serialize(Archive& ar, const unsigned int version)
@@ -28,5 +29,14 @@ class Line : public Figure
 
 };
 
+extern "C"
+{
+  Figure* maker(vector<Point>* points)
+  {
+    return (Figure*) new Line(points);
+  }
+}
+
 BOOST_CLASS_EXPORT_KEY(Line)
+BOOST_CLASS_EXPORT_IMPLEMENT(Line)
 #endif // LINE_H
