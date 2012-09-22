@@ -8,6 +8,8 @@
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <string>
@@ -35,7 +37,6 @@ class Figure
 
     template<class Archive>
       void serialize(Archive& ar, const unsigned int version) {};
-    virtual std::string get_serialization_str() {};
 
   protected:
     SDL_Surface* surface;

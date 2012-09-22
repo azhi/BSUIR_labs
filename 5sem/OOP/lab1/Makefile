@@ -4,7 +4,7 @@ LIBCFLAGS=-fPIC
 LIBFLAGS=-shared -Wl,-soname,
 LDFLAGS=-lSDL -lSDL_gfx -lboost_serialization
 CPP_SOURCES=main.cpp main_controller.cpp sdl_controller.cpp scene.cpp
-LIB_SOURCES=ellipse.cpp line.cpp rectangle.cpp
+LIB_SOURCES=ellipse.cpp line.cpp rectangle.cpp star.cpp
 OBJECTS=$(CPP_SOURCES:.cpp=.o)
 LIB_OBJECTS=$(LIB_SOURCES:.cpp=.o)
 LIB_NAMES=$(LIB_OBJECTS:.o=)

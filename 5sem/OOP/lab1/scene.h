@@ -20,8 +20,6 @@ class Scene
       {
         ar & BOOST_SERIALIZATION_NVP(figures);
       }
-    void save_to_file(const char* path);
-    void load_from_file(const char* path);
     
   private:
     vector<Figure*>* figures;

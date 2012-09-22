@@ -80,7 +80,10 @@ void Main_controller::main_loop()
               }
               else
               {
-                // scene->save_to_file( filename.c_str() );
+                std::ofstream ofs(filename.c_str(), std::ios::out);
+                boost::archive::text_oarchive text_arch(ofs);
+                text_arch << BOOST_SERIALIZATION_NVP(scene);
+                ofs.close();
               }
             }
             break;
@@ -111,7 +114,11 @@ void Main_controller::main_loop()
               }
               else
               {
-                // scene->load_from_file( filename.c_str() );
+                std::ifstream ifs(filename.c_str(), std::ios::in);
+                delete scene;
+                boost::archive::text_iarchive text_arch(ifs);
+                text_arch >> BOOST_SERIALIZATION_NVP(scene);
+                ifs.close();
               }
               scene->set_working_surface( sdl_controller->get_surface() );
             }
