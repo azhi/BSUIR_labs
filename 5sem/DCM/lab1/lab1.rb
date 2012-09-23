@@ -1,4 +1,9 @@
 require 'mathn'
+class Vector
+  def []=(i,val)
+    @elements[i] = val
+  end
+end
 
 Shoes.app do
   def generate_fields count
@@ -93,7 +98,7 @@ Shoes.app do
     Shoes.debug coeffs_array
 
     unless checkSeidalSolvable coeffs_array
-      @out.replace "Can't solve this system with Choletsky"
+      @out.replace "One of the main diagonal elements less than row/column sum\nCan't solve this system with Seidal"
       return;
     end
 
@@ -113,16 +118,86 @@ Shoes.app do
     @out.replace @X.each_with_index.map{ |el, i| "X#{i+1} = #{el.to_f}" }.join(", ")
   end
 
+  def solveByCholetsky
+    @out.replace ""
+    coeffs_array = @coeffs_edits.map{|ar| ar.map{|el| el.text.to_r}[0...-1]}
+    free = Vector[* @free_vector.map{ |el| el.text.to_r }]
+
+    unless Matrix[* coeffs_array].symmetric?
+      @out.replace "Coefficients matrix is not symmetric one\nCan't solve this system with Choletsky"
+      return
+    end
+
+    @L = Matrix.build(coeffs_array.size, coeffs_array.size){0}.row_vectors
+    (0...@L.size).each do |j|
+      (j...@L.size).each do |i|
+        if i==j
+          @sum = 0
+          (0...i).each{ |k| @sum += @L[i][k] ** 2 }
+          @L[i][j] = (coeffs_array[i][i] - @sum) ** 0.5
+        elsif j<i
+          @sum = 0
+          (0...j).each{ |k| @sum += @L[i][k] * @L[j][k] }
+          @L[i][j] = (coeffs_array[i][j] - @sum ) / @L[j][j]
+        else
+          break
+        end
+      end
+    end
+
+    @MEq1 = Matrix[* @L].row_vectors
+    @MEq1.each_with_index.each{ |vector, i| vector[ vector.size ] = free[i] }
+    (0...@MEq1.size).each{ |i|
+      @MEq1[i] /= @MEq1[i][i]
+      (i+1...@MEq1.size).each{ |j| @MEq1[j] -= @MEq1[i] * @MEq1[j][i] }
+    }
+
+    unless (0...@MEq1.size).map{ |i| @MEq1[i][i] }.find{ |el| el != 1 }.nil?
+      null_indexes = Hash[* (0...@MEq1.size).map{ |i| [i, @MEq1[i][i]] }.flatten ].find_all{ |key, val| val != 1 }
+      if null_indexes.map{ |key, val| @MEq1[key][-1]}.find{ |el| el != 0 }.nil?
+        @out.replace "Unable to solve"
+        return
+      else
+        @out.replace "No solution"
+        return
+      end
+    end
+
+    @MEq2 = Matrix[* @L.map{ |vec| vec.to_a }.transpose].row_vectors
+    @MEq2.each_with_index.each{ |vector, i| vector[ vector.size ] = @MEq1[i][-1] }
+    (0...@MEq2.size).each{ |i|
+      @MEq2[i] /= @MEq2[i][i]
+      (0...i).each{ |j| @MEq2[j] -= @MEq2[i] * @MEq2[j][i] }
+    }
+
+    Shoes.debug @MEq2
+    @MEq2.each{ |vector| if vector[-1].is_a?(Complex) && vector[-1].imag < 0.0000001 then vector[-1] = vector[-1].real end }
+    Shoes.debug @MEq2
+    if (0...@MEq2.size).map{ |i| @MEq2[i][i] }.find{ |el| el != 1 }.nil?
+      # got solution
+      @out.replace @MEq2.each_with_index.map{ |vector, i| 
+        "X#{i+1} = #{vector[-1].to_f}"
+      }.join(", ")
+    else
+      null_indexes = Hash[* (0...@MEq2.size).map{ |i| [i, @MEq2[i][i]] }.flatten ].find_all{ |key, val| val != 1 }
+      if null_indexes.map{ |key, val| @MEq2[key][-1]}.find{ |el| el != 0 }.nil?
+        @out.replace "Infinite number of solutions"
+      else
+        @out.replace "No solution"
+      end
+    end
+  end
+
   background "#FFF".."#000", :angle => 60
 
   flow :margin => 10 do
-    @eq_count = edit_line :width => 50
+    @eq_count = edit_line "3", :width => 50
     button "Generate fields" do
       generate_fields @eq_count.text.to_i
     end
 
     inscription "Precision: " 
-    @precision = edit_line :width => 50
+    @precision = edit_line "0.01", :width => 50
   end
 
   @fields = stack :margin => 5
@@ -131,7 +206,9 @@ Shoes.app do
     button "Gauss" do
       solveByGauss
     end
-    button "Choletsky"
+    button "Choletsky" do
+      solveByCholetsky
+    end
     button "Seidal" do
       solveBySeidal @precision.text.to_r
     end
@@ -141,8 +218,5 @@ Shoes.app do
     # background "#CCC"
     @out = para
   end
-  # button "Show" do
-  #   Shoes.debug @coeffs_edits
-  #   Shoes.debug @coeffs_edits.map{|ar| ar.map{|el| el.text.to_i}}
-  # end
+  generate_fields 3
 end
