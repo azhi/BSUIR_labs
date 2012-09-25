@@ -69,8 +69,8 @@ Shoes.app do
 
   def checkSeidalSolvable coeffs_array
     unless coeffs_array.each_with_index.map do |el, i|
-      sum = el.inject(0){ |res, n| res + n };
-      sum -= el[i]
+      sum = el.inject(0){ |res, n| res + n.abs };
+      sum -= el[i].abs
       el[i] > sum
     end.find{ |el| el == false }.nil?
       return false
@@ -78,9 +78,9 @@ Shoes.app do
 
     coeffs_array.transpose
     unless coeffs_array.each_with_index.map do |el, i|
-      sum = el.inject(0){ |res, n| res + n };
-      sum -= el[i]
-      el[i] > sum
+      sum = el.inject(0){ |res, n| res + n.abs };
+      sum -= el[i].abs
+      el[i].abs > sum
     end.find{ |el| el == false }.nil?
       return false
     end
@@ -98,7 +98,7 @@ Shoes.app do
     Shoes.debug coeffs_array
 
     unless checkSeidalSolvable coeffs_array
-      @out.replace "One of the main diagonal elements less than row/column sum\nCan't solve this system with Seidal"
+      @out.replace "One of the main diagonal elements less than row sum\nCan't solve this system with Seidal"
       return;
     end
 
@@ -155,10 +155,10 @@ Shoes.app do
     unless (0...@MEq1.size).map{ |i| @MEq1[i][i] }.find{ |el| el != 1 }.nil?
       null_indexes = Hash[* (0...@MEq1.size).map{ |i| [i, @MEq1[i][i]] }.flatten ].find_all{ |key, val| val != 1 }
       if null_indexes.map{ |key, val| @MEq1[key][-1]}.find{ |el| el != 0 }.nil?
-        @out.replace "Unable to solve"
+        @out.replace "Unable to solve by Choletsky"
         return
       else
-        @out.replace "No solution"
+        @out.replace "Unable to solve by Choletsky"
         return
       end
     end
@@ -181,9 +181,9 @@ Shoes.app do
     else
       null_indexes = Hash[* (0...@MEq2.size).map{ |i| [i, @MEq2[i][i]] }.flatten ].find_all{ |key, val| val != 1 }
       if null_indexes.map{ |key, val| @MEq2[key][-1]}.find{ |el| el != 0 }.nil?
-        @out.replace "Infinite number of solutions"
+        @out.replace "Unable to solve by Choletsky"
       else
-        @out.replace "No solution"
+        @out.replace "Unable to solve by Choletsky"
       end
     end
   end
