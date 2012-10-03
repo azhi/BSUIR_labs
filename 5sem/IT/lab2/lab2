@@ -1,0 +1,153 @@
+#! /usr/bin/env ruby
+
+P = [ [ 23, 5 ], [31, 3], [39, 4] ]
+
+class String
+  def ^ arg
+    s = ''
+    self.bytes.each_with_index{ |b, i| s += (b ^ arg[i]).chr }
+    return s
+  end
+
+  def length
+    i = 0;
+    self.bytes{ |b| i +=1 }
+    return i
+  end
+end
+
+class LFSR
+  attr_reader :key
+
+  def initialize seed, length, p
+    @P = p
+    @seed = seed
+    @length = length
+    @key = generateKey
+    @curBitIndex = 0
+  end
+
+  def getNextBit
+    @curBitIndex += 1
+    return @key[ @curBitIndex - 1 ]
+  end
+
+  private
+  
+  def getBit iter_key, n
+    return iter_key[-n].to_i
+  end
+
+  def shift iter_key
+    return iter_key[1..-1] + '0'
+  end
+
+  def generateKey
+    iter_key = @seed.to_s(2);
+    if @P[0] - iter_key.length > 0
+      iter_key = '0' * (@P[0] - iter_key.length) + iter_key
+    else
+      iter_key = iter_key[-@P[0]..-1]
+    end
+    key = ''
+    @length.times do |c|
+      key += getBit( iter_key, @P[0] ).to_s
+      prev_key = iter_key
+      iter_key = shift iter_key
+      if ( getBit( prev_key, @P[0] ) ^ getBit( prev_key, @P[1] ) ) == 1
+        iter_key[-1] = '1'
+      end
+    end
+    return key
+  end
+end
+
+class Geffe
+  attr_reader :key
+
+  def initialize seed, length
+    @seed = seed
+    @length = length
+    @lfsr1 = LFSR.new(seed, length, P[0])
+    @lfsr2 = LFSR.new(seed, length, P[1])
+    @lfsr3 = LFSR.new(seed, length, P[2])
+    @key = generateKey
+  end
+
+  private
+
+  def generateKey
+    key = ''
+    @length.times do |c|
+      lfsr1bit = @lfsr1.getNextBit
+      lfsr2bit = @lfsr2.getNextBit
+      lfsr3bit = @lfsr3.getNextBit
+      if lfsr1bit == '1'
+        key += lfsr2bit
+      else
+        key += lfsr3bit
+      end
+    end
+    return key
+  end
+end
+
+class RC4
+  def initialize u
+    @U = u
+    reset
+  end
+
+  def reset
+    @S = (0..255).to_a
+    j = 0
+    (0..255).each do |i|
+      j = (j + @S[i] + @U[i % @U.length].ord) % 256
+      @S[i], @S[j] = @S[j], @S[i]
+    end
+  end
+
+  def cypherText text
+    i = 0
+    j = 0
+    res = ''
+    text.bytes do |b|
+      i = (i + 1) % 256
+      j = (j + @S[i]) % 256
+      @S[i], @S[j] = @S[j], @S[i]
+      k = @S[(@S[i] + @S[j]) % 256]
+      res += (b ^ k).chr
+    end
+    return res
+  end
+end
+
+def readText
+  text = ''
+  while !$stdin.eof? do
+    text += $stdin.gets
+  end
+  text = text[0...-1]
+  return text
+end
+
+if ARGV[0] == '--lfsr'
+  seed = ARGV[1].split('=')[1].to_i
+  text = readText
+  lfsr = LFSR.new(seed, text.length * 8, P[0])
+  key = lfsr.key.scan(/.{8}/m).map{ |el| el.to_i(2) }
+  $stdout.puts ( text ^ key )
+elsif ARGV[0] == '--geffe'
+  seed = ARGV[1].split('=')[1].to_i
+  text = readText
+  geffe = Geffe.new(seed, text.length * 8)
+  key = geffe.key.scan(/.{8}/m).map{ |el| el.to_i(2) }
+  $stdout.puts ( text ^ key )
+elsif ARGV[0] == '--rc4'
+  u = ARGV[1].split('=')[1]
+  text = readText
+  rc4 = RC4.new(u)
+  $stdout.puts rc4.cypherText(text)
+else
+  $stdout.puts "Wrong arguments"
+end
