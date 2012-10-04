@@ -1,0 +1,127 @@
+#! /usr/bin/env ruby
+
+class Rotor
+  
+  def initialize( substTable, startState, maxState )
+    @sTable = substTable
+    @curState = startState
+    @startState = startState
+    @maxState = maxState
+    @N = 26
+  end
+
+  def reset
+    @curState = @startState
+  end
+
+  def makeTurn
+    @curState = (@curState + 1)
+    res = false
+    if @curState >= @maxState
+      res = true
+    end
+    @curState %= @maxState
+    return res
+  end
+
+  def getDirectOutput input
+    return (@sTable[ (input - @curState + @N) % @N ] + @curState) % @N
+  end
+
+  def getReverseOutput input
+    return (@sTable.invert[ (input - @curState + @N) % @N ] + @curState) % @N
+  end
+end
+
+class Reflector
+
+  def initialize( substTable )
+    @sTable = substTable
+    @N = 26
+  end
+
+  def reflect input
+    if @sTable.has_key?(input % @N)
+      return @sTable[input % @N]
+    else
+      return @sTable.invert[input % @N]
+    end
+  end
+
+end
+
+class EnigmaMachine
+
+  def initialize( descr1, descr2, descr3, descrRefl )
+    @rotor1 = Rotor.new( descr1[:table], descr1[:state], descr1[:maxstate] )
+    @rotor2 = Rotor.new( descr2[:table], descr2[:state], descr2[:maxstate] )
+    @rotor3 = Rotor.new( descr3[:table], descr3[:state], descr3[:maxstate] )
+    @reflector = Reflector.new( descrRefl[:table] )
+  end
+
+  def reset
+    @rotor1.reset
+    @rotor2.reset
+    @rotor3.reset
+  end
+
+  def codeSymbol symb
+    val = symb.ord - 'A'.ord
+    val = @rotor1.getDirectOutput val
+    val = @rotor2.getDirectOutput val
+    val = @rotor3.getDirectOutput val
+    val = @reflector.reflect val
+    val = @rotor3.getReverseOutput val
+    val = @rotor2.getReverseOutput val
+    val = @rotor1.getReverseOutput val
+    @rotor1.makeTurn && @rotor2.makeTurn && @rotor3.makeTurn
+    return (val + 'A'.ord).chr
+  end
+
+  def codeString str
+    res = ''
+    str.upcase.each_char{ |c| c >= 'A' && c <= 'Z' ? res += codeSymbol(c) : res+=c }
+    return res
+  end
+
+end
+
+def genSubstTable seed
+  srand seed
+  table = Hash[ *(0..25).to_a.shuffle.each_with_index.map{ |el, i| [i, el] }.flatten ]
+  return table
+end
+
+def genReflectTable seed
+  srand seed
+  k = (0..12).to_a.shuffle
+  v = (13..25).to_a.shuffle
+  table = {}
+  13.times{ |i| table.merge!({ k[i] => v[i] }) }
+  return table
+end
+
+def readText
+  text = ''
+  while !$stdin.eof? do
+    text += $stdin.gets
+  end
+  text = text[0...-1]
+  return text
+end
+
+state1 = ARGV[0].to_i
+state2 = ARGV[1].to_i
+state3 = ARGV[2].to_i
+table1 = genSubstTable 234623746238742
+table2 = genSubstTable 535718253416124
+table3 = genSubstTable 934321634216531
+tableRefl = genReflectTable 765854865864874
+descr1 = { :table => table1, :state => state1, :maxstate => 26 }
+descr2 = { :table => table2, :state => state2, :maxstate => 676 }
+descr3 = { :table => table3, :state => state3, :maxstate => 17576 }
+descrRefl = { :table => tableRefl }
+enigma = EnigmaMachine.new(descr1, descr2, descr3, descrRefl) 
+
+text = readText
+$stdout.puts enigma.codeString text
