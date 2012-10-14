@@ -14,11 +14,11 @@ public:
   ConsoleIO();
   virtual ~ConsoleIO();
 
-  static void cprint(TCHAR* msg);
-  static TCHAR* cgets();
+  static void cprint(LPTSTR msg);
+  static LPTSTR cgets();
 
 private:
   /* data */
 };
-  
+
 #endif // CONSOLE_IO_H
