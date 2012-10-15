@@ -22,6 +22,13 @@ struct Point
   int x,y;
   Point() : x(0), y(0) {}
   Point(int x, int y) : x(x), y(y) {}
+
+  template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & BOOST_SERIALIZATION_NVP(x);
+      ar & BOOST_SERIALIZATION_NVP(y);
+    }
 };
 
 class Figure

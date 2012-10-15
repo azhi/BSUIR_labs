@@ -36,6 +36,11 @@ extern "C"
   {
     return (Figure*) new Ellipse(points);
   }
+
+  bool draw_mode()
+  {
+    return false;
+  }
 }
 
 BOOST_CLASS_EXPORT_KEY(Ellipse)

@@ -16,9 +16,10 @@ Main_controller::~Main_controller()
   delete sdl_controller;
 }
 
-void Main_controller::add_figure_creator(maker_function maker)
+void Main_controller::add_figure_creator(maker_function maker, draw_mode_getter dw_get)
 {
   factory.push_back(maker);
+  draw_modes.push_back(dw_get);
 }
 
 void Main_controller::main_loop()
@@ -27,6 +28,8 @@ void Main_controller::main_loop()
   Point down = Point(0, 0);
   vector<Point>* points_list = new vector<Point>;
   bool in_drawing = false;
+  bool in_collecting_points = false;
+  bool multiple_drawing = false; 
   Figure* figure;
   while ( !quit )
   {
@@ -126,40 +129,145 @@ void Main_controller::main_loop()
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
-        if ( event.button.button == SDL_BUTTON_LEFT )
         {
-          points_list->clear();
-          points_list->push_back( Point(event.button.x, event.button.y) );
-          points_list->push_back( Point(event.button.x, event.button.y) );
-
-          maker_function maker = NULL;
-          if ( draw_mode < factory.size() )
-            maker = factory[draw_mode];
-          if ( maker == NULL )
-            fprintf(stderr, "Doesn't have maker for that figure\n");
+          multiple_drawing = false;
+          draw_mode_getter get_mode = NULL;
+          if ( draw_mode < draw_modes.size() )
+            get_mode = draw_modes[draw_mode];
+          if ( get_mode == NULL )
+            fprintf(stderr, "Doesn't have mode getter for that figure\n");
           else
+            multiple_drawing = get_mode();
+
+          if ( event.button.button == SDL_BUTTON_LEFT )
           {
-            in_drawing = true;
-            figure = maker(points_list);
-            figure->set_surface( sdl_controller->get_surface() );
-            scene->add_figure( figure );
+            if ( in_collecting_points )
+            {
+              points_list->push_back( Point(event.button.x, event.button.y) );
+              points_list->push_back( Point(event.button.x, event.button.y) );
+
+              vector<Point>::iterator cur_point, prev_point;
+              prev_point = points_list->begin();
+              cur_point = prev_point + 1;
+              while ( cur_point != points_list->end() )
+              {
+                lineRGBA(sdl_controller->get_surface(), prev_point->x, prev_point->y, cur_point->x, cur_point->y, 0, 0, 0, 255);
+                cur_point++;
+                prev_point++;
+              }
+            }
+            else if ( !in_collecting_points && multiple_drawing )
+            {
+              points_list->clear();
+              in_collecting_points = true;
+              in_drawing = true;
+              points_list->push_back( Point(event.button.x, event.button.y) );
+              points_list->push_back( Point(event.button.x, event.button.y) );
+            }
+            else
+            {
+              points_list->clear();
+              points_list->push_back( Point(event.button.x, event.button.y) );
+              points_list->push_back( Point(event.button.x, event.button.y) );
+
+              maker_function maker = NULL;
+              if ( draw_mode < factory.size() )
+                maker = factory[draw_mode];
+              if ( maker == NULL )
+                fprintf(stderr, "Doesn't have maker for that figure\n");
+              else
+              {
+                in_drawing = true;
+                figure = maker(points_list);
+                figure->set_surface( sdl_controller->get_surface() );
+                scene->add_figure( figure );
+              }
+            }
           }
-          break;
+          else if ( event.button.button == SDL_BUTTON_RIGHT && multiple_drawing && in_collecting_points )
+          {
+            in_collecting_points = false;
+            in_drawing = false;
+            vector<Point>::iterator first = points_list->begin();
+            vector<Point>::iterator last = points_list->end() - 1;
+            points_list->push_back( Point(first->x, first->y) );
+            maker_function maker = NULL;
+            if ( draw_mode < factory.size() )
+              maker = factory[draw_mode];
+            if ( maker == NULL )
+              fprintf(stderr, "Doesn't have maker for that figure\n");
+            else
+            {
+              figure = maker(points_list);
+              figure->set_surface( sdl_controller->get_surface() );
+              scene->add_figure( figure );
+            }
+          }
         }
         break;
       case SDL_MOUSEMOTION:
-        if ( in_drawing )
         {
-          Point up;
-          up.x = event.motion.x; 
-          up.y = event.motion.y;
-          figure->move_point2(up);
+          multiple_drawing = false;
+          draw_mode_getter get_mode = NULL;
+          if ( draw_mode < draw_modes.size() )
+            get_mode = draw_modes[draw_mode];
+          if ( get_mode == NULL )
+            fprintf(stderr, "Doesn't have mode getter for that figure\n");
+          else
+            multiple_drawing = get_mode();
+
+          if ( in_drawing )
+          {
+            if ( !multiple_drawing )
+            {
+              Point up;
+              up.x = event.motion.x; 
+              up.y = event.motion.y;
+              figure->move_point2(up);
+            }
+            else
+            {
+              vector<Point>::iterator cur_point, prev_point;
+              prev_point = points_list->begin();
+              cur_point = prev_point + 1;
+              while ( cur_point != points_list->end() )
+              {
+                lineRGBA(sdl_controller->get_surface(), prev_point->x, prev_point->y, cur_point->x, cur_point->y, 0, 0, 0, 255);
+                cur_point++;
+                prev_point++;
+              }
+            }
+          }
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        if ( event.button.button == SDL_BUTTON_LEFT )
         {
-          in_drawing = false;
+          multiple_drawing = false;
+          draw_mode_getter get_mode = NULL;
+          if ( draw_mode < draw_modes.size() )
+            get_mode = draw_modes[draw_mode];
+          if ( get_mode == NULL )
+            fprintf(stderr, "Doesn't have mode getter for that figure\n");
+          else
+            multiple_drawing = get_mode();
+
+          if ( event.button.button == SDL_BUTTON_LEFT && !multiple_drawing)
+          {
+            in_drawing = false;
+          }
+
+          if ( multiple_drawing )
+          {
+            vector<Point>::iterator cur_point, prev_point;
+            prev_point = points_list->begin();
+            cur_point = prev_point + 1;
+            while ( cur_point != points_list->end() )
+            {
+              lineRGBA(sdl_controller->get_surface(), prev_point->x, prev_point->y, cur_point->x, cur_point->y, 0, 0, 0, 255);
+              cur_point++;
+              prev_point++;
+            }
+          }
         }
         break;  
       case SDL_QUIT:

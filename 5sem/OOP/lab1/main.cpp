@@ -23,14 +23,16 @@ int main(int argc, const char *argv[])
     void* dlib = dlopen(in_buf, RTLD_NOW);
     if( dlib == NULL )
       cerr << dlerror() << endl;
-    void* func = dlsym(dlib, "maker");
-    if ( func == NULL )
-      fprintf(stderr, "Can't resolve 'maker' in %s\n", in_buf);
+    void* maker_func = dlsym(dlib, "maker");
+    void* mode_func = dlsym(dlib, "draw_mode");
+    if ( maker_func == NULL  || mode_func == NULL )
+      fprintf(stderr, "Can't resolve 'maker' or 'draw_mode' in %s\n", in_buf);
     else
     {
-      mc->add_figure_creator((maker_function) func);
+      mc->add_figure_creator((maker_function) maker_func, (draw_mode_getter) mode_func);
       printf("adding %s\n", in_buf);
     }
+
   }
   pclose(lib_paths);
 

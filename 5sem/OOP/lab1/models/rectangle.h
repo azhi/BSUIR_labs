@@ -35,6 +35,11 @@ extern "C"
   {
     return (Figure*) new Rectangle(points);
   }
+
+  bool draw_mode()
+  {
+    return false;
+  }
 }
 
 BOOST_CLASS_EXPORT_KEY(Rectangle)

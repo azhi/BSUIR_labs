@@ -44,6 +44,11 @@ extern "C"
   {
     return (Figure*) new Star(points);
   }
+
+  bool draw_mode()
+  {
+    return false;
+  }
 }
 
 BOOST_CLASS_EXPORT_KEY(Star)
