@@ -1,5 +1,4 @@
 require 'mathn'
-require 'gnuplot'
 
 class Vector
   def []=(i,val)
@@ -201,7 +200,7 @@ Shoes.app :title => "Interpolation" do
       plot_file.puts 'set ylabel "y"'
       
       plot_file.puts @plot_str.inject("plot "){ |str, el| str + "(x<=#{el[:max_x]} && x>=#{el[:min_x]}) ? (#{el[:polynom]}) : " } + '(1/0) notitle with lines linestyle 1' +
-                                                                ', "in.txt" using 1:2 notitle with points linestyle 2'
+                                                                ", \"#{@filename}\" using 1:2 notitle with points linestyle 2"
     end
     system "gnuplot -p plot.gnu"
   end
@@ -210,7 +209,8 @@ Shoes.app :title => "Interpolation" do
 
   stack :margin => 10 do
     button "Read points from file", :margin => 5 do
-      read_from_file "in.txt"
+      @filename = ask_open_file
+      read_from_file @filename
     end
 
     flow do
@@ -238,6 +238,23 @@ Shoes.app :title => "Interpolation" do
     @in = para :margin => 20
     para "Middle points:", :margin => 5
     @out = para :margin => 20
+
+    flow :margin => 5 do
+      inscription "X:"
+      @inX = edit_line :width => 50
+      inscription "Y:"
+      @outY = edit_line :width => 200
+      button "calculate Y" do
+        case @last
+        when "Lagrange"
+          @outY.text = get_y_lagrange @inX.text.to_f
+        when "Newton"
+          @outY.text = get_y_newton @inX.text.to_f
+        when "Splines"  
+          @outY.text = get_y_spline @inX.text.to_f
+        end
+      end
+    end
   end
 
 end
