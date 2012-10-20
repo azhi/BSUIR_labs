@@ -1,5 +1,5 @@
 CC=i586-mingw32msvc-g++
-CFLAGS=-c
+CFLAGS=-c --std=c++0x
 LDFLAGS=-mwindows -static
 CPP_SOURCES=main.cpp thread_pool.cpp worker.cpp console_io.cpp
 OBJECTS=$(CPP_SOURCES:.cpp=.o)

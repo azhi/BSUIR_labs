@@ -41,6 +41,9 @@ public:
   HANDLE get_thread_handle();
   static DWORD WINAPI main_loop(void* data);
 
+  void suspend();
+  void resume();
+
 private:
   int id;
   DWORD thread_id;

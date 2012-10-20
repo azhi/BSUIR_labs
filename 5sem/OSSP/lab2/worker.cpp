@@ -1,5 +1,5 @@
-#include "worker.h"
 #include "console_io.h"
+#include "worker.h"
 
 Worker::Worker(int id, queue<Func_descriptor>* task_queue, HANDLE mutex)
   : id(id), task_queue(task_queue)
@@ -28,6 +28,16 @@ HANDLE Worker::get_thread_handle()
   return thread_handle;
 }
 
+void Worker::suspend()
+{
+  SuspendThread(get_thread_handle());
+}
+
+void Worker::resume()
+{
+  ResumeThread(get_thread_handle());
+}
+
 DWORD Worker::main_loop(void* data)
 {
   Thread_params* tpp = (Thread_params*) data;
@@ -54,7 +64,7 @@ DWORD Worker::main_loop(void* data)
     switch(work_descr.cmd)
     {
     case CM_RUN:
-      StringCchPrintf(msg, BUF_SIZE, TEXT("%d worker beginnig task %d!\n"), id, work_descr.id);
+      StringCchPrintf(msg, BUF_SIZE, TEXT("%d worker beginning task %d!\n"), id, work_descr.id);
       ConsoleIO::cprint(msg);
 
       work_descr.func(NULL);

@@ -1,5 +1,7 @@
 #include "thread_pool.h"
 
+#include "console_io.h"
+
 ThreadPool::ThreadPool(int workers_count)
 {
   mutex = CreateMutex(NULL,  // default security attributes
@@ -34,6 +36,8 @@ void ThreadPool::dec_workers_num(int workers_count)
   if (workers_count < 1)
     return;
 
+  ConsoleIO::cprint(TEXT("Waiting for several threads to stop..."));
+
   Func_descriptor fd = { last_task_id++, CM_EXIT, NULL };
 
   DWORD dw_wait_result = WaitForSingleObject(mutex, INFINITE);
@@ -61,4 +65,18 @@ HANDLE* ThreadPool::worker_thread_handles()
   for (int i = 0; i < workers->size(); ++i)
     res[i] = (*workers)[i]->get_thread_handle();
   return res;
+}
+
+void ThreadPool::suspend_all()
+{
+  ConsoleIO::cprint(TEXT("Suspending all threads...\n"));
+  for(auto iter = workers->begin(); iter != workers->end(); ++iter)
+    (*iter)->suspend();
+}
+
+void ThreadPool::resume_all()
+{
+  ConsoleIO::cprint(TEXT("Resuming all threads...\n"));
+  for(auto iter = workers->begin(); iter != workers->end(); ++iter)
+    (*iter)->resume();
 }
