@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require File.join(File.dirname(__FILE__), 'java_objects/java_project.rb')
+
+jp = JavaProject.new(ARGV.shift)
+jp.chepo_spen
+
+# Temp dir
+tdir = `mktemp -d /tmp/JPR.XXX`
+
+# Remove temp dir
+`rm -r #{tdir}`
