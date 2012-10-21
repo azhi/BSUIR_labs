@@ -1,0 +1,109 @@
+#! /usr/bin/env ruby
+
+require 'mathn'
+include Math
+
+class Vector
+  def []=(i,val)
+    @elements[i] = val
+  end
+end
+
+class Matrix
+  def []=(i, j, val)
+    @rows[i][j] = val
+  end
+end
+
+def calc_func x, func
+  eval func.gsub("x", "#{x}")
+end
+
+def calc_splines_derive a, b, x, n, func
+  h = (b - a) / n
+  y = Array.new(n)
+  ix = a
+  (0...n).each do |i|
+    y[i] = calc_func(ix, func)
+    ix += h
+  end
+
+  steps = ((x - a) / h + h / 2).truncate
+  case steps
+  when 0
+    deriv1 = (-3 * y[0] + 4 * y[1] - y[2]) / 2 / h
+    deriv2 = (2 * y[0] - 5 * y[1] + 4 * y[2] - y[3]) / h ** 2
+  when n
+    deriv1 = (y[-3] - 4 * y[-2] + 3 * y[-1]) / 2 / h
+    deriv2 = (-y[-4] + 4 * y[-3] - 5 * y[-2] + 2 * y[-1]) / h ** 2
+  else
+    deriv1 = (-y[steps - 1] + y[steps + 1]) / 2 / h
+    deriv2 = (y[steps - 1] - 2 * y[steps] + y[steps + 1]) / h ** 2
+  end
+
+  return deriv1, deriv2
+end
+
+def calc_simpson_integral a, b, h, func
+  res = 0
+  x = a
+  while x < b - h do
+    res += calc_func(x, func) + 4 * calc_func((2 * x + h) / 2, func) + calc_func(x + h, func)
+    x += h
+  end
+  res *= h / 6
+  res
+end
+
+def calc_gauss_integral a, b, h, func
+  res = 0
+  n = ((b - a) / h).truncate
+  c = (3 / 5) ** 0.5
+  x0 = h * c / 2 + a + h / 2
+  x1 = a + h / 2
+  x2 = -h * c / 2 + a + h / 2
+  n.times do |i|
+    res += 5 * calc_func(x0, func) + 8 * calc_func(x1, func) + 5 * calc_func(x2, func)
+    x0 += h; x1 += h; x2 += h; 
+  end
+  res *= h / 2
+  res /= 9
+  res
+end
+
+if ( ARGV[0] == "--spl_derivative" )
+  hash = Hash[ *(ARGV[1] + ARGV[2] + ARGV[3] + ARGV[4]).split(?,).inject([]){ |res, arg| res + [arg.split(?=).first, arg.split(?=).last] } ]
+  if !hash.has_key?("a") || !hash.has_key?("b") || !hash.has_key?("x") || !hash.has_key?("n")
+    puts "Wrong arguments.\nUsage:./lab3 --spl_derivative/--integral [--simpson/--gauss] a=A, b=B, [,x=X, n=N/h=H] func"
+  else
+    a = hash["a"].to_f; b = hash["b"].to_f; x = hash["x"].to_f; n = hash["n"].to_f;
+    func = ARGV[-1]
+    puts "Calcing derivatives for \"#{func}\" in x=#{x}"
+    deriv1, deriv2 = calc_splines_derive a, b, x, n, func
+    puts "1st derivative equal #{deriv1}"
+    puts "2nd derivative equal #{deriv2}"
+  end
+elsif ( ARGV[0] == "--integral" )  
+  hash = Hash[ *(ARGV[2] + ARGV[3] + ARGV[4]).split(?,).inject([]){ |res, arg| res + [arg.split(?=).first, arg.split(?=).last] } ]
+  if !hash.has_key?("a") || !hash.has_key?("b") || !hash.has_key?("h")
+    puts "Wrong arguments.\nUsage:./lab3 --spl_derivative/--integral [--simpson/--gauss] a=A, b=B, [,x=X, n=N/h=H] func"
+  else
+    a = hash["a"].to_f; b = hash["b"].to_f; h = hash["h"].to_f;
+    func = ARGV[-1]
+    if ( ARGV[1] == "--simpson" )
+      puts "Using Simpson formula"
+      puts "Calcing integral of \"#{func}\" from #{a} to #{b} with step=#{h}"
+      res = calc_simpson_integral a, b, h, func
+      puts "integral equals #{res}"
+    elsif ( ARGV[1] == "--gauss" )
+      puts "Using Gauss formula"
+      puts "Calcing integral of \"#{func}\" from #{a} to #{b} with step=#{h}"
+      res = calc_gauss_integral a, b, h, func
+      puts "integral equals #{res}"
+    else
+      puts "Wrong arguments.\nUsage:./lab3 --spl_derivative/--integral [--simpson/--gauss] a=A, b=B, [,x=X, n=N/h=H] func"
+    end
+  end
+else
+  puts "Wrong arguments.\nUsage:./lab3 --spl_derivative/--integral [--simpson/--gauss] a=A, b=B, [,x=X, n=N/h=H] func"
+end
