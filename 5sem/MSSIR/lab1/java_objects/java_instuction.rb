@@ -1,17 +1,21 @@
-require File.join(File.dirname(__FILE__), 'java_baseobject.rb')
+require File.join(File.dirname(__FILE__), 'java_hasvariables.rb')
 
-class JavaIntruction < JavaBaseObject
+class JavaIntruction < JavaHasVariables
   attr_reader :type
-  attr_reader :variables
+  attr_reader :block
 
-  def initialize source, id
+  def initialize source, id, ext_variables = []
+    super(source, id, ext_variables)
+
     # defining type
     @type = :control # :io, :calc
 
     @variables = []
-    # parsing for variables, adding variables names
-    # note: i think here we just add names, and from top level (java_block), we
-    # will create objects for them
-    super(source, IDHelper.get_next)
+    # parsing for variables
+    # note: here, we must create JavaVariable objects by add_var method
+
+    @block = nil
+    # if needed, creating a block attached to this instruction
+    # @block = JavaBlock.new source, id, @ext_variables + @variables
   end
 end

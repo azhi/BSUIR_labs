@@ -8,9 +8,10 @@ class RegexpBuilder
     %w[- & ~ !].map{ |ch| Regexp.escape ch }.join(?|)
   end
 
+  # TOFIX: fielddef wrong regex, see debug output
   DEF = %q{
     (?<class_def> \g<mod> \s+ class \s+ \g<identifier> \s* \{ ( \g<field_def> | \g<method_def> | \s+ )* \} ){0}
-    (?<field_def> (\g<mod> \s+  )+ \g<identifier> \s+ \g<def_or_init> ( \s* , \s* \g<def_or_init> )* \s*; ){0}
+    (?<field_def> (\g<mod> \s+ )* + (?<ex_name> ( \g<identifier> ) ) ;? \s+ \g<def_or_init> ( \s* , \s* \g<def_or_init> )* \s*; ){0}
     (?<method_def> (\g<mod> \s+ )+ (?<ex_name> ( \g<identifier> \s* ){1,2} ) \( (?<params> (\s* \g<identifier> \s*,?)* ) \s* \) \s* (\g<block>) ){0}
     (?<block> \{ \s* ( \g<operation>  \s* )* \} ){0}
     (?<method_call> \g<identifier> \s* \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}

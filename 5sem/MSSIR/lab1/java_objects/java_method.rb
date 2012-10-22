@@ -7,7 +7,7 @@ class JavaMethod < JavaBaseObject
   attr_reader :block
 
   def initialize source
-    puts @source = source
+    @source = source
     def_m = RegexpBuilder.method_def.match(@source)
     name = def_m[:ex_name].split.last
     params = def_m[:params].split(?,).map(&:split).map(&:last)
@@ -15,9 +15,9 @@ class JavaMethod < JavaBaseObject
     params.each do |p|
       @definition[:params] << JavaVariable.new(p)
     end
-    p @definition
+    # p @definition
     @block = JavaBlock.new def_m[-1], nil, @definition[:params]
-    p @block
+    # p @block
     super source
   end
 end

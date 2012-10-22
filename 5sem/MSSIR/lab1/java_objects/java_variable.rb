@@ -9,7 +9,7 @@ class JavaVariable < JavaIdentifier
   end
 
   def to_s
-    types_str = @types.map{ |key, val| val == true ? key.to_s : nil }.join('/')
+    types_str = @types.map{ |key, val| val == true ? key.to_s : nil }.compact.join('/')
     "Variable: id=#{@id}, name=#{@identifier}, spen=#{@count-1}, types=#{types_str}"
   end
 end
