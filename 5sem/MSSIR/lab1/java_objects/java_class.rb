@@ -18,9 +18,8 @@ class JavaClass < JavaBaseObject
     @fields = []
     @source.gsub(RegexpBuilder.field_def) do |jfs|
       def_m = RegexpBuilder.field_def.match(jfs)
-      name = def_m[:ex_name]
-      puts "N: #{name}"
-      @fields << JavaVariable.new(name)
+      names = def_m[:defs].split(?,).map(&:split).map(&:first)
+      @fields += names.map{ |name| JavaVariable.new(name) }
     end
 
     super source
