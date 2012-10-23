@@ -1,0 +1,16 @@
+#! /usr/bin/env ruby
+
+n = ARGV[0].to_i
+s = [ "0", "1" ]
+(n-1).times do |c|
+  s = s + s.reverse
+  s = s.map.with_index do |str, i|
+    if i < s.size / 2
+      "0" + str
+    else
+      "1" + str
+    end
+  end
+end
+
+puts s
