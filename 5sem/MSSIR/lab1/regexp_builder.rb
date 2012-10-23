@@ -1,31 +1,43 @@
 class RegexpBuilder
 
   def self.b_ops
-    %w[+= -= == != /= *= |= &= ^= && || + - * / = | & ^].map{ |ch| Regexp.escape ch }.join(?|)
+    %w[+= -= == != /= *= |= &= ^= && <= >= || + - * / = | & ^ > <].map{ |ch| Regexp.escape ch }.join(?|)
   end
 
   def self.u_ops
-    %w[- & ~ !].map{ |ch| Regexp.escape ch }.join(?|)
+    %w[- & ~ ! ++ --].map{ |ch| Regexp.escape ch }.join(?|)
   end
 
-  # TOFIX: fielddef wrong regex, see debug output
   DEF = %q{
-    (?<class_def> \g<mod> \s+ class \s+ \g<identifier> \s* \{ ( \g<field_def> | \g<method_def> | \s+ )* \} ){0}
-    (?<field_def> (\g<mod> \s+ )+ \g<type> \s+ (?<defs> \g<def_or_init> ( \s* , \s* \g<def_or_init> )* ) \s*; ){0}
-    (?<method_def> (\g<mod> \s+ )+ (?<ex_name> ( \g<identifier> \s* ){1,2} ) \( (?<params> (\s* \g<identifier> \s*,?)* ) \s* \) \s* (\g<block>) ){0}
+    (?<class_def> \g<mod> \s+ class \s+ \g<identifier> \s*
+      (?<inheritance> ( : \s* | \s+ (extends | implements) \s+ )
+        \g<identifier> \s* ( , \s* \g<identifier> \s* )* )?
+      \{ ( \g<field_def> | \g<method_def> | \s+ )* \} ){0}
+    (?<field_def> (\g<mod> \s+ )+ \g<type> \s+ (?<defs> \g<def_or_init>
+      ( \s* , \s* \g<def_or_init> )* ) \s*; ){0}
+    (?<method_def> (\g<mod> \s+ )+ (?<ex_name> ( \g<identifier> \s* ){1,2} )
+      \( (?<params> (\s* \g<identifier> \s*,?)* ) \s* \) \s* (\g<block>) ){0}
     (?<block> \{ \s* ( \g<operation>  \s* )* \} ){0}
-    (?<method_call> \g<identifier> \s* \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}
-    (?<expr>  \g<var> \s* \g<b_op> \s* \g<expr> | \g<u_op> \s* \g<expr> | \( \s* \g<expr> \s* \) | \g<method_call> | \g<identifier> ){0}
-    (?<operation>  ( \g<if_form> | \g<for_form> | \g<block> | \g<var_def> | ( \g<expr> \s* )? ; ) ){0}
+    (?<method_call> \g<identifier> \s*
+      \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}
+    (?<expr>  \g<var> \s* \g<b_op> \s* \g<expr> | \g<u_op> \s* \g<expr> |
+      \( \s* \g<expr> \s* \) | \g<method_call> | \g<identifier> ){0}
+    (?<operation>  ( \g<if_form> | \g<for_form> | \g<block> |
+      \g<var_def> | ( \g<expr> \s* )? ; ) ){0}
     (?<if_form> if \s* \( \s* \g<expr> \s* \) \s* (?<then_block> \g<operation> )
       ( \s* else (?<else_block> \g<operation> ) )? ){0}
-    (?<for_form> for \s* \( ( \s* \g<expr> \s* ; ){2} \s* \g<expr> \) \g<operation> ){0}
+    (?<for_form> for \s* \( \s*
+      (?<for_control> ( \g<expr> \s* ; | \g<var_def> ) \s* \g<expr> \s*  ;
+        \s* \g<expr> )
+      \s* \) \g<operation> ){0}
     (?<mod> (public | private | protected | abstract | static | final) ){0}
     (?<def_or_init> \g<identifier> ( \s* = \s* \g<expr> )? ){0}
-    (?<var_def> (\g<mod> \s+ )? \g<type> \s+ (?<defs>  \g<def_or_init> ( \s*, \s* \g<def_or_init> )* \s* ) ; ){0}
+    (?<var_def> (\g<mod> \s+ )? \g<type> \s+
+      (?<defs>  \g<def_or_init> ( \s*, \s* \g<def_or_init> )* \s* ) ; ){0}
     (?<var> \w+ ){0}
     (?<type> \g<identifier> ){0}
     (?<identifier> [_a-zA-Z]\w* ){0}
+    (?<comment> ( // .*? \n | /\* .*? \*/ )){0}
   }.strip! +
   %Q{
     (?<b_op> (#{b_ops}) ){0}
@@ -37,7 +49,7 @@ class RegexpBuilder
       Regexp.compile(DEF + expr, Regexp::EXTENDED | Regexp::MULTILINE)
     end
 
-    %w[class_def method_def field_def expr].each do |s|
+    %w[class_def method_def field_def expr operation comment].each do |s|
       define_method(s){ make_regexp " \\g<#{s}>" }
     end
 
