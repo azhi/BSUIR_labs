@@ -94,10 +94,7 @@ end
 
 def genReflectTable seed
   srand seed
-  k = (0..12).to_a.shuffle
-  v = (13..25).to_a.shuffle
-  table = {}
-  13.times{ |i| table.merge!({ k[i] => v[i] }) }
+  table = Hash[ *(0..25).to_a.shuffle ]
   return table
 end
 

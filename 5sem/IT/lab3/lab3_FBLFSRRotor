@@ -1,0 +1,173 @@
+#! /usr/bin/env ruby
+
+require 'mathn'
+
+P = [80, 79, 43, 42, 1]
+
+class LFSR
+  def initialize seed, p
+    @P = p
+    @seed = seed
+    init
+  end
+
+  def reset
+    init
+  end
+
+  def getNextState
+    makeStep
+    @iter_key
+  end
+
+  private
+  
+  def getBit key, n
+    return key[-n].to_i
+  end
+
+  def shift
+    @iter_key = @iter_key[1..-1] + '0'
+  end
+
+  def makeStep
+    prev_key = @iter_key
+    shift
+    res = getBit( prev_key, @P[0] )
+    (1...@P.size).each{ |i| res ^ getBit( prev_key, @P[i] ) }
+    if res == 1
+      @iter_key[-1] = '1'
+    end
+  end
+
+  def init
+    @iter_key = @seed.to_s(2);
+    if @P[0] - @iter_key.length > 0
+      @iter_key = '0' * (@P[0] - @iter_key.length) + @iter_key
+    else
+      @iter_key = @iter_key[-@P[0]..-1]
+    end
+  end
+end
+
+class Rotor
+  def initialize( substTable, rcbIndex, lfsrStartState )
+    @sTable = substTable
+    @rcbIndex = rcbIndex
+    @RS = 0
+    setRCB lfsrStartState
+  end
+
+  def reset lfsrState
+    @RS = 0
+    setRCB lfsrState
+  end
+
+  def makeTurn sym, lfsrState
+    setRCB lfsrState
+    @RS = ( @RS + sym.ord + @RCB ) % 256
+  end
+
+  def getDirectOutput input
+    return @sTable[ (input.ord + @RS) % 256 ].chr
+  end
+
+  def getReverseOutput input
+    return @sTable.invert[ input.ord ].chr
+  end
+
+  def getSym type, input, lfsrState
+    res = ""
+    case type
+    when :encode
+      res = getDirectOutput input
+      makeTurn res, lfsrState
+    when :decode
+      i = getReverseOutput input
+      res = i.ord - @RS
+      res += 256 if res < 0
+      res = res.chr
+      makeTurn input, lfsrState
+    end
+    res
+  end
+
+  private
+
+  def setRCB lfsrState
+    @RCB = lfsrState[@rcbIndex...@rcbIndex+8].to_i(2)
+  end
+end
+
+class RotorFBLFSRMachine
+
+  def initialize( seed, descr1, descr2, descr3 )
+    @lfsr = LFSR.new( seed, P )
+    lfsrState = @lfsr.getNextState
+    @rotors = []
+    @rotors[0] = Rotor.new( descr1[:table], descr1[:rcbIndex], lfsrState )
+    @rotors[1] = Rotor.new( descr2[:table], descr2[:rcbIndex], lfsrState )
+    @rotors[2] = Rotor.new( descr3[:table], descr3[:rcbIndex], lfsrState )
+  end
+
+  def reset
+    @lfsr.reset
+    @rotors.each{ |rotor| rotor.reset }
+  end
+
+  def codeSymbol type, symb
+    lfsrState = @lfsr.getNextState
+    val = ''
+    case type
+    when :encode
+      val = @rotors.inject(symb){ |res, rotor| rotor.getSym( type, res, lfsrState ) }
+    when :decode
+      val = @rotors.reverse.inject(symb){ |res, rotor| rotor.getSym( type, res, lfsrState ) }
+    end
+    return val
+  end
+
+  def codeString type, str
+    res = ''
+    str.each_byte{ |b| res += codeSymbol(type, b.chr) }
+    return res
+  end
+
+end
+
+def genSubstTable seed
+  srand seed
+  table = Hash[ *(0..255).to_a.shuffle.each_with_index.map{ |el, i| [i, el] }.flatten ]
+  return table
+end
+
+def readText
+  text = ''
+  while !$stdin.eof? do
+    text += $stdin.gets
+  end
+  text = text[0...-1]
+  return text
+end
+
+seed = ARGV[1].to_i
+i = ARGV[2].to_i
+j = ARGV[3].to_i
+k = ARGV[4].to_i
+table1 = genSubstTable 234623746238742
+table2 = genSubstTable 535718253416124
+table3 = genSubstTable 934321634216531
+descr1 = { :table => table1, :rcbIndex => i}
+descr2 = { :table => table2, :rcbIndex => j}
+descr3 = { :table => table3, :rcbIndex => k}
+
+machine = RotorFBLFSRMachine.new( seed, descr1, descr2, descr3 )
+
+if ARGV[0] == "--encode"
+  type = :encode
+elsif ARGV[0] == "--decode"
+  type = :decode
+end
+
+text = readText
+$stdout.puts machine.codeString type, text
