@@ -44,6 +44,12 @@ public class Bicycle {
   }
 
   private void testMethod(int n) {
-    ;;;
+    if (n > 3)
+      speed *= 2;
+    else {
+      gear /= 2;
+    }
+    for (int i = 0; i < n; ++i);
+    ;;
   }
 }

@@ -7,8 +7,8 @@ class JavaClass < JavaBaseObject
   attr_reader :fields
 
   def initialize source, id
-    @source = source.gsub(RegexpBuilder.comment, '').
-      gsub(RegexpBuilder.class_def).to_a.first
+    @source = RegexpBuilder.class_def.
+      match(source.gsub(RegexpBuilder.comment, ''))[:class_def]
     raise unless @source
 
     @fields = []
