@@ -26,9 +26,7 @@ class JavaProject
     end
     block.instructions.each do |instr|
       instr.variables.each{ |var| puts var }
-      unless instr.block.nil?
-        process_block instr.block
-      end
+      instr.blocks.each{ |block| process_block block }
     end
   end
 

@@ -20,9 +20,11 @@ class RegexpBuilder
     (?<block> \{ \s* ( \g<operation>  \s* )* \} ){0}
     (?<method_call> \g<identifier> \s*
       \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}
-    (?<expr>  \g<var> \s* \g<b_op> \s* \g<expr> | \g<u_op> \s* \g<expr> |
-      \( \s* \g<expr> \s* \) | \g<method_call> | \g<identifier> ){0}
-    (?<operation>  ( \g<if_form> | \g<for_form> | \g<block> |
+    (?<expr>  \g<var> \s* \g<b_op> \s* \g<inner_expr> | \g<u_op> \s* \g<inner_expr> |
+      \( \s* \g<inner_expr> \s* \) | \g<method_call> | \g<var> ){0}
+    (?<inner_expr> \g<expr> ){0}  
+    (?<operation>  ( \g<single_operation> | \g<block> ) ){0}
+    (?<single_operation> ( \g<if_form> | \g<for_form> |
       \g<var_def> | ( \g<expr> \s* )? ; ) ){0}
     (?<if_form> if \s* \( \s* \g<expr> \s* \) \s* (?<then_block> \g<operation> )
       ( \s* else (?<else_block> \g<operation> ) )? ){0}
@@ -34,7 +36,7 @@ class RegexpBuilder
     (?<def_or_init> \g<identifier> ( \s* = \s* \g<expr> )? ){0}
     (?<var_def> (\g<mod> \s+ )? \g<type> \s+
       (?<defs>  \g<def_or_init> ( \s*, \s* \g<def_or_init> )* \s* ) ; ){0}
-    (?<var> \w+ ){0}
+    (?<var> \g<identifier> ){0}
     (?<type> \g<identifier> ){0}
     (?<identifier> [_a-zA-Z]\w* ){0}
     (?<comment> ( // .*? \n | /\* .*? \*/ )){0}
@@ -49,7 +51,7 @@ class RegexpBuilder
       Regexp.compile(DEF + expr, Regexp::EXTENDED | Regexp::MULTILINE)
     end
 
-    %w[class_def method_def field_def expr operation comment].each do |s|
+    %w[class_def method_def field_def expr var single_operation operation comment block].each do |s|
       define_method(s){ make_regexp " \\g<#{s}>" }
     end
 
@@ -58,7 +60,7 @@ class RegexpBuilder
       res = {i: [], o: []}
       str.gsub(re) do |s|
         m = re.match(str)
-        res.merge!(io_operation(m[:expr])){ |_, *v| v.flatten }
+        res.merge!(io_operations(m[:expr])){ |_, *v| v.flatten }
         res[:o] << m[:wr]
         m[:expr].gsub(make_regexp '\g<identifier>') do |i|
           res[:i] << i

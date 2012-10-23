@@ -4,9 +4,11 @@ require File.join(File.dirname(__FILE__), 'java_variable.rb')
 
 class JavaMethod < JavaBaseObject
   attr_reader :definition
+  attr_reader :fields
   attr_reader :block
 
-  def initialize source
+  def initialize source, fields
+    @fields = fields
     @source = source
     def_m = RegexpBuilder.method_def.match(@source)
     name = def_m[:ex_name].split.last
@@ -16,7 +18,7 @@ class JavaMethod < JavaBaseObject
       @definition[:params] << JavaVariable.new(p)
     end
     # p @definition
-    @block = JavaBlock.new def_m[-1], nil, @definition[:params]
+    @block = JavaBlock.new def_m[:block], nil, @fields + @definition[:params]
     # p @block
     super source
   end
