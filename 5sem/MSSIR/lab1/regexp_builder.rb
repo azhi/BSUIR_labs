@@ -1,7 +1,7 @@
 class RegexpBuilder
 
   def self.bool_b_ops
-    %w[&& ||].map{ |ch| Regexp.escape ch }.join(?|)
+    Regexp.compile %w[&& ||].map{ |ch| Regexp.escape ch }.join(?|)
   end
 
   def self.b_ops
@@ -38,6 +38,7 @@ class RegexpBuilder
       (?<for_control> ( \g<expr> \s* ; | \g<var_def> ) \s* \g<expr> \s*  ;
         \s* \g<expr> )
       \s* \) \s* \g<operation> ){0}
+    (?<while_form> while \s*+ \( \s*+ \g<expr> \s*+ \) \s*+ \g<operation> ){0}
     (?<mod> (public | private | protected | abstract | static | final) ){0}
     (?<def_or_init> \g<identifier> ( \s* = \s* \g<expr> )? ){0}
     (?<var_def> (\g<mod> \s+ )* \g<type> \s+
