@@ -44,7 +44,7 @@ class JavaInstruction < JavaHasVariables
 
       @expr_count = con.split(RegexpBuilder.bool_b_ops).size
       @blocks << JavaBlock.new("{#{m[:block]}}", nil,
-                               @ext_variables + @variables) if m[:block]
+                               @variables + @ext_variables) if m[:block]
     elsif try_size.call(:if_form) == sz
       ctrl = m[:if_form][RegexpBuilder.surrounded_by]
       variables = RegexpBuilder.get_vars(ctrl)
@@ -57,7 +57,7 @@ class JavaInstruction < JavaHasVariables
       @blocks << JavaBlock.new("{#{m[:then_block]}}", nil,
                                @variables + @ext_variables) if m[:then_block]
       @blocks << JavaBlock.new("{#{m[:else_block]}}", nil,
-                               @ext_variables + @variables) if m[:else_block]
+                               @variables + @ext_variables) if m[:else_block]
     elsif try_size.call(:while_form) == sz
       ctrl = m[:while_form][RegexpBuilder.surrounded_by]
       variables = RegexpBuilder.get_vars(ctrl)
