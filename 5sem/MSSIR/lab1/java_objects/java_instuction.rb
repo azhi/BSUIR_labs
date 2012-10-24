@@ -44,6 +44,16 @@ class JavaInstruction < JavaHasVariables
                                @ext_variables + @variables) if m[:then_block]
       @blocks << JavaBlock.new("{#{m[:else_block]}}", nil,
                                @ext_variables + @variables) if m[:else_block]
+    # elsif while_loop
+    elsif m[:var_def]
+      variables = RegexpBuilder.parse_variable_init(m[:defs])
+      variables[:o].each do |var_name|
+        @variables << JavaVariable.new(var_name)
+      end unless variables[:o].nil?
+      variables[:i].each do |var_name|
+        var = add_var var_name
+        var.setType :calc, true
+      end unless variables[:i].nil?
     elsif m[:method_call]
       # NOTE 4 gerkola: expecting here a list of used variables in params of
       # calling
@@ -69,12 +79,6 @@ class JavaInstruction < JavaHasVariables
         var = add_var var_name
         var.setType :calc, true
       end unless outputs.nil?
-    # elsif is_a_var_def
-      # NOTE in var der, we shoudn't call add_var method, we should add
-      # variable directly, cause even if's name matches external variable, we
-      # should create a local one with the same name
-    # elsif for_loop
-    # elsif while_loop
     end
   end
 end

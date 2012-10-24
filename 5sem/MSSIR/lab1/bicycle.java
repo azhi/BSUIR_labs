@@ -53,13 +53,16 @@ public class Bicycle {
     ;;
   }
 
-  public static void Main()
-  {
-    Bicycle(10, 100, 2);
+  public static void Main() {
+    int in = 5, useless = in;
+    readLine(in);
+    Bicycle(10, in, 2);
     setCadence(50);
     setGear(3);
     applyBrake(10);
     speedUp(30);
     testMethod(i, j);
+    string out = 10;
+    printLn(out);
   }
 }

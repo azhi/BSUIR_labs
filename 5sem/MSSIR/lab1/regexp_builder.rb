@@ -19,7 +19,7 @@ class RegexpBuilder
     (?<method_def> (\g<mod> \s+ )+ (?<ex_name> ( \g<identifier> \s* ){1,2} )
       \( (?<params> (\s* \g<identifier> \s*,?)* ) \s* \) \s* (\g<block>) ){0}
     (?<block> \{ \s* ( \g<operation>  \s* )* \} ){0}
-    (?<method_call> \g<call_name> \s*
+    (?<method_call> (new)? \g<call_name> \s*
       \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}
     (?<expr>  \g<var> \s* \g<b_op> \s* \g<inner_expr> |
       \g<u_op> \s* \g<inner_expr> | \( \s* \g<inner_expr> \s* \) |
@@ -36,7 +36,7 @@ class RegexpBuilder
       \s* \) \s* \g<operation> ){0}
     (?<mod> (public | private | protected | abstract | static | final) ){0}
     (?<def_or_init> \g<identifier> ( \s* = \s* \g<expr> )? ){0}
-    (?<var_def> (\g<mod> \s+ )? \g<type> \s+
+    (?<var_def> (\g<mod> \s+ )* \g<type> \s+
       (?<defs>  \g<def_or_init> ( \s*, \s* \g<def_or_init> )* \s* ) ; ){0}
     (?<call_name> \g<identifier> ){0} 
     (?<var> \g<identifier> ){0}
@@ -55,7 +55,7 @@ class RegexpBuilder
     end
 
     %w[class_def method_def field_def expr var
-      single_operation operation method_call comment block].each do |s|
+      single_operation var_def operation method_call comment block].each do |s|
       define_method(s){ make_regexp " \\g<#{s}>" }
     end
 
@@ -70,6 +70,18 @@ class RegexpBuilder
           res[:i] << i
         end
       end
+      res
+    end
+    
+    def parse_variable_init src
+      res = {i: [], o: []}
+      puts "parsing #{src}"
+      tmpi = []; tmpo = [];
+      src.split(?,).each do |defin|
+        tmpi += io_operations(defin)[:i]
+        tmpo += io_operations(defin)[:o]
+      end
+      res[:i] = tmpi; res[:o] = tmpo;
       res
     end
 

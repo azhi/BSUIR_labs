@@ -31,22 +31,25 @@ class JavaProject
             yield param
           end
         end
-        process_block method.block unless method.block.nil?
+        vars = process_block method.block unless method.block.nil?
+        vars.each{ |var| yield var } unless vars.nil?
       end
     end
   end
 
 
   def process_block block
+    res = []
     unless block.variables.nil?
       block.variables.each do |var|
-        yield var
+        res << var
       end
     end
     block.instructions.each do |instr|
-      instr.variables.each{ |var| yield var }
-      instr.blocks.each{ |block| process_block block }
+      instr.variables.each{ |var| res << var }
+      instr.blocks.each{ |block| res += process_block block }
     end
+    res
   end
 
   def chepo_spen
