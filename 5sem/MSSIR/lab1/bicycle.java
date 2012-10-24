@@ -49,13 +49,17 @@ public class Bicycle {
     else {
       gear /= 2;
     }
-    for (int i = 0; i < n; ++i);
+    int i = 0;
+    for (int i = 0; i < n; ++i)
+    {
+      n = i + 1;
+    }
     ;;
   }
 
   public static void Main() {
     int in = 5, useless = in;
-    if ( n > 5 )
+    if ( n > 5 || n < 10 )
     {
       int in = 15;
     }

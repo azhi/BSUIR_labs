@@ -82,7 +82,6 @@ class RegexpBuilder
 
     def parse_variable_init src
       res = {i: [], o: []}
-      puts "parsing #{src}"
       tmpi = []; tmpo = [];
       src.split(?,).each do |defin|
         tmpi += io_operations(defin)[:i]
