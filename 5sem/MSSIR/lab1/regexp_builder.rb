@@ -1,5 +1,9 @@
 class RegexpBuilder
 
+  def self.bool_b_ops
+    %w[&& ||].map{ |ch| Regexp.escape ch }.join(?|)
+  end
+
   def self.b_ops
     %w[+= -= == != /= *= |= &= ^= && <= >= || + - * / = | & ^ > <].
       map{ |ch| Regexp.escape ch }.join(?|)
@@ -21,11 +25,11 @@ class RegexpBuilder
     (?<block> \{ \s* ( \g<operation>  \s* )* \} ){0}
     (?<method_call> (new)? \g<call_name> \s*
       \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}
-    (?<expr>  \g<var> \s* \g<b_op> \s* \g<inner_expr> |
-      \g<u_op> \s* \g<inner_expr> | \( \s* \g<inner_expr> \s* \) |
+    (?<expr>  ( \g<var> | \d+ ) \s*+ \g<b_op> \s*+ \g<inner_expr> |
+      \g<u_op> \s* \g<inner_expr> | \( \s*+ \g<inner_expr> \s*+ \) |
       \g<method_call> | \g<var> | \d+ ){0}
     (?<inner_expr> \g<expr> ){0}
-    (?<operation>  ( \g<single_operation> | \g<block> ) ){0}
+    (?<operation> ( \g<single_operation> | \g<block> ) ){0}
     (?<single_operation> ( \g<if_form> | \g<for_form> |
       \g<var_def> | \g<method_call> | ( \g<expr> \s* )? ; ) ){0}
     (?<if_form> if \s* \( \s* \g<expr> \s* \) \s* (?<then_block> \g<operation> )
@@ -38,7 +42,7 @@ class RegexpBuilder
     (?<def_or_init> \g<identifier> ( \s* = \s* \g<expr> )? ){0}
     (?<var_def> (\g<mod> \s+ )* \g<type> \s+
       (?<defs>  \g<def_or_init> ( \s*, \s* \g<def_or_init> )* \s* ) ; ){0}
-    (?<call_name> \g<identifier> ){0} 
+    (?<call_name> \g<identifier> ){0}
     (?<var> \g<identifier> ){0}
     (?<type> \g<identifier> ){0}
     (?<identifier> [_a-zA-Z]\w* ){0}
@@ -66,13 +70,16 @@ class RegexpBuilder
         m = re.match(str)
         res.merge!(io_operations(m[:expr])){ |_, *v| v.flatten } if recursive
         res[:o] << m[:wr]
-        m[:expr].gsub(make_regexp '\g<identifier>') do |i|
-          res[:i] << i
-        end
+        res[:i] += get_vars(m[:expr])
       end
+      res[:i] = get_vars(str) unless str =~ re
       res
     end
-    
+
+    def get_vars src
+      src.gsub(/[_a-zA-Z][\w.]*+\s*+[^(]/x).to_a.map{ |a| a[0..-2].strip }
+    end
+
     def parse_variable_init src
       res = {i: [], o: []}
       puts "parsing #{src}"
@@ -85,7 +92,7 @@ class RegexpBuilder
       res
     end
 
-    def surrounded_by b, e
+    def surrounded_by b = ?(, e = ?)
       # Note: b, e - one character strings.
       @sur_i ||= 0
       @sur_i += 1

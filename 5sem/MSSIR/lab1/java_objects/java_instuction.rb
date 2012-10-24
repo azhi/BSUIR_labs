@@ -18,28 +18,33 @@ class JavaInstruction < JavaHasVariables
 
     if m[:for_form] && (!m[:if_form] ||
                         m[:if_form].size < m[:for_form].size)
-      # NOTE 4 gerkola: expecting here a list of used variables in for
-      # definition
-      variables = RegexpBuilder.io_operations(m[:for_form])[:variables]
+      ini, con, it = m[:for_form][RegexpBuilder.surrounded_by].split ?;
+      ini = ini[1..-1].strip + ?;
+      con = con + ?;
+      it = it[0..-2].strip + ?;
+      variables = []
+      vars = RegexpBuilder.parse_variable_init(ini)
+      variables += vars[:i]
+      @variables += vars[:o].map{ |v| JavaVariable.new v }
+      variables += RegexpBuilder.get_vars(con)
+      variables += RegexpBuilder.get_vars(it)
       variables.each do |var_name|
         var = add_var var_name
         var.setType :control, true
       end unless variables.nil?
       @type = :control
-      # TODO: expr_count calculation
-      @expr_count = 1
+
+      @expr_count = con.split(RegexpBuilder.bool_b_ops).size
       @blocks << JavaBlock.new("{#{m[:block]}}", nil, @ext_variables + @variables) if m[:block]
     elsif m[:if_form]
-      # NOTE 4 gerkola: expecting here a list of used variables in if
-      # definition
-      variables = RegexpBuilder.io_operations(m[:if_form])[:variables]
+      ctrl = m[:if_form][RegexpBuilder.surrounded_by]
+      variables = RegexpBuilder.get_vars(ctrl)
       variables.each do |var_name|
         var = add_var var_name
         var.setType :control, true
       end unless variables.nil?
       @type = :control
-      # TODO: expr_count calculation
-      @expr_count = 1
+      @expr_count = ctrl.split(RegexpBuilder.bool_b_ops).size
       @blocks << JavaBlock.new("{#{m[:then_block]}}", nil,
                                @ext_variables + @variables) if m[:then_block]
       @blocks << JavaBlock.new("{#{m[:else_block]}}", nil,
@@ -55,15 +60,13 @@ class JavaInstruction < JavaHasVariables
         var.setType :calc, true
       end unless variables[:i].nil?
     elsif m[:method_call]
-      # NOTE 4 gerkola: expecting here a list of used variables in params of
-      # calling
       @type = :call
       @call_name = m[:call_name]
       io_type = false
       unless (@call_name =~ /( print | println | readLine | Reader | Writer )+/ix).nil?
         io_type = true
       end
-      variables = RegexpBuilder.io_operations(m[:method_call])[:variables]
+      variables = RegexpBuilder.get_vars(m[:method_call])
       variables.each do |var_name|
         var = add_var var_name
         var.setType :io, io_type
