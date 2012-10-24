@@ -52,4 +52,14 @@ public class Bicycle {
     for (int i = 0; i < n; ++i);
     ;;
   }
+
+  public static void Main()
+  {
+    Bicycle(10, 100, 2);
+    setCadence(50);
+    setGear(3);
+    applyBrake(10);
+    speedUp(30);
+    testMethod(i, j);
+  }
 }

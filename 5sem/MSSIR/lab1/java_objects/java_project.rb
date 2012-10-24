@@ -15,37 +15,59 @@ class JavaProject
         @classes << JavaClass.new(file.read, IDHelper.get_next)
       end
     end
+
+    each_variable{ |var| var.setType :unused, true if !var.types[:control] && !var.types[:io] && !var.types[:calc] }
   end
+
+  def each_variable
+    @classes.each do |java_class|
+      java_class.fields.each do |field|
+        yield field
+      end
+
+      java_class.methods.each do |method|
+        unless method.definition[:params].empty?
+          method.definition[:params].each do |param|
+            yield param
+          end
+        end
+        process_block method.block unless method.block.nil?
+      end
+    end
+  end
+
 
   def process_block block
     unless block.variables.nil?
       block.variables.each do |var|
-        var.types[:unused] = true if !var.types[:control] && !var.types[:io] && !var.types[:calc]
+        yield var
       end
-      block.variables.each{ |var| puts var }
     end
     block.instructions.each do |instr|
-      instr.variables.each{ |var| puts var }
+      instr.variables.each{ |var| yield var }
       instr.blocks.each{ |block| process_block block }
     end
   end
 
   def chepo_spen
-    @classes.each do |java_class|
-      java_class.fields.each do |field|
-        field.types[:unused] = true if !field.types[:control] && !field.types[:io] && !field.types[:calc]
-      end
-      java_class.fields.each{ |field| puts field }
+    puts "Variables:"
+    each_variable{ |var| puts var } 
+  end
 
-      java_class.methods.each do |method|
-        unless method.definition[:params].empty?
-          method.definition[:params].each do |param|
-            param.types[:unused] = true if !param.types[:control] && !param.types[:io] && !param.types[:calc]
-          end
-          method.definition[:params].each{ |param| puts param }
-        end
-        process_block method.block
-      end
+  def chepin
+    res = 0
+    each_variable do |var|
+      res += 3 if var.types[:control]
+      res += 2 if var.types[:calc]
+      res += 1 if var.types[:io]
+      res += 0.5 if var.types[:unused]
     end
+    puts "Chepin = #{res}"
+  end
+
+  def mayers
+    main_method = @classes.map{ |java_class| java_class.methods.find{ |method| method.definition[:name] == "Main" } }.compact.first
+    e, v, h = main_method.calc_mayers @classes, 0
+    puts "Mayers = [#{e - v + 2}; #{e - v + 2 + h}]"
   end
 end

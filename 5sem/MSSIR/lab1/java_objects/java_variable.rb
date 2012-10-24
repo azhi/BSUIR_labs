@@ -8,6 +8,10 @@ class JavaVariable < JavaIdentifier
     super name
   end
 
+  def setType symb, val
+    @types[symb] = val
+  end
+
   def to_s
     types_str = @types.map{ |key, val| val == true ? key.to_s : nil }.compact.join('/')
     "Variable: id=#{@id}, name=#{@identifier}, spen=#{@count-1}, types=#{types_str}"

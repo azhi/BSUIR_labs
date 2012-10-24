@@ -19,17 +19,6 @@ class JavaHasVariables < JavaBaseObject
       var.inc_count
       res = var
     end
-
-    unless @type.nil?
-      case @type
-      when :control
-        res.types[:control] = true
-      when :io
-        res.types[:io] = true
-      when :calc
-        res.types[:calc] = true
-      end
-    end
     res
   end
 end

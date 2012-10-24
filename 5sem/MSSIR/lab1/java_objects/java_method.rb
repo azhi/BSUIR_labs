@@ -17,9 +17,11 @@ class JavaMethod < JavaBaseObject
     params.each do |p|
       @definition[:params] << JavaVariable.new(p)
     end
-    # p @definition
     @block = JavaBlock.new def_m[:block], nil, @fields + @definition[:params]
-    # p @block
     super source
+  end
+
+  def calc_mayers classes, level
+    @block.calc_mayers classes, level
   end
 end

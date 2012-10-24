@@ -4,6 +4,10 @@ require File.join(File.dirname(__FILE__), 'java_objects/java_project.rb')
 
 jp = JavaProject.new(ARGV.shift)
 jp.chepo_spen
+puts
+jp.chepin
+puts
+jp.mayers
 
 # Temp dir
 tdir = `mktemp -d /tmp/JPR.XXX`

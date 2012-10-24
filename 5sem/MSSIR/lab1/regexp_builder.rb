@@ -19,7 +19,7 @@ class RegexpBuilder
     (?<method_def> (\g<mod> \s+ )+ (?<ex_name> ( \g<identifier> \s* ){1,2} )
       \( (?<params> (\s* \g<identifier> \s*,?)* ) \s* \) \s* (\g<block>) ){0}
     (?<block> \{ \s* ( \g<operation>  \s* )* \} ){0}
-    (?<method_call> \g<identifier> \s*
+    (?<method_call> \g<call_name> \s*
       \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}
     (?<expr>  \g<var> \s* \g<b_op> \s* \g<inner_expr> |
       \g<u_op> \s* \g<inner_expr> | \( \s* \g<inner_expr> \s* \) |
@@ -27,7 +27,7 @@ class RegexpBuilder
     (?<inner_expr> \g<expr> ){0}
     (?<operation>  ( \g<single_operation> | \g<block> ) ){0}
     (?<single_operation> ( \g<if_form> | \g<for_form> |
-      \g<var_def> | ( \g<expr> \s* )? ; ) ){0}
+      \g<var_def> | \g<method_call> | ( \g<expr> \s* )? ; ) ){0}
     (?<if_form> if \s* \( \s* \g<expr> \s* \) \s* (?<then_block> \g<operation> )
       ( \s* else \s* (?<else_block> \g<operation> ) )? ){0}
     (?<for_form> for \s* \( \s*
@@ -38,6 +38,7 @@ class RegexpBuilder
     (?<def_or_init> \g<identifier> ( \s* = \s* \g<expr> )? ){0}
     (?<var_def> (\g<mod> \s+ )? \g<type> \s+
       (?<defs>  \g<def_or_init> ( \s*, \s* \g<def_or_init> )* \s* ) ; ){0}
+    (?<call_name> \g<identifier> ){0} 
     (?<var> \g<identifier> ){0}
     (?<type> \g<identifier> ){0}
     (?<identifier> [_a-zA-Z]\w* ){0}
@@ -54,7 +55,7 @@ class RegexpBuilder
     end
 
     %w[class_def method_def field_def expr var
-      single_operation operation comment block].each do |s|
+      single_operation operation method_call comment block].each do |s|
       define_method(s){ make_regexp " \\g<#{s}>" }
     end
 
