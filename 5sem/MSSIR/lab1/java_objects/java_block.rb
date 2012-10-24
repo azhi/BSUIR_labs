@@ -9,8 +9,10 @@ class JavaBlock < JavaHasVariables
     super(source, id, ext_variables)
 
     @instructions = []
+    @instr_variables = []
     source.gsub(RegexpBuilder.single_operation) do |operation|
-      @instructions << JavaInstruction.new(operation, nil, @ext_variables)
+      @instructions << JavaInstruction.new(operation, nil, @instr_variables + @ext_variables)
+      @instr_variables += @instructions.last.variables
     end
   end
 

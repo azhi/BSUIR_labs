@@ -55,6 +55,14 @@ public class Bicycle {
 
   public static void Main() {
     int in = 5, useless = in;
+    if ( n > 5 )
+    {
+      int in = 15;
+    }
+    else
+    {
+      int useless = in;
+    }
     readLine(in);
     Bicycle(10, in, 2);
     setCadence(50);
