@@ -25,7 +25,20 @@ class JavaBlock < JavaHasVariables
       case instr.type
       when :control
         h += instr.expr_count - 1
-        v += instr.blocks.size
+        e += instr.blocks.size + 1
+        v += instr.blocks.size + 2
+        puts '   ' * level + "Control operator id=#{instr.id}, has #{instr.blocks.size} blocks, processing ..."
+        instr.blocks.each do |block|
+          ie, iv, ih = block.calc_mayers classes, level + 1
+          e += ie; v += iv; h += ih;
+        end
+      when :control_inc
+        e += 1
+        v += 3
+      when :cycle
+        h += instr.expr_count - 1
+        e += 2
+        v += 3
         puts '   ' * level + "Control operator id=#{instr.id}, has #{instr.blocks.size} blocks, processing ..."
         instr.blocks.each do |block|
           ie, iv, ih = block.calc_mayers classes, level + 1

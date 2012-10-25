@@ -43,7 +43,7 @@ public class Bicycle {
     speed += increment;
   }
 
-  private void testMethod(int n) {
+  private int testMethod(int n) {
     if (n > 3)
       speed *= 2;
     else {
@@ -53,8 +53,13 @@ public class Bicycle {
     for (int i = 0; i < n; ++i)
     {
       n = i + 1;
+      if(i % 1000) {
+	continue;
+      }
     }
     ;;
+    while ((i > 0) && (i < n));
+    return -1;
   }
 
   public static void Main() {
@@ -67,14 +72,15 @@ public class Bicycle {
     {
       int useless = in;
     }
-    readLine(in);
-    Bicycle(10, in, 2);
-    setCadence(50);
-    setGear(3);
-    applyBrake(10);
-    speedUp(30);
-    testMethod(i, j);
+    System.in.readLine(in);
+    Bicycle bicycle = new Bicycle(10, in, 2);
+    bicycle.setCadence(50);
+    bicycle.setGear(3);
+    bicycle.applyBrake(10);
+    bicycle.speedUp(30);
+    int i = 0, j = -1;
+    bicycle.testMethod(i, j);
     string out = 10;
-    printLn(out);
+    System.out.println(out);
   }
 }

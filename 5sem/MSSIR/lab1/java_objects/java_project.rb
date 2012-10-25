@@ -54,7 +54,7 @@ class JavaProject
 
   def chepo_spen
     puts "Variables:"
-    each_variable{ |var| puts var } 
+    each_variable{ |var| puts var }
   end
 
   def chepin

@@ -5,12 +5,16 @@ class RegexpBuilder
   end
 
   def self.b_ops
-    %w[+= -= == != /= *= |= &= ^= && <= >= || + - * / = | & ^ > <].
+    %w[+= -= == != /= *= |= &= ^= && <= >= || + - * / % = | & ^ > <].
       map{ |ch| Regexp.escape ch }.join(?|)
   end
 
   def self.u_ops
     %w[- & ~ ! ++ --].map{ |ch| Regexp.escape ch }.join(?|)
+  end
+
+  def self.ext_u_ops
+    %w[new return]
   end
 
   DEF = %q{
@@ -23,14 +27,15 @@ class RegexpBuilder
     (?<method_def> (\g<mod> \s+ )+ (?<ex_name> ( \g<identifier> \s* ){1,2} )
       \( (?<params> (\s* \g<identifier> \s*,?)* ) \s* \) \s* (\g<block>) ){0}
     (?<block> \{ \s* ( \g<operation>  \s* )* \} ){0}
-    (?<method_call> (new)? \g<call_name> \s*
+    (?<method_call> \g<call_name> \s*
       \( ( \s* \g<expr> (\s* , \s* \g<expr> )* )? \s* \) ){0}
-    (?<expr>  ( \g<var> | \d+ ) \s*+ \g<b_op> \s*+ \g<inner_expr> |
-      \g<u_op> \s* \g<inner_expr> | \( \s*+ \g<inner_expr> \s*+ \) |
-      \g<method_call> | \g<var> | \d+ ){0}
+    (?<expr>  ( \g<u_op> \s* \g<inner_expr> | \( \s*+ \g<inner_expr> \s*+ \) |
+      \g<method_call> | \g<var> | \d+ )
+      ( \s*+ \[ \g<inner_expr> \] | \s*+ \g<b_op> \s*+ \g<inner_expr> )* ){0}
     (?<inner_expr> \g<expr> ){0}
-    (?<operation> ( \g<single_operation> | \g<block> ) ){0}
-    (?<single_operation> ( \g<if_form> | \g<for_form> |
+    (?<operation> ( \g<single_operation> | \g<block> | continue\s*+; |
+       break\s*+; ) ){0}
+    (?<single_operation> ( \g<if_form> | \g<for_form> | \g<while_form> |
       \g<var_def> | \g<method_call> | ( \g<expr> \s* )? ; ) ){0}
     (?<if_form> if \s* \( \s* \g<expr> \s* \) \s* (?<then_block> \g<operation> )
       ( \s* else \s* (?<else_block> \g<operation> ) )? ){0}
@@ -43,15 +48,15 @@ class RegexpBuilder
     (?<def_or_init> \g<identifier> ( \s* = \s* \g<expr> )? ){0}
     (?<var_def> (\g<mod> \s+ )* \g<type> \s+
       (?<defs>  \g<def_or_init> ( \s*, \s* \g<def_or_init> )* \s* ) ; ){0}
-    (?<call_name> \g<identifier> ){0}
+    (?<call_name> (?: \g<identifier> \. )*+ ( \g<identifier> ) ){0}
     (?<var> \g<identifier> ){0}
     (?<type> \g<identifier> ){0}
-    (?<identifier> [_a-zA-Z]\w* ){0}
+    (?<identifier> [_a-zA-Z]\w*+ ){0}
     (?<comment> ( // .*? \n | /\* .*? \*/ )){0}
   }.strip! +
   %Q{
     (?<b_op> (#{b_ops}) ){0}
-    (?<u_op> (#{u_ops}) ){0}
+    (?<u_op> (#{u_ops} | (?: #{ext_u_ops.join(?|)} ) \s ) ){0}
   }.strip!
 
   class << self
@@ -71,9 +76,9 @@ class RegexpBuilder
         m = re.match(str)
         res.merge!(io_operations(m[:expr])){ |_, *v| v.flatten } if recursive
         res[:o] << m[:wr]
-        res[:i] += get_vars(m[:expr])
+        res[:i] += get_vars(m[:expr] + ?;)
       end
-      res[:i] = get_vars(str) unless str =~ re
+      res[:i] = get_vars(str + ?;) unless str =~ re
       res
     end
 
@@ -85,8 +90,8 @@ class RegexpBuilder
       res = {i: [], o: []}
       tmpi = []; tmpo = [];
       src.split(?,).each do |defin|
-        tmpi += io_operations(defin)[:i]
-        tmpo += io_operations(defin)[:o]
+        tmpi += io_operations(defin)[:i] - ext_u_ops
+        tmpo += io_operations(defin)[:o] - ext_u_ops
       end
       res[:i] = tmpi; res[:o] = tmpo;
       res

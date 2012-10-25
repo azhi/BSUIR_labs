@@ -40,7 +40,7 @@ class JavaInstruction < JavaHasVariables
         var = add_var var_name
         var.setType :control, true
       end unless variables.nil?
-      @type = :control
+      @type = :cycle
 
       @expr_count = con.split(RegexpBuilder.bool_b_ops).size
       @blocks << JavaBlock.new("{#{m[:block]}}", nil,
@@ -65,7 +65,7 @@ class JavaInstruction < JavaHasVariables
         var = add_var var_name
         var.setType :control, true
       end unless variables.nil?
-      @type = :control
+      @type = :cycle
       @expr_count = ctrl.split(RegexpBuilder.bool_b_ops).size
 
       @blocks << JavaBlock.new("{#{m[:block]}}", nil,
@@ -79,9 +79,9 @@ class JavaInstruction < JavaHasVariables
         var = add_var var_name
         var.setType :calc, true
       end unless variables[:i].nil?
-    elsif try_size.call(:method_call) == sz
+    elsif m[:method_call]
       @type = :call
-      @call_name = m[:call_name]
+      @call_name = m[:call_name].split(?.).last
       io_type = false
       unless (@call_name =~ /( print | println | readLine | Reader | Writer )+/ix).nil?
         io_type = true
@@ -90,6 +90,7 @@ class JavaInstruction < JavaHasVariables
       variables.each do |var_name|
         var = add_var var_name
         var.setType :io, io_type unless var.types[:io]
+        var.setType :calc, true
       end unless variables.nil?
     elsif try_size.call(:expr) == sz
       inputs = RegexpBuilder.io_operations(source)[:i]
@@ -102,6 +103,7 @@ class JavaInstruction < JavaHasVariables
         var = add_var var_name
         var.setType :calc, true
       end unless outputs.nil?
+      @type = :control_inc if source =~ /break|continue/
     end unless sz.zero?
   end
 end
