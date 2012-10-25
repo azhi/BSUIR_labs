@@ -135,8 +135,7 @@ class RotorFBLFSRMachine
 
 end
 
-def genSubstTable seed
-  srand seed
+def genSubstTable
   table = Hash[ *(0..255).to_a.shuffle.each_with_index.map{ |el, i| [i, el] }.flatten ]
   return table
 end
@@ -151,12 +150,13 @@ def readText
 end
 
 seed = ARGV[1].to_i
-i = ARGV[2].to_i
-j = ARGV[3].to_i
-k = ARGV[4].to_i
-table1 = genSubstTable 234623746238742
-table2 = genSubstTable 535718253416124
-table3 = genSubstTable 934321634216531
+srand seed
+table1 = genSubstTable
+table2 = genSubstTable
+table3 = genSubstTable
+i = rand.to_i % 72
+j = rand.to_i % 72
+k = rand.to_i % 72
 descr1 = { :table => table1, :rcbIndex => i}
 descr2 = { :table => table2, :rcbIndex => j}
 descr3 = { :table => table3, :rcbIndex => k}

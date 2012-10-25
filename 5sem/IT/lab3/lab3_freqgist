@@ -1,0 +1,34 @@
+#! /usr/bin/env ruby
+
+require 'mathn'
+require 'gnuplot'
+
+def readText
+  text = ''
+  while !$stdin.eof? do
+    text += $stdin.gets
+  end
+  text = text[0...-1]
+  return text
+end
+
+str = readText
+res = Hash[ *(0..255).to_a.map{ |i| [i, 0] }.flatten ]
+str.each_byte{ |b| res[b] += 1 }
+
+Gnuplot.open do |gp|
+  Gnuplot::Plot.new( gp ) do |plot|
+  
+    plot.title  "Letter frequency gist"
+    plot.ylabel "count"
+    plot.xlabel "letter"
+    
+    x = res.map{ |k, v| k }
+    y = res.map{ |k, v| v }
+
+    plot.data << Gnuplot::DataSet.new( [x, y] ) do |ds|
+      ds.with = "linespoints"
+      ds.notitle
+    end
+  end
+end

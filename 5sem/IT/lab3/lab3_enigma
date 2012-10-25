@@ -2,11 +2,10 @@
 
 class Rotor
   
-  def initialize( substTable, startState, maxState )
+  def initialize( substTable, startState )
     @sTable = substTable
     @curState = startState
     @startState = startState
-    @maxState = maxState
     @N = 26
   end
 
@@ -17,10 +16,10 @@ class Rotor
   def makeTurn
     @curState = (@curState + 1)
     res = false
-    if @curState >= @maxState
+    if @curState >= @N
       res = true
     end
-    @curState %= @maxState
+    @curState %= @N
     return res
   end
 
@@ -53,9 +52,9 @@ end
 class EnigmaMachine
 
   def initialize( descr1, descr2, descr3, descrRefl )
-    @rotor1 = Rotor.new( descr1[:table], descr1[:state], descr1[:maxstate] )
-    @rotor2 = Rotor.new( descr2[:table], descr2[:state], descr2[:maxstate] )
-    @rotor3 = Rotor.new( descr3[:table], descr3[:state], descr3[:maxstate] )
+    @rotor1 = Rotor.new( descr1[:table], descr1[:state] )
+    @rotor2 = Rotor.new( descr2[:table], descr2[:state] )
+    @rotor3 = Rotor.new( descr3[:table], descr3[:state] )
     @reflector = Reflector.new( descrRefl[:table] )
   end
 
@@ -86,14 +85,12 @@ class EnigmaMachine
 
 end
 
-def genSubstTable seed
-  srand seed
+def genSubstTable
   table = Hash[ *(0..25).to_a.shuffle.each_with_index.map{ |el, i| [i, el] }.flatten ]
   return table
 end
 
-def genReflectTable seed
-  srand seed
+def genReflectTable
   table = Hash[ *(0..25).to_a.shuffle ]
   return table
 end
@@ -107,16 +104,18 @@ def readText
   return text
 end
 
-state1 = ARGV[0].to_i
-state2 = ARGV[1].to_i
-state3 = ARGV[2].to_i
-table1 = genSubstTable 234623746238742
-table2 = genSubstTable 535718253416124
-table3 = genSubstTable 934321634216531
-tableRefl = genReflectTable 765854865864874
-descr1 = { :table => table1, :state => state1, :maxstate => 26 }
-descr2 = { :table => table2, :state => state2, :maxstate => 676 }
-descr3 = { :table => table3, :state => state3, :maxstate => 17576 }
+seed = ARGV[0].to_i
+srand seed
+table1 = genSubstTable
+table2 = genSubstTable
+table3 = genSubstTable
+state1 = rand.to_i % 25
+state2 = rand.to_i % 25
+state3 = rand.to_i % 25
+tableRefl = genReflectTable
+descr1 = { :table => table1, :state => state1 }
+descr2 = { :table => table2, :state => state2 }
+descr3 = { :table => table3, :state => state3 }
 descrRefl = { :table => tableRefl }
 enigma = EnigmaMachine.new(descr1, descr2, descr3, descrRefl) 
 
