@@ -2,7 +2,9 @@
 
 #include "common.h"
 
-CriticalSection::CriticalSection(LPTSTR szName)
+#include <stdio.h>
+
+CriticalSection::CriticalSection(LPCTSTR szName)
   : bOccupied(false)
 {
   try{
@@ -16,7 +18,9 @@ CriticalSection::CriticalSection(LPTSTR szName)
   } catch (...) {
     CloseHandle(hMMFile);
     hMMFile = NULL;
+    throw;
   }
+  printf("CS: 0x%0.16llx%0.16llx%0.16llx\n", *lpCriticalSection, *(lpCriticalSection + 8), *(lpCriticalSection + 16));
 }
 
 CriticalSection::~CriticalSection()
@@ -28,8 +32,9 @@ CriticalSection::~CriticalSection()
   hMMFile = NULL;
 }
 
-void CriticalSection::CreateSection(LPTSTR szName)
+void CriticalSection::CreateSection(LPCTSTR szName)
 {
+  printf("Creating a shared file\n");
   hMMFile =
     CreateFileMapping(INVALID_HANDLE_VALUE, // use paging file
 		      NULL,                 // default security
@@ -44,7 +49,6 @@ void CriticalSection::CreateSection(LPTSTR szName)
 
   asrt(!lpCriticalSection, TEXT("Can not map the shared file."));
 
-  lpCriticalSection = (LPCRITICAL_SECTION) malloc(iFileSize);
   InitializeCriticalSection(lpCriticalSection);
 }
 
@@ -52,16 +56,20 @@ void CriticalSection::enter(void)
 {
   if (bOccupied)
     return;
+  printf("Entering critical section (%0.8x) ... ", lpCriticalSection);
   EnterCriticalSection(lpCriticalSection);
   bOccupied = true;
+  printf("done.\n");
 }
 
 void CriticalSection::leave(void)
 {
   if (!bOccupied)
     return;
+  printf("Leaving critical section (%0.8x) ... ", lpCriticalSection);
   LeaveCriticalSection(lpCriticalSection);
   bOccupied = false;
+  printf("done.\n");
 }
 
 LPCRITICAL_SECTION CriticalSection::getCriticalSection(void)

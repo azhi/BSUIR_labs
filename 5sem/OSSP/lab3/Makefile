@@ -1,5 +1,5 @@
 CC=i586-mingw32msvc-g++
-CFLAGS=-c --std=c++0x
+CFLAGS=-c -g --std=c++0x
 LDFLAGS=-static
 CPP_SOURCES=$(wildcard *.cpp)
 OBJECTS=$(CPP_SOURCES:.cpp=.o)

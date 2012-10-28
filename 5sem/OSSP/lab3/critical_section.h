@@ -7,7 +7,7 @@
 class CriticalSection
 {
  public:
-  CriticalSection(LPTSTR name);
+  CriticalSection(LPCTSTR name);
   ~CriticalSection();
 
   LPCRITICAL_SECTION getCriticalSection(void);
@@ -15,7 +15,7 @@ class CriticalSection
   void leave(void);
 
  private:
-  void CreateSection(LPTSTR szName);
+  void CreateSection(LPCTSTR szName);
 
   LPCRITICAL_SECTION lpCriticalSection;
   char bOccupied;
