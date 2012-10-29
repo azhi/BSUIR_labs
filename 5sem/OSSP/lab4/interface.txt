@@ -1,0 +1,22 @@
+typedef struct _Abonent
+{
+  DWORD id;
+  LPTSTR name;
+  LPTSTR phone_no;
+  LPTSTR address;
+} Abonent;
+
+DWORD find_by_{name,phone_no,address}(DWORD *ids, DWORD max_num, LPCTSTR $1);
+// Returns number of matches
+
+BOOL get_by_id(DWORD id, Abonent *abonent);
+// Returs 0 if not found, non-zero otherwise
+
+BOOL update(Abonent *abonent);
+// Returns 0 if failed, non-zero otherwise
+
+DWORD insert(Abonent *new_abonent);
+// Returns new id
+
+BOOL delete(DWORD id);
+// Returns 0 if failed
