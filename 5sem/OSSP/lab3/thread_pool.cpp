@@ -4,7 +4,6 @@
 
 ThreadPool::ThreadPool(int count)
 {
-  cs = new CriticalSection(TEXT("consoleioCS"));
   closeEvent = CreateEvent( 
       NULL,               // default security attributes
       TRUE,               // manual-reset event
@@ -14,7 +13,6 @@ ThreadPool::ThreadPool(int count)
 
   Thread_params* tpp = (Thread_params*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Thread_params));
   tpp->closeEvent = closeEvent;
-  tpp->cs = cs;
 
   for (int i = 0; i < count; i++)
   {
@@ -26,12 +24,12 @@ ThreadPool::ThreadPool(int count)
         0,                      // use default creation flags
         NULL);                  // returns the thread identifier
     thread_handles.push_back(thread_handle);
+    Sleep(100);
   }
 }
 
 ThreadPool::~ThreadPool()
 {
-  delete cs;
 }
 
 void ThreadPool::kill_all()
@@ -56,21 +54,26 @@ void ThreadPool::kill_all()
 
 DWORD ThreadPool::main_loop(void* data)
 {
+  CriticalSection* cs = new CriticalSection(TEXT("consoleioCS"));
   Thread_params* tpp = (Thread_params*) data;
   HANDLE closeEvent = tpp->closeEvent;
-  CriticalSection* cs = tpp->cs;
   TCHAR msg[1024];
+  int ind = 0;
 
   while (1)
   {
     cs->enter();
-    for(int i = 0; i < 5; i++)
-      printf("%d printing something to the console!\n", GetCurrentThreadId());
+    printf("%5d %5d printing %dth message!\n", GetCurrentProcessId(), GetCurrentThreadId(), ++ind);
+    fflush(stdout);
+    Sleep(200);
     cs->leave();
 
     DWORD wait_result = WaitForSingleObject(closeEvent, 0);
     if ( wait_result == WAIT_OBJECT_0 )
+    {
+      delete cs;
       ExitThread(0);
+    }
   }
   return 0;
 }

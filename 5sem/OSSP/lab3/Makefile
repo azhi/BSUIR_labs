@@ -1,6 +1,6 @@
 CC=i586-mingw32msvc-g++
-CFLAGS=-c -g
-LDFLAGS=-mwindows -static
+CFLAGS=-c
+LDFLAGS=-static
 CPP_SOURCES=$(wildcard *.cpp)
 OBJECTS=$(CPP_SOURCES:.cpp=.o)
 EXECUTABLE=lab3.exe

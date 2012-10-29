@@ -16,11 +16,12 @@ CriticalSection::CriticalSection(LPCTSTR szName)
 
     asrt(!lpCriticalSection, TEXT("Can not map the shared file."));
   } catch (...) {
-    CloseHandle(hMMFile);
+    if(hMMFile)
+      CloseHandle(hMMFile);
     hMMFile = NULL;
     throw;
   }
-  printf("CS: 0x%0.16llx%0.16llx%0.16llx\n", *lpCriticalSection, *(lpCriticalSection + 8), *(lpCriticalSection + 16));
+  //printf("CS: 0x%0.16llx%0.16llx%0.16llx\n", *lpCriticalSection, *(lpCriticalSection + 8), *(lpCriticalSection + 16));
 }
 
 CriticalSection::~CriticalSection()
@@ -56,20 +57,22 @@ void CriticalSection::enter(void)
 {
   if (bOccupied)
     return;
-  printf("Entering critical section (%0.8x) ... ", lpCriticalSection);
-  EnterCriticalSection(lpCriticalSection);
+  //printf("Entering critical section (%0.8x) ... ", lpCriticalSection);
+  while(!TryEnterCriticalSection(lpCriticalSection))
+    Sleep(10);
   bOccupied = true;
-  printf("done.\n");
+  //printf("done.\n");
 }
 
 void CriticalSection::leave(void)
 {
   if (!bOccupied)
     return;
-  printf("Leaving critical section (%0.8x) ... ", lpCriticalSection);
+  //printf("Leaving critical section (%0.8x) ... ", lpCriticalSection);
   LeaveCriticalSection(lpCriticalSection);
   bOccupied = false;
-  printf("done.\n");
+  Sleep(15);
+  //printf("done.\n");
 }
 
 LPCRITICAL_SECTION CriticalSection::getCriticalSection(void)

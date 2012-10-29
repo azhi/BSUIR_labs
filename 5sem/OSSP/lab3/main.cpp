@@ -14,7 +14,7 @@ int main(int argc, char **argv)
   // delete pCriticalSection;
 
   ThreadPool* tp = new ThreadPool(2);
-  Sleep(2000);
+  Sleep(30000);
   tp->kill_all();
   return 0;
 }

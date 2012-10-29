@@ -11,7 +11,6 @@ using namespace std;
 struct Thread_params
 {
   HANDLE closeEvent;
-  CriticalSection* cs;
 };
 
 class ThreadPool
@@ -25,7 +24,6 @@ public:
 private:
   HANDLE closeEvent;
   vector<HANDLE> thread_handles;
-  CriticalSection* cs;
 
   static DWORD WINAPI main_loop(void* data);
 };
