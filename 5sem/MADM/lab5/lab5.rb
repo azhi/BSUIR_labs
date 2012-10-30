@@ -1,7 +1,6 @@
 #! /usr/bin/env ruby
 
 require 'gnuplot'
-require 'pry'
 
 def calc_d_sum point
   [ @d[0], @d[1] * point[0], @d[2] * point[1], @d[3] * point[0] * point[1] ].inject(0){ |res, el| res + el }

@@ -34,11 +34,26 @@ params = Hash[ *ARGV.join.split(?,).map{ |arg| [arg.split(?=)[0], arg.split(?=)[
 @mu2 = params["mu2"].to_i; @sigma2 = params["sigma2"].to_i;
 
 x1, x2 = calc_intersect_point
-intersect_x = [x1, x2].min
+if x1.between?(@mu1, @mu2)
+  intersect_x = x1
+elsif x2.between?(@mu1, @mu2)
+  intersect_x = x2
+else
+  puts "Can't calc intersect point"
+  exit
+end
+
 puts "Intersect point: (#{intersect_x.round(6)}, #{get_f1(intersect_x).round(6)})"
-f1_integr = ( 1 + erf( (intersect_x - @mu1) / (@sigma1 * 2 ** 0.5) ) ) / 2
-f2_integr = ( 1 + erf( (intersect_x - @mu2) / (@sigma2 * 2 ** 0.5) ) ) / 2
-puts "Error probability: #{(f1_integr / f2_integr * 100).round(2)}%"
+f1_l_integr = ( 1 + erf( (intersect_x - @mu1) / (@sigma1 * 2 ** 0.5) ) ) / 2
+f2_l_integr = ( 1 + erf( (intersect_x - @mu2) / (@sigma2 * 2 ** 0.5) ) ) / 2
+f1_r_integr = 1 - ( 1 + erf( (intersect_x - @mu1) / (@sigma1 * 2 ** 0.5) ) ) / 2
+f2_r_integr = 1 - ( 1 + erf( (intersect_x - @mu2) / (@sigma2 * 2 ** 0.5) ) ) / 2
+
+if f1_l_integr < f2_l_integr
+  puts "Error probability: #{((f1_l_integr + f2_r_integr)).round(2)}"
+else
+  puts "Error probability: #{((f2_l_integr + f1_r_integr)).round(2)}"
+end
 
 Gnuplot::open do |gp|
   Gnuplot::Plot.new(gp) do |plot|
