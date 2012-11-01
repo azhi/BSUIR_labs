@@ -26,12 +26,12 @@ class SessionKeyGenerator
       7.times do
         s = k.to_s(2)
         s = '0' * (128 - s.size) + s if (128 - s.size) > 0
-        @key << s.scan(/.{16}/).map{ |el| el.to_i(2)}
+        @key << s.reverse.scan(/.{16}/).map{ |el| el.reverse.to_i(2)}
         k = (s[25..-1] + s[0...25]).to_i(2)
       end
       @key = @key.flatten
       if type == :decode
-        @u = @key.dup
+        @z = @key.dup
         @key.clear
         @key << process_6_indexes([48, 49, 50, 51, 46, 47])
         i = 42
@@ -48,12 +48,12 @@ class SessionKeyGenerator
     private
 
     def process_6_indexes arg
-      res1 = extended_euclid @u[ arg[0] ], 65537
-      res2 = 65536 - @u[ arg[1] ]
-      res3 = 65536 - @u[ arg[2] ]
-      res4 = extended_euclid @u[ arg[3] ], 65537
-      res5 = @u[ arg[4] ]
-      res6 = @u[ arg[5] ]
+      res1 = extended_euclid @z[ arg[0] ], 65537
+      res2 = 65536 - @z[ arg[1] ]
+      res3 = 65536 - @z[ arg[2] ]
+      res4 = extended_euclid @z[ arg[3] ], 65537
+      res5 = @z[ arg[4] ]
+      res6 = @z[ arg[5] ]
       res = [res1, res2, res3, res4, res5, res6]
       unless res.find{ |el| el == Float::NAN }.nil?
         throw Float::NAN
@@ -68,24 +68,25 @@ end
 class IDEA
   def initialize k, type
     @k = k
-    @z = SessionKeyGenerator.generate_session_keys @k, type
+    @key = SessionKeyGenerator.generate_session_keys @k, type
   end
 
   def set_type type
-    @z = SessionKeyGenerator.generate_session_keys @k, type
+    @key = SessionKeyGenerator.generate_session_keys @k, type
   end
 
   def do_lap hash
-    i1 = multiply hash[:X][0], hash[:Z][0]
-    i2 = add hash[:X][1], hash[:Z][1]
-    i3 = add hash[:X][2], hash[:Z][2]
-    i4 = multiply hash[:X][3], hash[:Z][3]
+    (4 - hash[:X].size).times{ hash[:X] << 0 }
+    i1 = multiply hash[:X][0], hash[:key][0]
+    i2 = add hash[:X][1], hash[:key][1]
+    i3 = add hash[:X][2], hash[:key][2]
+    i4 = multiply hash[:X][3], hash[:key][3]
     inMAl = xor i1, i3
     inMAr = xor i2, i4
 
-    mal = multiply inMAl, hash[:Z][4]
+    mal = multiply inMAl, hash[:key][4]
     mar = add inMAr, mal
-    outMAr = multiply mar, hash[:Z][5]
+    outMAr = multiply mar, hash[:key][5]
     outMAl = add mal, outMAr
 
     w = []
@@ -98,47 +99,36 @@ class IDEA
 
   def do_last_lap hash
     w = []
-    w[0] = multiply hash[:X][0], hash[:Z][0]
-    w[1] = add hash[:X][1], hash[:Z][1]
-    w[2] = add hash[:X][2], hash[:Z][2]
-    w[3] = multiply hash[:X][3], hash[:Z][3]
+    w[0] = multiply hash[:X][0], hash[:key][0]
+    w[1] = add hash[:X][1], hash[:key][1]
+    w[2] = add hash[:X][2], hash[:key][2]
+    w[3] = multiply hash[:X][3], hash[:key][3]
     return w
   end
 
   def do_64_bits input
-    input = '0' * (64 - input.size) + input if (64 - input.size) > 0
-    x = input.scan(/.{16}/).map{ |el| el.to_i(2) }
+    (8 - input.size).times{ input << 0 }
+    x = input.each_slice(2).map{ |(high_byte, low_byte)| (high_byte << 8) + low_byte }
 
     i = 0
     8.times do
-      x = do_lap({ :X => x, :Z => @z[i..i+5]})
+      x = do_lap({X: x, key: @key[i..i+5]})
       i += 6
     end
 
     x[1], x[2] = x[2], x[1]
-    x = do_last_lap({:X => x, :Z => @z[48..51]})
-    res = x.map do |el|
-      str = el.to_s(2)
-      str = '0' * (16 - str.size) + str
-    end.join
-    return res
+    x = do_last_lap({X: x, key: @key[48..51]})
+    return x
   end
 
   def process_file file
     while (!file.eof?) do
-      _64_bits = ''
-      8.times do
-        byte = file.getbyte
-        unless byte.nil?
-          byte_s = byte.to_s(2)
-          byte_s = '0' * (8 - byte_s.size) + byte_s
-          _64_bits += byte_s
-        end
+      bytes = file.read.bytes.each_slice(8)
+      bytes.each do |_8_bytes|
+        res = do_64_bits _8_bytes
+        res = res.map{ |el| [ (el >> 8) & 0xFF, el & 0xFF ] }.flatten
+        print res.map{ |el| el.chr }.join
       end
-
-      _64_bits = '0' * (64 - _64_bits.size) + _64_bits
-      res = do_64_bits _64_bits
-      print res.scan(/.{8}/).map{ |byte| byte.to_i(2).chr }.join
     end
   end
 
