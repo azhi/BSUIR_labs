@@ -1,0 +1,28 @@
+CC=i586-mingw32msvc-g++
+CFLAGS=-c
+LDFLAGS=-static
+LIBCFLAGS=-DBUILDING_DLL
+LIBFLAGS=-shared -Wl,-soname,
+DB_SOURCE=DB.cpp
+DB_OBJECT=$(DB_SOURCE:.cpp=.o)
+DB_LIB=DB.dll
+CPP_SOURCES=main.cpp
+OBJECTS=$(CPP_SOURCES:.cpp=.o)
+EXECUTABLE=lab3.exe
+
+$(EXECUTABLE): $(OBJECTS) $(DB_LIB)
+	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
+
+all: $(CPP_SOURCES) $(EXECUTABLE) $(DB_LIB)
+
+$(DB_LIB): $(DB_OBJECT)
+	$(CC) $(LIBFLAGS) $(DB_OBJECT) -o $(DB_LIB)
+
+$(DB_OBJECT): $(DB_SOURCE)
+	$(CC) $(CFLAGS) $(LIBCFLAGS) $(DB_SOURCE) -o $(DB_OBJECT)
+
+$(OBJECTS):
+	$(CC) $(CFLAGS) $(@:.o=.cpp) -o $@
+
+clean:
+	rm -f $(OBJECTS) $(EXECUTABLE) $(DB_OBJECT) $(DB_LIB)
