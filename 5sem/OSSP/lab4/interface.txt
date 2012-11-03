@@ -9,6 +9,9 @@ typedef struct _Abonent
 BOOL init();
 // initialize DB
 
+void finalize();
+// end DB session
+
 DWORD find_by_{name,phone_no,address}(DWORD *ids, DWORD max_num, LPCTSTR $1);
 // Returns number of matches
 
@@ -18,7 +21,7 @@ BOOL get_by_id(DWORD id, Abonent *abonent);
 BOOL update_abonent(Abonent *abonent);
 // Returns 0 if failed, non-zero otherwise
 
-DWORD insert_abonent(Abonent *new_abonent);
+void insert_abonent(Abonent *new_abonent);
 // Returns new id
 
 BOOL remove_abonent(DWORD id);

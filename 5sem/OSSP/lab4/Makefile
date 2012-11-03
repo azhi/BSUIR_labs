@@ -1,5 +1,5 @@
 CC=i586-mingw32msvc-g++
-CFLAGS=-c
+CFLAGS=-c -D_UNICODE -DUNICODE
 LDFLAGS=-static
 LIBCFLAGS=-DBUILDING_DLL
 LIBFLAGS=-shared -Wl,-soname,
@@ -8,7 +8,7 @@ DB_OBJECT=$(DB_SOURCE:.cpp=.o)
 DB_LIB=DB.dll
 CPP_SOURCES=main.cpp
 OBJECTS=$(CPP_SOURCES:.cpp=.o)
-EXECUTABLE=lab3.exe
+EXECUTABLE=lab4.exe
 
 $(EXECUTABLE): $(OBJECTS) $(DB_LIB)
 	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
