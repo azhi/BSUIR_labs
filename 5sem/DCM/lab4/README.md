@@ -1,7 +1,5 @@
 Lab #4
 ---
-generating Gray codes
+generating Gray code, converting between Gray code and binary code
 
-Usage:./lab4 N
-
-generates all posibles N length Gray codes
+developed on ruby using shoes
