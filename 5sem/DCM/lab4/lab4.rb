@@ -39,6 +39,7 @@ Shoes.app :title => "Gray code", :width => 700 do
         inscription "n:"
         @inN = edit_line :width => 50
         button "Generate" do
+          4.times{ |i| @out[i].replace "" }
           s = generate_gray_code
           s = s.map.with_index{ |el, i| {ind: i, el: el} }
           if s.size > 16
@@ -49,7 +50,10 @@ Shoes.app :title => "Gray code", :width => 700 do
             end
             each_count = s.size / 4
             4.times do |i|
-              @out[i].replace s[(i * each_count)..((i + 1) * each_count - 1)].map{ |hash| "#{hash[:ind]} - #{hash[:el]}" }.join("\n")
+              str = s[(i * each_count)..((i + 1) * each_count - 1)].map do |hash|
+                hash.is_a?(Hash) ? "#{hash[:ind]} - #{hash[:el]}" : hash.to_s
+              end.join("\n")
+              @out[i].replace str
             end
           else
             @out[0].replace s.map{ |hash| "#{hash[:ind]} - #{hash[:el]}" }.join("\n")
