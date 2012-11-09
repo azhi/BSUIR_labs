@@ -40,6 +40,7 @@ Shoes.app :title => "Gray code", :width => 700 do
         @inN = edit_line :width => 50
         button "Generate" do
           s = generate_gray_code
+          s = s.map.with_index{ |el, i| {ind: i, el: el} }
           if s.size > 16
             if (s.size > 64)
               rand_pos = rand(0...(s.size - 64))
@@ -48,10 +49,10 @@ Shoes.app :title => "Gray code", :width => 700 do
             end
             each_count = s.size / 4
             4.times do |i|
-              @out[i].replace s[(i * each_count)..((i + 1) * each_count - 1)].join("\n")
+              @out[i].replace s[(i * each_count)..((i + 1) * each_count - 1)].map{ |hash| "#{hash[:ind]} - #{hash[:el]}" }.join("\n")
             end
           else
-            @out[0].replace s.join("\n")
+            @out[0].replace s.map{ |hash| "#{hash[:ind]} - #{hash[:el]}" }.join("\n")
           end
         end
       end
@@ -88,13 +89,14 @@ Shoes.app :title => "Gray code", :width => 700 do
 
       inscription "out:"
       flow do
-        inscription "in base 2:"
+        inscription "in base 2:" if type == :gb
+        inscription "in Gray code:" if type == :bg
         @out2 = para
       end
       flow do
         inscription "in base 10:"
         @out10 = para
-      end
+      end if type == :gb
       button "Convert" do
         if type == :gb
           res = convgb @input.text.to_i(@inB.text.to_i)
