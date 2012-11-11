@@ -21,7 +21,7 @@ BOOL get_by_id(DWORD id, Abonent *abonent);
 BOOL update_abonent(Abonent *abonent);
 // Returns 0 if failed, non-zero otherwise
 
-void insert_abonent(Abonent *new_abonent);
+DWORD insert_abonent(Abonent *new_abonent);
 // Returns new id
 
 BOOL remove_abonent(DWORD id);

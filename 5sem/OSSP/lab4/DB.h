@@ -34,7 +34,7 @@ BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent);
 
 BOOL FUNC_DECLARE update_abonent(Abonent *abonent);
 
-void FUNC_DECLARE insert_abonent(Abonent *new_abonent);
+DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent);
 
 BOOL FUNC_DECLARE remove_abonent(DWORD id);
 

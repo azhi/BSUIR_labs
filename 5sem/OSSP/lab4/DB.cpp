@@ -57,6 +57,7 @@ void FUNC_DECLARE init()
     if ( id > last_id )
       last_id = id;
   }
+  last_id++;
   fclose(db_file);
 }
 
@@ -153,10 +154,11 @@ BOOL FUNC_DECLARE update_abonent(Abonent *abonent)
   return true;
 }
 
-void FUNC_DECLARE insert_abonent(Abonent *new_abonent)
+DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent)
 {
   Abonent* abonent = create_abonent(last_id++, new_abonent->name, new_abonent->phone_no, new_abonent->address);
   add_to_list(abonent);
+  return abonent->id;
 }
 
 BOOL FUNC_DECLARE remove_abonent(DWORD id)
