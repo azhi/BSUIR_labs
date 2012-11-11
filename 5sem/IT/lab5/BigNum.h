@@ -6,28 +6,36 @@
 
 using namespace std;
 
+typedef unsigned long ulong;
+
 class BigNum
 {
   public:
-    BigNum(long base);
-    BigNum(long base, vector<long> nums);
+    BigNum(ulong base);
+    BigNum(ulong base, vector<ulong> nums);
+    BigNum(ulong base, string str_nums);
     virtual ~BigNum();
 
-    BigNum operator+(BigNum& other);
-    BigNum operator*(BigNum& other);
-    BigNum operator/(BigNum& other);
-    BigNum karatsubaMultiply(BigNum& other);
+    BigNum& operator+(BigNum& other);
+    BigNum& operator-(BigNum& other);
+    BigNum& operator*(BigNum& other);
+    BigNum& operator/(BigNum& other);
+    BigNum& karatsubaMultiply(BigNum& other);
+    BigNum& pow(long power);
 
     string to_string();
-    vector<long> get_numbers() { return numbers; };
-    void set_numbers(vector<long> nums) { numbers.insert(numbers.begin(), nums.begin(), nums.end()); };
-    long get_base() { return base; };
+    vector<ulong> get_numbers() { return numbers; };
+    void set_numbers(vector<ulong>& nums) { numbers.insert(numbers.begin(), nums.begin(), nums.end()); };
+    void set_rev_numbers(vector<ulong>& rev_nums) { numbers.insert(numbers.begin(), rev_nums.rbegin(), rev_nums.rend()); };
+    ulong get_base() { return base; };
 
     void trim_zeroes();
 
   private:
-    long base;
-		vector<long> numbers;
+    ulong base;
+		vector<ulong> numbers;
+
+    void split_number(vector<ulong>& src, vector<ulong>& hi_part, vector<ulong>& lo_part, long size);
 };
 
 #endif // BIGNUM_H
