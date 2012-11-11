@@ -1,6 +1,30 @@
 #include "DB.h"
 
-#include <stdlib.h>
+#include <stdio.h>
+
+List_element *head, *tail;
+int last_id;
+
+BOOL cmp_id(const Abonent* a1, const Abonent* a2)
+{
+  return a1->id == a2->id;
+}
+
+BOOL cmp_name(const Abonent* a1, const Abonent* a2)
+{
+  return _tcscmp(a1->name, a2->name) == 0;
+}
+
+BOOL cmp_phone(const Abonent* a1, const Abonent* a2)
+{
+  return _tcscmp(a1->phone_no, a2->phone_no) == 0;
+}
+
+BOOL cmp_address(const Abonent* a1, const Abonent* a2)
+{
+  return _tcscmp(a1->address, a2->address) == 0;
+}
+
 
 void get_next_el(LPCTSTR buf, int* pi, LPTSTR res)
 {
@@ -39,7 +63,7 @@ void FUNC_DECLARE init()
     int i = 0, count = 0;
     get_next_el(buf, &i, tmp);
     id = _ttoi(tmp);
-    
+
     skip_delimiters(buf, &i);
     get_next_el(buf, &i, tmp);
     _tcscpy(name, tmp);
@@ -138,7 +162,7 @@ BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
   _tcscpy(abonent->phone_no, res->abonent->phone_no);
   _tcscpy(abonent->address, res->abonent->address);
   clear_abonent(cmp_ab);
-  return true; 
+  return true;
 }
 
 BOOL FUNC_DECLARE update_abonent(Abonent *abonent)

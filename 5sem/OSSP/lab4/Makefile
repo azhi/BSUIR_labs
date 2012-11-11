@@ -1,12 +1,12 @@
 CC=i586-mingw32msvc-g++
 CFLAGS=-c -D_UNICODE -DUNICODE
-LDFLAGS=-static
+LDFLAGS=-static -mwindows
 LIBCFLAGS=-DBUILDING_DLL
 LIBFLAGS=-shared -Wl,-soname,
 DB_SOURCE=DB.cpp
 DB_OBJECT=$(DB_SOURCE:.cpp=.o)
 DB_LIB=DB.dll
-CPP_SOURCES=main.cpp
+CPP_SOURCES=main.cpp app.cpp db_wrapper.cpp
 OBJECTS=$(CPP_SOURCES:.cpp=.o)
 EXECUTABLE=lab4.exe
 

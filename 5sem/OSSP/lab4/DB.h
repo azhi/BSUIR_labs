@@ -1,9 +1,8 @@
 #ifndef DLL_H
 #define DLL_H
 
-#include <windows.h>
-#include <stdio.h>
 #include <tchar.h>
+#include <windows.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,30 +45,7 @@ typedef struct _List_element
   _List_element* next;
 } List_element;
 
-List_element *head, *tail;
-int last_id;
-
 typedef BOOL (*cmp_func)(const Abonent* a1, const Abonent* a2);
-
-BOOL cmp_id(const Abonent* a1, const Abonent* a2)
-{
-  return a1->id == a2->id;
-}
-
-BOOL cmp_name(const Abonent* a1, const Abonent* a2)
-{
-  return _tcscmp(a1->name, a2->name) == 0;
-}
-
-BOOL cmp_phone(const Abonent* a1, const Abonent* a2)
-{
-  return _tcscmp(a1->phone_no, a2->phone_no) == 0;
-}
-
-BOOL cmp_address(const Abonent* a1, const Abonent* a2)
-{
-  return _tcscmp(a1->address, a2->address) == 0;
-}
 
 Abonent* create_abonent(DWORD id, LPCTSTR name, LPCTSTR phone, LPCTSTR address);
 void clear_abonent(Abonent* abonent);
