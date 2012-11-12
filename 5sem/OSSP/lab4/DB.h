@@ -16,12 +16,7 @@ extern "C" {
 #define FUNC_DECLARE __declspec(dllimport)
 #endif
 
-void FUNC_DECLARE init();
-void FUNC_DECLARE finalize();
-
-DWORD FUNC_DECLARE find_by_name(DWORD *ids, DWORD max_num, LPCTSTR name);
-DWORD FUNC_DECLARE find_by_phone_no(DWORD *ids, DWORD max_num, LPCTSTR phone_no);
-DWORD FUNC_DECLARE find_by_address(DWORD *ids, DWORD max_num, LPCTSTR address);
+DWORD FUNC_DECLARE find_abonents(DWORD *ids, DWORD max_num, Abonent* ab);
 
 BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent);
 
@@ -30,6 +25,13 @@ BOOL FUNC_DECLARE update_abonent(Abonent *abonent);
 DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent);
 
 BOOL FUNC_DECLARE remove_abonent(DWORD id);
+
+BOOL FUNC_DECLARE APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+
+void init();
+void finalize();
+
+int reference_count = 0;
 
 #ifdef BUILDING_DLL
 

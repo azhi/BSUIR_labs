@@ -37,15 +37,11 @@ BigNum::~BigNum()
 {
 }
 
-BigNum& BigNum::operator+(BigNum& other)
+BigNum& add(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last)
 {
-  if ( base != other.get_base() )
-    throw invalid_argument("Both operands should be in one base");
-
   vector<ulong> res_numbers;
-  vector<ulong> o_numbers = other.get_numbers();
   long j = 0; char k = 0;
-  long n = max(numbers.size(), o_numbers.size());
+  long n = max(numbers.size(), last - first);
   long m_size = numbers.size();
   long o_size = o_numbers.size();
 
@@ -67,6 +63,30 @@ BigNum& BigNum::operator+(BigNum& other)
   BigNum* res = new BigNum(base, res_numbers);
   res->trim_zeroes();
   return (*res);
+}
+
+BigNum& sub(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last)
+{
+
+}
+
+BigNum& mul(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last)
+{
+
+}
+
+BigNum& div(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last)
+{
+
+}
+
+BigNum& BigNum::operator+(BigNum& other)
+{
+  if ( base != other.get_base() )
+    throw invalid_argument("Both operands should be in one base");
+
+  vector<ulong> o_numbers = other.get_numbers();
+  add(o_numbers, o_numbers.begin(), o_numbers.end());
 }
 
 BigNum& BigNum::operator-(BigNum& other)

@@ -10,21 +10,10 @@ BOOL cmp_id(const Abonent* a1, const Abonent* a2)
   return a1->id == a2->id;
 }
 
-BOOL cmp_name(const Abonent* a1, const Abonent* a2)
+BOOL cmp(const Abonent* a1, const Abonent* a2)
 {
-  return _tcscmp(a1->name, a2->name) == 0;
+  return a1->id == a2->id;
 }
-
-BOOL cmp_phone(const Abonent* a1, const Abonent* a2)
-{
-  return _tcscmp(a1->phone_no, a2->phone_no) == 0;
-}
-
-BOOL cmp_address(const Abonent* a1, const Abonent* a2)
-{
-  return _tcscmp(a1->address, a2->address) == 0;
-}
-
 
 void get_next_el(LPCTSTR buf, int* pi, LPTSTR res)
 {
@@ -43,8 +32,14 @@ void skip_delimiters(LPCTSTR buf, int* pi)
     (*pi)++;
 }
 
+#define read_field(LPTSTR field)
+  skip_delimiters(buf, &i);\
+  get_next_el(buf, &i, tmp);\
+  _tcscpy(field, tmp);
+
 void FUNC_DECLARE init()
 {
+  _tprintf(TEXT("initing\n"));
   head = NULL; tail = NULL;
   last_id = 0;
   FILE *db_file = _tfopen(TEXT("phones.db"), TEXT("rb"));
@@ -55,28 +50,30 @@ void FUNC_DECLARE init()
   while ( _fgetts(buf, 1024, db_file) != NULL)
   {
     DWORD id;
-    TCHAR name[256];
     TCHAR phone_no[256];
-    TCHAR address[256];
-    TCHAR tmp[256];
+    TCHAR family_name[256];
+    TCHAR name[256];
+    TCHAR middle_name[256];
+    TCHAR street[256];
+    TCHAR house[256];
+    TCHAR building[256];
+    TCHAR flat[256];
 
     int i = 0, count = 0;
     get_next_el(buf, &i, tmp);
     id = _ttoi(tmp);
 
-    skip_delimiters(buf, &i);
-    get_next_el(buf, &i, tmp);
-    _tcscpy(name, tmp);
+    read_field(phone_no);
+    read_field(family_name);
+    read_field(name);
+    read_field(middle_name);
+    read_field(street);
+    read_field(house);
+    read_field(building);
+    read_field(flat);
 
-    skip_delimiters(buf, &i);
-    get_next_el(buf, &i, tmp);
-    _tcscpy(phone_no, tmp);
-
-    skip_delimiters(buf, &i);
-    get_next_el(buf, &i, tmp);
-    _tcscpy(address, tmp);
-
-    Abonent* new_abonent = create_abonent(id, name, phone_no, address);
+    Abonent* new_abonent = create_abonent(id, phone_no, family_name, name,
+                                          middle_name, street, house, building, flat);
     add_to_list(new_abonent);
     if ( id > last_id )
       last_id = id;
@@ -84,6 +81,8 @@ void FUNC_DECLARE init()
   last_id++;
   fclose(db_file);
 }
+
+#undef read_field
 
 void FUNC_DECLARE finalize()
 {
@@ -94,66 +93,33 @@ void FUNC_DECLARE finalize()
   while (iterator != NULL)
   {
     Abonent* abonent = iterator->abonent;
-    _ftprintf(db_file, TEXT("%d, %s, %s, %s\n"), abonent->id, abonent->name, abonent->phone_no, abonent->address);
+    _ftprintf(db_file, TEXT("%d, %s, %s, %s, %s, %s, %s, %s, %s\n"),
+              abonent->id, abonent->phone_no, abonent->family_name,
+              abonent->name, abonent->middle_name, abonent->street,
+              abonent->house, abonent->building, abonent->flat);
     iterator = iterator->next;
   }
   fclose(db_file);
 }
 
-DWORD FUNC_DECLARE find_by_name(DWORD *ids, DWORD max_num, LPCTSTR name)
+DWORD FUNC_DECLARE find_abonents(DWORD *ids, DWORD max_num, Abonent* ab)
 {
   DWORD count = -1;
-  Abonent* cmp_ab = create_abonent(0, name, NULL, NULL);
   List_element* begin = head;
   List_element* res = NULL;
-  while ( (res = find_element(begin, &cmp_name, cmp_ab)) != NULL )
+  while ( (res = find_element(begin, &cmp, ab)) != NULL )
   {
     count++;
     if ( count < max_num )
       ids[count] = res->abonent->id;
     begin = res->next;
   }
-  clear_abonent(cmp_ab);
-  return count + 1;
-}
-
-DWORD FUNC_DECLARE find_by_phone_no(DWORD *ids, DWORD max_num, LPCTSTR phone_no)
-{
-  DWORD count = -1;
-  Abonent* cmp_ab = create_abonent(0, NULL, phone_no, NULL);
-  List_element* begin = head;
-  List_element* res = NULL;
-  while ( (res = find_element(begin, &cmp_phone, cmp_ab)) != NULL )
-  {
-    count++;
-    if ( count < max_num )
-      ids[count] = res->abonent->id;
-    begin = res->next;
-  }
-  clear_abonent(cmp_ab);
-  return count + 1;
-}
-
-DWORD FUNC_DECLARE find_by_address(DWORD *ids, DWORD max_num, LPCTSTR address)
-{
-  DWORD count = -1;
-  Abonent* cmp_ab = create_abonent(0, NULL, NULL, address);
-  List_element* begin = head;
-  List_element* res = NULL;
-  while ( (res = find_element(begin, &cmp_address, cmp_ab)) != NULL )
-  {
-    count++;
-    if ( count < max_num )
-      ids[count] = res->abonent->id;
-    begin = res->next;
-  }
-  clear_abonent(cmp_ab);
   return count + 1;
 }
 
 BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
 {
-  Abonent* cmp_ab = create_abonent(id, NULL, NULL, NULL);
+  Abonent* cmp_ab = create_abonent(id);
   List_element* res = find_element(head, &cmp_id, cmp_ab);
   if (res == NULL)
     return false;
@@ -167,7 +133,7 @@ BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
 
 BOOL FUNC_DECLARE update_abonent(Abonent *abonent)
 {
-  Abonent* cmp_ab = create_abonent(abonent->id, NULL, NULL, NULL);
+  Abonent* cmp_ab = create_abonent(abonent->id);
   List_element* res = find_element(head, &cmp_id, cmp_ab);
   if (res == NULL)
     return false;
@@ -180,14 +146,16 @@ BOOL FUNC_DECLARE update_abonent(Abonent *abonent)
 
 DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent)
 {
-  Abonent* abonent = create_abonent(last_id++, new_abonent->name, new_abonent->phone_no, new_abonent->address);
+  Abonent* abonent = create_abonent(last_id++, new_abonent->phone_no, new_abonent->family_name,
+                                    new_abonent->name, new_abonent->middle_name, new_abonent->street,
+                                    new_abonent->house, new_abonent->building, new_abonent->flat);
   add_to_list(abonent);
   return abonent->id;
 }
 
 BOOL FUNC_DECLARE remove_abonent(DWORD id)
 {
-  Abonent* cmp_ab = create_abonent(id, NULL, NULL, NULL);
+  Abonent* cmp_ab = create_abonent(id);
   List_element* res = find_element(head, &cmp_id, cmp_ab);
   if (res == NULL)
     return false;
@@ -241,3 +209,29 @@ void remove_element(List_element* rem_el)
   free(rem_el);
 }
 
+BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  if ( reference_count == 0 )
+    init();
+
+  switch (fdwReason)
+  {
+    case DLL_PROCESS_ATTACH:
+      reference_count++;
+      break;
+    case DLL_PROCESS_DETACH:
+      reference_count--;
+      break;
+    case DLL_THREAD_ATTACH:
+      reference_count++;
+      break;
+    case DLL_THREAD_DETACH:
+      reference_count--;
+      break;
+  }
+
+  if ( reference_count == 0 )
+    finalize();
+
+  return TRUE;
+}

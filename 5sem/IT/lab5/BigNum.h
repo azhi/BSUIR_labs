@@ -23,6 +23,11 @@ class BigNum
     BigNum& karatsubaMultiply(BigNum& other);
     BigNum& pow(long power);
 
+    BigNum& add(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last);
+    BigNum& sub(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last);
+    BigNum& mul(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last);
+    BigNum& div(vector<ulong>& o_numbers, vector<ulong>::iterator first, vector<ulong>::iterator last);
+
     string to_string();
     vector<ulong> get_numbers() { return numbers; };
     void set_numbers(vector<ulong>& nums) { numbers.insert(numbers.begin(), nums.begin(), nums.end()); };
