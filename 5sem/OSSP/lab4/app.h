@@ -19,14 +19,13 @@ private:
   static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
                                   WPARAM wParam, LPARAM lParam);
 
-  void findByPhoneNo(LPCTSTR phone_no);
-  void findByName(LPCTSTR name);
-  void findByAddress(LPCTSTR address);
-  void insertAbonent(LPCTSTR phone_no, LPCTSTR name, LPCTSTR address);
+  void findAbonent(Abonent *abonent=NULL);
+  void insertAbonent(Abonent *abonent=NULL);
+  Abonent *loadAbonent();
 
   void initializeList(HWND hwndList);
   void updateList(DWORD *ids=NULL, DWORD num=0);
-  void updateStatus(LPCTSTR status);
+  void updateStatus(LPCTSTR status, BOOL in_progress=FALSE);
 
   HINSTANCE hInst;
   HWND hwnd;

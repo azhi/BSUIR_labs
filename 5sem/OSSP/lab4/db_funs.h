@@ -1,7 +1,7 @@
 #ifndef _DB_FUNS_H_
 #define _DB_FUNS_H_
 
-#include "DB.h"
+#include "abonent.h"
 
 typedef DWORD (*find_abonents_func)(DWORD *ids, DWORD max_num,
                                        Abonent* ab);

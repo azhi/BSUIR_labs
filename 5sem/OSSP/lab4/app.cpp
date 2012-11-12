@@ -9,13 +9,11 @@ enum {
   C_PHONE_NO,
   C_NAME,
   C_ADDRESS,
-  C_FIND_BY_PHONE_NO,
-  C_FIND_BY_NAME,
-  C_FIND_BY_ADDRESS,
+  C_FIND,
   C_INSERT,
   C_STATUSBAR,
   C_LIST,
-  C_DELETE_1 = 0x0100
+  C_DELETE
 };
 
 App::App(HINSTANCE hInst, LPCTSTR szAppTitle) : in_progress(FALSE),
@@ -36,16 +34,24 @@ App::App(HINSTANCE hInst, LPCTSTR szAppTitle) : in_progress(FALSE),
   if (!RegisterClass(&wc))
     throw;
 
-  hwnd = CreateWindow(szAppTitle, szAppTitle, WS_OVERLAPPEDWINDOW,
+  hwnd = CreateWindow(szAppTitle, szAppTitle,
+                      WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU |
+                      WS_MINIMIZEBOX,
                       CW_USEDEFAULT, CW_USEDEFAULT, 360, 420,
                       NULL, NULL, hInst, NULL);
 
   if (!hwnd)
     throw;
 
+
+  INITCOMMONCONTROLSEX icc = { dwSize : sizeof(icc),
+                               dwICC  : ICC_STANDARD_CLASSES };
+  InitCommonControlsEx(&icc);
+
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (long)this);
 
   db_w = DB_Wrapper(TEXT("DB.dll"));
+
 }
 
 void App::run(int nCmdShow)
@@ -60,13 +66,17 @@ void App::run(int nCmdShow)
   }
 }
 
-void App::findByPhoneNo(LPCTSTR phone_no)
+void App::findAbonent(Abonent *abonent)
 {
-  updateStatus(TEXT("Searching..."));
-  in_progress = TRUE;
+  BOOL bCr = abonent == NULL;
+  if (!abonent) {
+    abonent = loadAbonent();
+    printf("Abonent loaded.\n");
+  }
+
+  updateStatus(TEXT("Searching..."), TRUE);
   DWORD *ids = (DWORD *) malloc(sizeof(DWORD) * 256);
-  _tprintf(phone_no);
-  DWORD count = db_w.find_by_phone_no(ids, 256, phone_no);
+  DWORD count = 0;//db_w.find_abonents(ids, 256, abonent);
   if (count) {
     updateList(ids, count < 256 ? count : 256);
     LPTSTR status = (LPTSTR) malloc(sizeof(TCHAR) * 256);
@@ -78,53 +88,33 @@ void App::findByPhoneNo(LPCTSTR phone_no)
     updateStatus(TEXT("Sorry, no records found."));
   }
   free(ids);
+  if (bCr)
+    clear_abonent(abonent);
 }
 
-void App::findByName(LPCTSTR name)
-{
-  updateStatus(TEXT("Searching..."));
-  in_progress = TRUE;
-  DWORD *ids = (DWORD *) malloc(sizeof(DWORD) * 256);
-  DWORD count = db_w.find_by_name(ids, 256, name);
-  if (count) {
-    updateList(ids, count < 256 ? count : 256);
-    LPTSTR status = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-    _stprintf(status, TEXT("%d record(s) found."), count);
-    updateStatus(status);
-    free(status);
-  } else {
-    updateList();
-    updateStatus(TEXT("Sorry, no records found."));
+#define LOAD(c_id, where) {                    \
+    HWND hwndChld = GetDlgItem(hwnd, c_id);    \
+    GetWindowText(hwndChld, ab->where, 256);   \
   }
-  free(ids);
+
+Abonent *App::loadAbonent()
+{
+  Abonent *ab = create_abonent();
+  LOAD(C_PHONE_NO, phone_no);
+  LOAD(C_NAME, name);
+  LOAD(C_ADDRESS, street);
+  return ab;
 }
 
-void App::findByAddress(LPCTSTR address)
-{
-  updateStatus(TEXT("Searching..."));
-  in_progress = TRUE;
-  DWORD *ids = (DWORD *) malloc(sizeof(DWORD) * 256);
-  DWORD count = db_w.find_by_address(ids, 256, address);
-  if (count) {
-    updateList(ids, count < 256 ? count : 256);
-    LPTSTR status = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-    _stprintf(status, TEXT("%d record(s) found."), count);
-    updateStatus(status);
-    free(status);
-  } else {
-    updateList();
-    updateStatus(TEXT("Sorry, no records found."));
-  }
-  free(ids);
-}
+#undef LOAD
 
-void App::insertAbonent(LPCTSTR phone_no, LPCTSTR name, LPCTSTR address)
+void App::insertAbonent(Abonent *abonent)
 {
-  Abonent ab = { id       : 0,
-                 name     : const_cast<LPTSTR>(name),
-                 phone_no : const_cast<LPTSTR>(phone_no),
-                 address  : const_cast<LPTSTR>(address) };
-  DWORD id = db_w.insert_abonent(&ab);
+  BOOL bCr = abonent == NULL;
+  if (!abonent)
+    abonent = loadAbonent();
+
+  DWORD id = 0;//db_w.insert_abonent(abonent);
 
   if (id == -1)
     throw;
@@ -133,41 +123,36 @@ void App::insertAbonent(LPCTSTR phone_no, LPCTSTR name, LPCTSTR address)
   _stprintf(status, TEXT("Record with id %d created."), id);
   updateStatus(status);
   free(status);
+
+  if(bCr)
+    clear_abonent(abonent);
 }
 
-void App::updateStatus(LPCTSTR status)
+void App::updateStatus(LPCTSTR status, BOOL in_progress)
 {
-  in_progress = FALSE;
+  this->in_progress = in_progress;
   HWND hwndStatus = GetDlgItem(hwnd, C_STATUSBAR);
   SetWindowText(hwndStatus, status);
 }
 
+#define INS_CLMN(_i, _str, _cx)                 \
+  lvC.pszText = const_cast<LPTSTR>(TEXT(_str)); \
+  lvC.cx = _cx;                                 \
+  lvC.iSubItem = _i;                            \
+  ListView_InsertColumn(hwndList, _i, &lvC);
+
 void App::initializeList(HWND hwndList)
 {
   LV_COLUMN lvC = { mask : LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM,
-                    fmt  : LVCFMT_LEFT,
-                    cx   : 75 };
+                    fmt  : LVCFMT_LEFT };
 
-  lvC.pszText = const_cast<LPTSTR>(TEXT("id"));
-  lvC.cx = 24;
-  lvC.iSubItem = 0;
-  ListView_InsertColumn(hwndList, 0, &lvC);
-
-  lvC.cx = 80;
-  lvC.pszText = const_cast<LPTSTR>(TEXT("Phone no."));
-  lvC.iSubItem = 1;
-  ListView_InsertColumn(hwndList, 1, &lvC);
-
-  lvC.cx = 100;
-
-  lvC.pszText = const_cast<LPTSTR>(TEXT("Name"));
-  lvC.iSubItem = 2;
-  ListView_InsertColumn(hwndList, 2, &lvC);
-
-  lvC.pszText = const_cast<LPTSTR>(TEXT("Address"));
-  lvC.iSubItem = 3;
-  ListView_InsertColumn(hwndList, 3, &lvC);
+  INS_CLMN(0, "id", 24);
+  INS_CLMN(1, "Phone no.", 80);
+  INS_CLMN(2, "Name", 100);
+  INS_CLMN(3, "Address", 100);
 }
+
+#undef INS_CLMN
 
 void App::updateList(DWORD *ids, DWORD num)
 {
@@ -192,13 +177,12 @@ void App::updateList(DWORD *ids, DWORD num)
     lvI.pszText = (LPTSTR) malloc(sizeof(TCHAR) * 256);
     lvI.iItem = i;
     _stprintf(lvI.pszText, TEXT("%d"), ids[i]);
-
     ListView_InsertItem(hwndList, &lvI);
     free(lvI.pszText);
 
     ListView_SetItemText(hwndList, i, 1, ab->phone_no);
     ListView_SetItemText(hwndList, i, 2, ab->name);
-    ListView_SetItemText(hwndList, i, 3, ab->address);
+    ListView_SetItemText(hwndList, i, 3, ab->street);
   }
 
   clear_abonent(ab);
@@ -212,14 +196,15 @@ LRESULT CALLBACK App::WndProc(HWND hwnd, UINT msg,
                               WPARAM wParam, LPARAM lParam)
 {
   App *self((App*)GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+  Abonent *ab;
+
   LPTSTR name, phone_no, address;
   HWND hwndChld;
   long len;
 
   switch(msg) {
   case WM_CREATE:
-
-    InitCommonControls();
 
     CreateWindow(WC_EDIT, TEXT(""),
                  WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -237,20 +222,10 @@ LRESULT CALLBACK App::WndProc(HWND hwnd, UINT msg,
                  hwnd, (HMENU) C_ADDRESS, NULL, NULL);
 
 
-    CreateWindow(WC_BUTTON, TEXT("Find by phone no"),
+    CreateWindow(WC_BUTTON, TEXT("Find"),
                  WS_VISIBLE | WS_CHILD,
                  140, 10, 200, 24,
-                 hwnd, (HMENU) C_FIND_BY_PHONE_NO, NULL, NULL);
-
-    CreateWindow(WC_BUTTON, TEXT("Find by name"),
-                 WS_VISIBLE | WS_CHILD,
-                 140, 35, 200, 24,
-                 hwnd, (HMENU) C_FIND_BY_NAME, NULL, NULL);
-
-    CreateWindow(WC_BUTTON, TEXT("Find by address"),
-                 WS_VISIBLE | WS_CHILD,
-                 140, 60, 200, 24,
-                 hwnd, (HMENU) C_FIND_BY_ADDRESS, NULL, NULL);
+                 hwnd, (HMENU) C_FIND, NULL, NULL);
 
     CreateWindow(WC_BUTTON, TEXT("Insert"),
                  WS_VISIBLE | WS_CHILD,
@@ -275,54 +250,16 @@ LRESULT CALLBACK App::WndProc(HWND hwnd, UINT msg,
       break;
 
     switch(LOWORD(wParam)) {
-    case C_FIND_BY_PHONE_NO:
-      hwndChld = GetDlgItem(hwnd, C_PHONE_NO);
-      len = GetWindowTextLength(hwndChld) + 1;
-      phone_no = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-      GetWindowText(hwndChld, phone_no, len);
-      self->findByPhoneNo(phone_no);
-      free(phone_no);
-      break;
-
-    case C_FIND_BY_NAME:
-      hwndChld = GetDlgItem(hwnd, C_NAME);
-      len = GetWindowTextLength(hwndChld) + 1;
-      name = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-      GetWindowText(hwndChld, name, len);
-      self->findByName(name);
-      free(name);
-      break;
-
-    case C_FIND_BY_ADDRESS:
-      hwndChld = GetDlgItem(hwnd, C_ADDRESS);
-      len = GetWindowTextLength(hwndChld) + 1;
-      address = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-      GetWindowText(hwndChld, address, len);
-      self->findByAddress(address);
-      free(address);
+    case C_FIND:
+      //ab = self->loadAbonent();
+      self->findAbonent();
+      //clear_abonent(ab);
       break;
 
     case C_INSERT:
-      hwndChld = GetDlgItem(hwnd, C_PHONE_NO);
-      len = GetWindowTextLength(hwndChld) + 1;
-      phone_no = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-      GetWindowText(hwndChld, phone_no, len);
-
-      hwndChld = GetDlgItem(hwnd, C_NAME);
-      len = GetWindowTextLength(hwndChld) + 1;
-      name = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-      GetWindowText(hwndChld, name, len);
-
-      hwndChld = GetDlgItem(hwnd, C_ADDRESS);
-      len = GetWindowTextLength(hwndChld) + 1;
-      address = (LPTSTR) malloc(sizeof(TCHAR) * 256);
-      GetWindowText(hwndChld, address, len);
-
-      self->insertAbonent(phone_no, name, address);
-
-      free(phone_no);
-      free(name);
-      free(address);
+      //ab = self->loadAbonent();
+      self->insertAbonent();
+      //clear_abonent(ab);
       break;
     }
     break; // WM_COMMAND

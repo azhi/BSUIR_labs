@@ -2,10 +2,12 @@
 
 #include "abonent.h"
 
-Abonent* create_abonent(DWORD id=0, LPCTSTR phone_no=NULL, LPCTSTR family_name=NULL,
-                        LPCTSTR name=NULL, LPCTSTR middle_name=NULL,
-                        LPCTSTR street=NULL, LPCTSTR house=NULL,
-                        LPCTSTR building=NULL, LPCTSTR flat=NULL)
+LPTSTR init_field(LPTSTR &field, LPCTSTR value);
+
+Abonent* create_abonent(DWORD id, LPCTSTR phone_no, LPCTSTR family_name,
+                        LPCTSTR name, LPCTSTR middle_name,
+                        LPCTSTR street, LPCTSTR house,
+                        LPCTSTR building, LPCTSTR flat)
 {
   Abonent *abonent = (Abonent*) malloc(sizeof(Abonent));
   abonent->id = id;
@@ -20,7 +22,7 @@ Abonent* create_abonent(DWORD id=0, LPCTSTR phone_no=NULL, LPCTSTR family_name=N
   return abonent;
 }
 
-LPTSTR init_field(LPTSTR field, LPCTSTR value)
+LPTSTR init_field(LPTSTR &field, LPCTSTR value)
 {
   field = (LPTSTR) calloc(sizeof(TCHAR), 256);
   if (value != NULL)
