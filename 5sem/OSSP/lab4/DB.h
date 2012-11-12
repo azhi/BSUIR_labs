@@ -4,6 +4,8 @@
 #include <tchar.h>
 #include <windows.h>
 
+#include "abonent.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,14 +15,6 @@ extern "C" {
 #else
 #define FUNC_DECLARE __declspec(dllimport)
 #endif
-
-typedef struct _Abonent
-{
-  DWORD id;
-  LPTSTR name;
-  LPTSTR phone_no;
-  LPTSTR address;
-} Abonent;
 
 void FUNC_DECLARE init();
 void FUNC_DECLARE finalize();
@@ -37,6 +31,7 @@ DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent);
 
 BOOL FUNC_DECLARE remove_abonent(DWORD id);
 
+#ifdef BUILDING_DLL
 
 typedef struct _List_element
 {
@@ -47,11 +42,11 @@ typedef struct _List_element
 
 typedef BOOL (*cmp_func)(const Abonent* a1, const Abonent* a2);
 
-Abonent* create_abonent(DWORD id, LPCTSTR name, LPCTSTR phone, LPCTSTR address);
-void clear_abonent(Abonent* abonent);
 void add_to_list(Abonent* abonent);
 List_element* find_element(List_element* begin, cmp_func cmp, Abonent* cmp_ab);
 void remove_element(List_element* rem_el);
+
+#endif
 
 #ifdef __cplusplus
 }
