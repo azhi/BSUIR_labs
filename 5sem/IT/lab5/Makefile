@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -std=c++0x
+CFLAGS=-c -O3 -std=c++0x
 LDFLAGS=-lm
 CPP_SOURCES=$(wildcard *.cpp)
 OBJECTS=$(CPP_SOURCES:.cpp=.o)
