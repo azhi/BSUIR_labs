@@ -42,10 +42,10 @@ typedef struct _List_element
   _List_element* next;
 } List_element;
 
-typedef BOOL (*cmp_func)(const Abonent* a1, const Abonent* a2);
+typedef DWORD (*cmp_func)(const Abonent* a1, const Abonent* a2);
 
 void add_to_list(Abonent* abonent);
-List_element* find_element(List_element* begin, cmp_func cmp, Abonent* cmp_ab);
+List_element* find_element(List_element* begin, cmp_func cmp, Abonent* cmp_ab, int* sim_level);
 void remove_element(List_element* rem_el);
 
 #endif

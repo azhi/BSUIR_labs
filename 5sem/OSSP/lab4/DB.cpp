@@ -5,15 +5,64 @@
 List_element *head, *tail;
 int last_id;
 
-BOOL cmp_id(const Abonent* a1, const Abonent* a2)
+DWORD cmp_id(const Abonent* a1, const Abonent* a2)
 {
   return a1->id == a2->id;
 }
 
-BOOL cmp(const Abonent* a1, const Abonent* a2)
+#define str_equal(s1, s2)\
+  (_tcscmp(s1, s2) == 0)
+
+#define str_similar(s1, s2)\
+  (_tcsstr(s1, s2) != NULL)
+
+#define abonent_all_equal(ab1, ab2)\
+  str_equal(ab1->phone_no, ab2->phone_no) &&\
+  str_equal(ab1->family_name, ab2->family_name) &&\
+  str_equal(ab1->name, ab2->name) &&\
+  str_equal(ab1->middle_name, ab2->middle_name) &&\
+  str_equal(ab1->street, ab2->street) &&\
+  str_equal(ab1->house, ab2->house) &&\
+  str_equal(ab1->building, ab2->building) &&\
+  str_equal(ab1->flat, ab2->flat)
+
+#define abonent_some_equal(ab1, ab2)\
+  str_equal(ab1->phone_no, ab2->phone_no) ||\
+  str_equal(ab1->family_name, ab2->family_name) ||\
+  str_equal(ab1->name, ab2->name) ||\
+  str_equal(ab1->middle_name, ab2->middle_name) ||\
+  str_equal(ab1->street, ab2->street) ||\
+  str_equal(ab1->house, ab2->house) ||\
+  str_equal(ab1->building, ab2->building) ||\
+  str_equal(ab1->flat, ab2->flat)
+
+#define abonent_some_similar(ab1, ab2)\
+  ( ab2->phone_no[0] != '\0' && str_similar(ab1->phone_no, ab2->phone_no) ) ||\
+  ( ab2->family_name[0] != '\0' && str_similar(ab1->family_name, ab2->family_name) ) ||\
+  ( ab2->name[0] != '\0' && str_similar(ab1->name, ab2->name) ) ||\
+  ( ab2->middle_name[0] != '\0' && str_similar(ab1->middle_name, ab2->middle_name) ) ||\
+  ( ab2->street[0] != '\0' && str_similar(ab1->street, ab2->street) ) ||\
+  ( ab2->house[0] != '\0' && str_similar(ab1->house, ab2->house) ) ||\
+  ( ab2->building[0] != '\0' && str_similar(ab1->building, ab2->building) ) ||\
+  ( ab2->flat[0] != '\0' && str_similar(ab1->flat, ab2->flat) )
+
+
+DWORD cmp(const Abonent* a1, const Abonent* a2)
 {
-  return a1->id == a2->id;
+  if ( abonent_all_equal(a1, a2) )
+    return 3;
+  if ( abonent_some_equal(a1, a2) )
+    return 2;
+  if ( abonent_some_similar(a1, a2) )
+    return 1;
+  return 0;
 }
+
+#undef str_equal
+#undef str_similar
+#undef abonent_all_equal
+#undef abonent_some_equal
+#undef abonent_some_similar
 
 void get_next_el(LPCTSTR buf, int* pi, LPTSTR res)
 {
@@ -32,16 +81,15 @@ void skip_delimiters(LPCTSTR buf, int* pi)
     (*pi)++;
 }
 
-#define read_field(LPTSTR field)
+#define read_field(field)\
   skip_delimiters(buf, &i);\
   get_next_el(buf, &i, tmp);\
   _tcscpy(field, tmp);
 
-void FUNC_DECLARE init()
+void init()
 {
-  _tprintf(TEXT("initing\n"));
   head = NULL; tail = NULL;
-  last_id = 0;
+  last_id = -1;
   FILE *db_file = _tfopen(TEXT("phones.db"), TEXT("rb"));
   if ( db_file == NULL )
     return;
@@ -58,6 +106,7 @@ void FUNC_DECLARE init()
     TCHAR house[256];
     TCHAR building[256];
     TCHAR flat[256];
+    TCHAR tmp[256];
 
     int i = 0, count = 0;
     get_next_el(buf, &i, tmp);
@@ -84,7 +133,7 @@ void FUNC_DECLARE init()
 
 #undef read_field
 
-void FUNC_DECLARE finalize()
+void finalize()
 {
   FILE *db_file = _tfopen(TEXT("phones.db"), TEXT("wb"));
   if ( db_file == NULL )
@@ -102,31 +151,60 @@ void FUNC_DECLARE finalize()
   fclose(db_file);
 }
 
+#define copy_res_array(sub_ar_index)\
+  for ( int j = 0; j < counts[sub_ar_index]; ++j )\
+    ids[fill++] = level_ids[sub_ar_index][j];
+
 DWORD FUNC_DECLARE find_abonents(DWORD *ids, DWORD max_num, Abonent* ab)
 {
   DWORD count = -1;
+  DWORD** level_ids = (DWORD**) malloc(sizeof(DWORD*) * 3);
+  for ( int i = 0; i < 3; ++i )
+    level_ids[i] = (DWORD*) malloc(sizeof(DWORD) * max_num);
+  DWORD* counts = (DWORD*) calloc(sizeof(DWORD), 3);
   List_element* begin = head;
   List_element* res = NULL;
-  while ( (res = find_element(begin, &cmp, ab)) != NULL )
+  int similar_level = 0;
+  while ( (res = find_element(begin, &cmp, ab, &similar_level)) != NULL )
   {
     count++;
-    if ( count < max_num )
-      ids[count] = res->abonent->id;
+    if ( count >= max_num )
+      break;
+    level_ids[similar_level - 1][ counts[similar_level - 1]++ ] = res->abonent->id;
     begin = res->next;
   }
+
+  DWORD fill = 0;
+  copy_res_array(2);
+  copy_res_array(1);
+  copy_res_array(0);
+
+  for ( int i = 0; i < 3; ++i )
+    free(level_ids[i]);
+  free(level_ids);
+  free(counts);
   return count + 1;
 }
+
+#define copy_abonent_fields(ab1, ab2)\
+  _tcscpy(ab1->phone_no, ab2->phone_no);\
+  _tcscpy(ab1->family_name, ab2->family_name);\
+  _tcscpy(ab1->name, ab2->name);\
+  _tcscpy(ab1->middle_name, ab2->middle_name);\
+  _tcscpy(ab1->street, ab2->street);\
+  _tcscpy(ab1->house, ab2->house);\
+  _tcscpy(ab1->building, ab2->building);\
+  _tcscpy(ab1->flat, ab2->flat);
+
 
 BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
 {
   Abonent* cmp_ab = create_abonent(id);
-  List_element* res = find_element(head, &cmp_id, cmp_ab);
+  List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
   if (res == NULL)
     return false;
   abonent->id = res->abonent->id;
-  _tcscpy(abonent->name, res->abonent->name);
-  _tcscpy(abonent->phone_no, res->abonent->phone_no);
-  _tcscpy(abonent->address, res->abonent->address);
+  copy_abonent_fields(abonent, res->abonent);
   clear_abonent(cmp_ab);
   return true;
 }
@@ -134,15 +212,15 @@ BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
 BOOL FUNC_DECLARE update_abonent(Abonent *abonent)
 {
   Abonent* cmp_ab = create_abonent(abonent->id);
-  List_element* res = find_element(head, &cmp_id, cmp_ab);
+  List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
   if (res == NULL)
     return false;
-  _tcscpy(res->abonent->name, abonent->name);
-  _tcscpy(res->abonent->phone_no, abonent->phone_no);
-  _tcscpy(res->abonent->address, abonent->address);
+  copy_abonent_fields(res->abonent, abonent);
   clear_abonent(cmp_ab);
   return true;
 }
+
+#undef copy_abonent_fields
 
 DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent)
 {
@@ -156,7 +234,7 @@ DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent)
 BOOL FUNC_DECLARE remove_abonent(DWORD id)
 {
   Abonent* cmp_ab = create_abonent(id);
-  List_element* res = find_element(head, &cmp_id, cmp_ab);
+  List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
   if (res == NULL)
     return false;
   remove_element(res);
@@ -183,13 +261,14 @@ void add_to_list(Abonent* abonent)
   }
 }
 
-List_element* find_element(List_element* begin, cmp_func cmp, Abonent* cmp_ab)
+List_element* find_element(List_element* begin, cmp_func cmp, Abonent* cmp_ab, int* sim_level)
 {
   List_element* iterator = begin;
-  while (iterator != NULL && !cmp(iterator->abonent, cmp_ab))
-  {
+  int similar_level = 0;
+  while (iterator != NULL && ( similar_level = cmp(iterator->abonent, cmp_ab) ) == 0)
     iterator = iterator->next;
-  }
+  if ( sim_level != NULL )
+    *sim_level = similar_level;
   return iterator;
 }
 
