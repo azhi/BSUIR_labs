@@ -194,6 +194,9 @@ void BigNum::divmod(vector<long long>& numbers, vector<long long>& o_numbers, ve
     u[j] = 0;
 
   long long chk;
+  rem.reserve(m + n);
+  for ( long i = 0; i < n; ++i )
+    rem.push_back(0);
   short_divmod(u, vec_d[0], rem, &chk, base);
   if ( chk != 0 )
     throw invalid_argument("error while scaling back to 1/d");
@@ -204,15 +207,12 @@ void BigNum::short_divmod(vector<long long>& numbers, long long short_num, vecto
   trim_num_zeroes(numbers);
   long n = numbers.size();
 
-  quo.reserve(n);
-  for ( long i = 0; i < n; ++i )
-    quo.push_back(0);
   long j = n - 1;
   long long div = 0;
   while ( j > -1 )
   {
     div += numbers[j];
-    if ( numbers[j] < short_num )
+    if ( div < short_num )
       quo[j] = 0;
     else
     {
@@ -224,7 +224,7 @@ void BigNum::short_divmod(vector<long long>& numbers, long long short_num, vecto
   }
 
   if ( rem != NULL )
-    (*rem) = div;
+    (*rem) = div / base;
 }
 
 vector<long long>& BigNum::kmul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
@@ -438,12 +438,23 @@ void BigNum::trim_zeroes()
 string BigNum::to_string()
 {
   stringstream ss;
-  vector<long long>::reverse_iterator it = numbers.rbegin();
-  while ( it != numbers.rend() )
+  vector<long long> quo;
+  quo.insert(quo.begin(), numbers.begin(), numbers.end());
+  long long rem;
+
+  short_divmod(quo, 10, quo, &rem, base);
+  trim_num_zeroes(quo);
+  while ( quo[0] != 0 || quo.size() > 1 )
   {
-    ss << (*it) << " ";
-    ++it;
+    ss << rem;
+    short_divmod(quo, 10, quo, &rem, base);
+    trim_num_zeroes(quo);
   }
-  string res = ss.str();
+  ss << rem;
+  string rev_res = ss.str();
+  string res;
+  string::reverse_iterator sym;
+  for ( sym = rev_res.rbegin(); sym < rev_res.rend(); sym++ )
+    res += (*sym);
   return res;
 }
