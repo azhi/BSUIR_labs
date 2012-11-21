@@ -16,20 +16,20 @@ class BigNum
     BigNum(long long base, string str_nums);
     virtual ~BigNum();
 
-    BigNum& operator+(BigNum& other);
-    BigNum& operator-(BigNum& other);
-    BigNum& operator*(BigNum& other);
-    BigNum& operator/(BigNum& other);
-    BigNum& operator%(BigNum& other);
-    BigNum& karatsubaMultiply(BigNum& other);
-    BigNum& pow(long power);
+    BigNum operator+(BigNum& other);
+    BigNum operator-(BigNum& other);
+    BigNum operator*(BigNum& other);
+    BigNum operator/(BigNum& other);
+    BigNum operator%(BigNum& other);
+    BigNum karatsubaMultiply(BigNum& other);
+    BigNum pow(long power);
 
-    static vector<long long>& add(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
-    static vector<long long>& sub(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
-    static vector<long long>& mul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
+    static vector<long long> add(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
+    static vector<long long> sub(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
+    static vector<long long> mul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
     static void divmod(vector<long long>& numbers, vector<long long>& o_numbers, vector<long long>& quo, vector<long long>& rem, long long base);
     static void short_divmod(vector<long long>& numbers, long long short_num, vector<long long>& quo, long long* rem, long long base);
-    static vector<long long>& kmul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
+    static vector<long long> kmul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base);
     static void lshift(vector<long long>* numbers, long count);
     static void split_number(IPos begin, IPos end, vector<long long>& src, IPos* middle, long count);
     static void trim_num_zeroes(vector<long long>& nums);

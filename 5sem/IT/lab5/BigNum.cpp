@@ -38,9 +38,9 @@ BigNum::~BigNum()
 {
 }
 
-vector<long long>& BigNum::add(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
+vector<long long> BigNum::add(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
 {
-  vector<long long>* res_numbers = new vector<long long>;
+  vector<long long> res_numbers;
   long j = 0; char k = 0;
   IPos m_pos = begin;
   IPos o_pos = o_begin;
@@ -50,23 +50,23 @@ vector<long long>& BigNum::add(vector<long long>& numbers, IPos begin, IPos end,
   {
     long long s1 = m_pos < end ? (*(m_pos++)) : 0;
     long long s2 = o_pos < o_end ? (*(o_pos++)) : 0;
-    res_numbers->push_back(s1 + s2 + k);
-    if ( (*res_numbers)[j] >= base )
+    res_numbers.push_back(s1 + s2 + k);
+    if ( res_numbers[j] >= base )
     {
-      (*res_numbers)[j] -= base;
+      res_numbers[j] -= base;
       k = 1;
     }
     else
       k = 0;
     ++j;
   }
-  res_numbers->push_back(k);
-  return (*res_numbers);
+  res_numbers.push_back(k);
+  return res_numbers;
 }
 
-vector<long long>& BigNum::sub(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
+vector<long long> BigNum::sub(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
 {
-  vector<long long>* res_numbers = new vector<long long>;
+  vector<long long> res_numbers;
   long j = 0; char k = 0;
   IPos m_pos = begin;
   IPos o_pos = o_begin;
@@ -84,26 +84,26 @@ vector<long long>& BigNum::sub(vector<long long>& numbers, IPos begin, IPos end,
     }
     else
       k = 0;
-    res_numbers->push_back(num);
+    res_numbers.push_back(num);
     ++j;
   }
   
   if ( k == 1 )
     throw invalid_argument("First operand should be greater than the second one");
 
-  return (*res_numbers);
+  return res_numbers;
 }
 
-vector<long long>& BigNum::mul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
+vector<long long> BigNum::mul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
 {
   long start_i = begin - numbers.begin();
   long start_j = o_begin - o_numbers.begin();
   long m = end - begin;
   long n = o_end - o_begin;
 
-  vector<long long>* res_numbers = new vector<long long>;
+  vector<long long> res_numbers;
   for(long i = 0; i < m + n; ++i)
-    res_numbers->push_back(0);
+    res_numbers.push_back(0);
 
   long j = start_j;
   while ( j < start_j + n )
@@ -115,19 +115,19 @@ vector<long long>& BigNum::mul(vector<long long>& numbers, IPos begin, IPos end,
       while ( i < start_i + m )
       {
         long res_index = i + j - start_i - start_j;
-        long long t = o_numbers[j] * numbers[i] + (*res_numbers)[res_index] + k;
-        (*res_numbers)[res_index] = t % base;
+        long long t = o_numbers[j] * numbers[i] + res_numbers[res_index] + k;
+        res_numbers[res_index] = t % base;
         k = t / base;
         ++i;
       }
-      (*res_numbers)[j + m - start_j] = k;
+      res_numbers[j + m - start_j] = k;
     }
     else
-      (*res_numbers)[j + m - start_j] = 0;
+      res_numbers[j + m - start_j] = 0;
     ++j;
   }
 
-  return (*res_numbers);
+  return res_numbers;
 }
 
 void BigNum::divmod(vector<long long>& numbers, vector<long long>& o_numbers, vector<long long>& quo, vector<long long>& rem, long long base)
@@ -227,26 +227,26 @@ void BigNum::short_divmod(vector<long long>& numbers, long long short_num, vecto
     (*rem) = div / base;
 }
 
-vector<long long>& BigNum::kmul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
+vector<long long> BigNum::kmul(vector<long long>& numbers, IPos begin, IPos end, vector<long long>& o_numbers, IPos o_begin, IPos o_end, long long base)
 {
   if ( (end - begin) <= 1 && (o_end - o_begin) <= 1 )
   {
-    vector<long long>* res_numbers = new vector<long long>;
+    vector<long long> res_numbers;
     long long m1 = (end - begin) == 1 ? (*begin) : 0;
     long long m2 = (o_end - o_begin) == 1 ? (*o_begin) : 0;
-    res_numbers->push_back(m1 * m2);
+    res_numbers.push_back(m1 * m2);
 
-    long long div = (*res_numbers)[0] / base;
+    long long div = res_numbers[0] / base;
     long i = 0;
     while ( div != 0 )
     {
-      (*res_numbers)[i] %= base;
-      res_numbers->push_back(div);
+      res_numbers[i] %= base;
+      res_numbers.push_back(div);
       ++i;
-      div = (*res_numbers)[i] / base;
+      div = res_numbers[i] / base;
     }
 
-    return (*res_numbers);
+    return res_numbers;
   }
 
   long size = max(end - begin, o_end - o_begin);
@@ -257,39 +257,23 @@ vector<long long>& BigNum::kmul(vector<long long>& numbers, IPos begin, IPos end
   split_number(begin, end, numbers, &middle, count);
   split_number(o_begin, o_end, o_numbers, &o_middle, count);
 
-  clock_t t1 = clock();
   vector<long long> u1mv1 = kmul(numbers, middle, end, o_numbers, o_middle, o_end, base);
-  clock_t t2 = clock();
   vector<long long> u0mv0 = kmul(numbers, begin, middle, o_numbers, o_begin, o_middle, base);
-  clock_t t3 = clock();
   vector<long long> u1au0 = add(numbers, middle, end, numbers, begin, middle, base);
   trim_num_zeroes(u1au0);
   vector<long long> v1av0 = add(o_numbers, o_middle, o_end, o_numbers, o_begin, o_middle, base);
   trim_num_zeroes(v1av0);
-  clock_t t4 = clock();
   vector<long long> umv = full_kmul(u1au0, v1av0, base);
-  clock_t t5 = clock();
 
   vector<long long> sum2 = full_sub(umv, u0mv0, base);
   sum2 = full_sub(sum2, u1mv1, base);
-  clock_t t6 = clock();
 
   lshift(&u1mv1, count * 2);
   lshift(&sum2, count);
 
-  vector<long long>& res = full_add(u1mv1, sum2, base);
+  vector<long long> res = full_add(u1mv1, sum2, base);
   res = full_add(res, u0mv0, base);
   trim_num_zeroes(res);
-  // if ( t2 - t1 > 0 )
-  //   cout << "1-2: " << t2 - t1 << endl;
-  // if ( t3 - t2 > 0 )
-  //   cout << "2-3: " << t3 - t2 << endl;
-  // if ( t4 - t3 > 0 )
-  //   cout << "3-4: " << t4 - t3 << endl;
-  // if ( t5 - t4 > 0 )
-  //   cout << "4-5: " << t5 - t4 << endl;
-  // if ( t6 - t5 > 0 )
-  //   cout << "5-6: " << t6 - t5 << endl;
   return res;
 }
 
@@ -310,46 +294,43 @@ void BigNum::split_number(IPos begin, IPos end, vector<long long>& src, IPos* mi
     (*middle) = begin + count;
 }
 
-BigNum& BigNum::operator+(BigNum& other)
+BigNum BigNum::operator+(BigNum& other)
 {
   if ( base != other.get_base() )
     throw invalid_argument("Both operands should be in one base");
 
   vector<long long> o_numbers = other.get_numbers();
-  vector<long long>& res_numbers = full_add(numbers, o_numbers, base);
-  BigNum* res = new BigNum(base, res_numbers);
-  res->trim_zeroes();
-  delete (&res_numbers);
-  return (*res);
+  vector<long long> res_numbers = full_add(numbers, o_numbers, base);
+  BigNum res(base, res_numbers);
+  res.trim_zeroes();
+  return res;
 }
 
-BigNum& BigNum::operator-(BigNum& other)
+BigNum BigNum::operator-(BigNum& other)
 {
   if ( base != other.get_base() )
     throw invalid_argument("Both operands should be in one base");
 
   vector<long long> o_numbers = other.get_numbers();
-  vector<long long>& res_numbers = full_sub(numbers, o_numbers, base);
-  BigNum* res = new BigNum(base, res_numbers);
-  res->trim_zeroes();
-  delete (&res_numbers);
-  return (*res);
+  vector<long long> res_numbers = full_sub(numbers, o_numbers, base);
+  BigNum res(base, res_numbers);
+  res.trim_zeroes();
+  return res;
 }
 
-BigNum& BigNum::operator*(BigNum& other)
+BigNum BigNum::operator*(BigNum& other)
 {
   if ( base != other.get_base() )
     throw invalid_argument("Both operands should be in one base");
 
   vector<long long> o_numbers = other.get_numbers();
-  vector<long long>& res_numbers = full_mul(numbers, o_numbers, base);
-  BigNum* res = new BigNum(base, res_numbers);
-  res->trim_zeroes();
-  delete (&res_numbers);
-  return (*res);
+  vector<long long> res_numbers = full_mul(numbers, o_numbers, base);
+  BigNum res(base, res_numbers);
+  res.trim_zeroes();
+  return res;
 }
 
-BigNum& BigNum::operator/(BigNum& other)
+BigNum BigNum::operator/(BigNum& other)
 {
   if ( base != other.get_base() )
     throw invalid_argument("Both operands should be in one base");
@@ -359,20 +340,20 @@ BigNum& BigNum::operator/(BigNum& other)
   {
     vector<long long> q;
     q.push_back(0);
-    BigNum* big_q = new BigNum(base, q);
-    return (*big_q);
+    BigNum big_q(base, q);
+    return big_q;
   }
 
   vector<long long> q;
   vector<long long> r;
   full_div(numbers, o_numbers, q, r, base);
 
-  BigNum* big_q = new BigNum(base, q);
-  big_q->trim_zeroes();
-  return (*big_q);
+  BigNum big_q(base, q);
+  big_q.trim_zeroes();
+  return big_q;
 }
 
-BigNum& BigNum::operator%(BigNum& other)
+BigNum BigNum::operator%(BigNum& other)
 {
   if ( base != other.get_base() )
     throw invalid_argument("Both operands should be in one base");
@@ -385,26 +366,25 @@ BigNum& BigNum::operator%(BigNum& other)
   vector<long long> r;
   full_div(numbers, o_numbers, q, r, base);
 
-  BigNum* big_r = new BigNum(base, r);
-  big_r->trim_zeroes();
-  return (*big_r);
+  BigNum big_r(base, r);
+  big_r.trim_zeroes();
+  return big_r;
 }
 
-BigNum& BigNum::karatsubaMultiply(BigNum& other)
+BigNum BigNum::karatsubaMultiply(BigNum& other)
 {
   if ( base != other.get_base() )
     throw invalid_argument("Both operands should be in one base");
 
   trim_zeroes(); other.trim_zeroes();
   vector<long long> o_numbers = other.get_numbers();
-  vector<long long>& res_numbers = full_kmul(numbers, o_numbers, base);
-  BigNum* res = new BigNum(base, res_numbers);
-  res->trim_zeroes();
-  delete (&res_numbers);
-  return (*res);
+  vector<long long> res_numbers = full_kmul(numbers, o_numbers, base);
+  BigNum res(base, res_numbers);
+  res.trim_zeroes();
+  return res;
 }
 
-BigNum& BigNum::pow(long power)
+BigNum BigNum::pow(long power)
 {
   if ( power == 1 )
     return (*this);
