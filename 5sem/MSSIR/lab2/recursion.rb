@@ -17,103 +17,119 @@ def go_deeper! sexp = nil, vars = {}, level = 0
   case sexp.sexp_type
   when nil
     return
-  # TODO: strings with insertions ("#{}", etc.)
   when :const
-    puts ' ' * level + "Const: name=#{sexp[1].inspect}"
     # Name:     sexp[1]
+    puts ' ' * level + "Const: name=#{sexp[1].inspect}"
   when :hash, :array
-    puts ' ' * level + "Container: el=#{sexp.sexp_body}"
-    sexp.sexp_body.each{ |sexp| go_deeper! sexp, {}, level+1 }
     # Elements: sexp.sexp_body   ungrouped
+    puts ' ' * level + "C2ontainer: el=#{sexp.sexp_body}"
+    sexp.sexp_body.each{ |sexp| go_deeper! sexp, {}, level+1 }
   when :lit                      # number/sumbol/etc.
-    puts ' ' * level + "Literal: val=#{sexp[1].inspect}"
     # Value:    sexp[1]          s(:lit, 1) | s(:lit, :sym)
+    puts ' ' * level + "Literal: val=#{sexp[1].inspect}"
+  when :array
+    sexp.sexp_body.each{ |sexp| go_deeper! sexp, {}, level+1 }
+  when :dot2                     # range
+    # From, to  sexp[1,2]
+    go_deeper! sexp[1], {}, level+1
+    go_deeper! sexp[2], {}, level+1
   when :str
-    puts ' ' * level + "String: val=#{sexp[1].inspect}"
     # Value:    sexp[1]          s(:str, "string")
+    puts ' ' * level + "String: val=#{sexp[1].inspect}"
+  when :dstr
+    # Init_val  sexp[1]
+    # Concated  sexp[2..-1]      s(:evstr, expression) | s(:str "string")
+    sexp[2..-1].each do |sexp|
+      if sexp.sexp_type == :evstr
+        go_deeper! sexp[1]
+      else
+        go_deeper! sexp, {}, level+1
+      end
+    end
 
   when :lvar, :gvar, :ivar, :cvar
-    puts ' ' * level + "Var: name=#{sexp[1].inspect}"
     # Name:     sexp[1]
+    puts ' ' * level + "Var: name=#{sexp[1].inspect}"
   when :and, :or
+    # Args:     sexp[1..2]
     puts ' ' * level + "Logic op: name=#{sexp[1..2].inspect}"
     go_deeper! sexp[1], {}, level+1
     go_deeper! sexp[2], {}, level+1
-    # Args:     sexp[1..2]
   when :op_asgn_and, :op_asgn_or
-    puts ' ' * level + "Cond assignment: cond=#{sexp[1].inspect} asgn=#{sexp2.inspect}"
-    go_deeper! sexp[1], {}, level+1
-    go_deeper! sexp[2], {}, level+1
     # Cond:     sexp[1]          s(:?var, :name)
     # Asgn:     sexp[2]          s(:?asgn/:cvdecl, :name, :value)
+    puts ' ' * level + "Cond assignment: cond=#{sexp[1].inspect} asgn=#{sexp[2].inspect}"
+    go_deeper! sexp[1], {}, level+1
+    go_deeper! sexp[2], {}, level+1
   when :call
-    puts ' ' * level + "Call: obj=#{sexp[1].inspect} name=#{sexp[2].inspect} args=#{sexp[3..-1].inspect}"
-    go_deeper! sexp[1], {}, level+1 unless sexp[1].nil?
-    sexp[3..-1].each{ |sexp| go_deeper! sexp, {}, level+1 }
     # Object:   sexp[1]          may be an expression
     # Name:     sexp[2]
     # Args:     sexp[3..-1]
-  when :args
-    puts ' ' * level + "Args: el=#{sexp.sexp_body}"
-    sexp.sexp_body.each do |el|
-      if el.is_a?(Sexp)
-        go_deeper! el, {}, level+1 
-      else
-        # process argnames here
-      end
-    end
+    puts ' ' * level + "Call: obj=#{sexp[1].inspect} name=#{sexp[2].inspect} args=#{sexp[3..-1].inspect}"
+    go_deeper! sexp[1], {}, level+1 unless sexp[1].nil?
+    sexp[3..-1].each{ |sexp| go_deeper! sexp, {}, level+1 }
   when :iter
-    puts ' ' * level + "Iterator: obj=#{sexp[1].inspect} locals=#{sexp[2].inspect} body=#{sexp[3].inspect}"
-    go_deeper! sexp[1], {}, level+1
-    go_deeper! sexp[2], {}, level+1
-    go_deeper! sexp[3], {}, level+1
     # Object:   sexp[1]          Or s(:call, nil, :lambda)
     # Locals:   sexp[2]          s(:args, *names) | s(:args)
     # Body:     sexp[3]          block / expression
+    puts ' ' * level + "Iterator: obj=#{sexp[1].inspect} locals=#{sexp[2].inspect} body=#{sexp[3].inspect}"
+    go_deeper! sexp[1], {}, level+1 unless sexp[1] == s(:call, nil, :lambda)
+    # process locals here
+    go_deeper! sexp[3], {}, level+1
 
   when :if                       # and unless
+    # Cond:     sexp[1]
+    # Then:     sexp[2]          block / expression
+    # Else:     sexp[3]          block / expression
     puts ' ' * level + "Condition: cond=#{sexp[1].inspect} then=#{sexp[2].inspect} else=#{sexp[3].inspect}"
     go_deeper! sexp[1], {}, level+1
     go_deeper! sexp[2], {}, level+1
     go_deeper! sexp[3], {}, level+1
+  when :case
     # Cond:     sexp[1]
-    # Then:     sexp[2]          block / expression
-    # Else:     sexp[3]          block / expression
+    # When:     sexp[2..-2]      s(:when, s(:array, expression),
+    #                              block / expression)
+    # Else:     sexp[-1]         block / expression
+    go_deeper! sexp[1], {}, level+1
+    sexp[2..-2].each do |sexp|
+      go_deeper! sexp[1], {}, level+1
+      go_deeper! sexp[2], {}, level+1
+    end
+    go_deeper! sexp[-1], {}, level+1
 
   when :for
+    # Where:    sexp[1]          array / range
+    # What:     sexp[2]          s(:lasgn, :name)
+    # Body:     sexp[3]          block / expression
     puts ' ' * level + "For: where=#{sexp[1].inspect} what=#{sexp[2].inspect} body=#{sexp[3].inspect}"
     go_deeper! sexp[1], {}, level+1
     go_deeper! sexp[2], {}, level+1
     go_deeper! sexp[3], {}, level+1
-    # Where:    sexp[1]          array / range
-    # What:     sexp[2]          s(:lasgn, :name)
-    # Body:     sexp[3]          block / expression
   when :while, :until
-    puts ' ' * level + "Wh|unt loop: control=#{sexp[1].inspect} body=#{sexp[2].inspect}"
-    go_deeper! sexp[1], {}, level+1
-    go_deeper! sexp[2], {}, level+1
-    go_deeper! sexp[3], {}, level+1
     # Control:  sexp[1]
     # Body:     sexp[2]
     # ???:      sexp[3]          Always true
+    puts ' ' * level + "Wh|unt loop: control=#{sexp[1].inspect} body=#{sexp[2].inspect}"
+    go_deeper! sexp[1], {}, level+1
+    go_deeper! sexp[2], {}, level+1
 
   when :defn
-    puts ' ' * level + "Defn: name=#{sexp[1].inspect} args=#{sexp[2].inspect} body=#{sexp[3].inspect}"
-    go_deeper! sexp[2], {}, level+1
-    sexp[3..-1].each{ |sexp| go_deeper! sexp, {}, level+1 }
-    
     # Name:     sexp[1]
     # Args:     sexp[2]          s(:args, *arg_names, s(:block, *asgns))
-    # Body:     sexp[3]          s(:scope, s(:block, *))
+    # Body:     sexp[3]          *blocks
+    puts ' ' * level + "Defn: name=#{sexp[1].inspect} args=#{sexp[2].inspect} body=#{sexp[3..-1].inspect}"
+    #go_deeper! sexp[2], {}, level+1
+    sexp[3..-1].each{ |sexp| go_deeper! sexp, {}, level+1 }
+
   when :gasgn, :lasgn, :iasgn, :cvdecl
-    puts ' ' * level + "Assign: name=#{sexp[1].inspect} value=#{sexp[2].inspect}"
-    go_deeper! sexp[2], {}, level+1
     # Name:     sexp[1]
     # Value:    sexp[2]
+    puts ' ' * level + "Assign: name=#{sexp[1].inspect} value=#{sexp[2].inspect}"
+    go_deeper! sexp[2], {}, level+1
 
   when :return
-    puts ' ' * level + "return"
     # No params
+    puts ' ' * level + "return"
 
   when :nil
 
