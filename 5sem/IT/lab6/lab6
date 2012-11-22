@@ -84,10 +84,10 @@ class RSA
 
     def create_hacking r, ko
       phi = calc_phi r
+      raise "Bad ko" if ko.gcd(phi) != 1
       ks = extended_euclid ko, phi
 
-      raise "Bad ko" if ko.is_a?(Float) && !ko.finite?
-      raise "Bad ko" if ko.gcd(phi) != 1
+      raise "Bad ko or r" if ks.is_a?(Float) && !ks.finite?
       STDERR.puts "Secret key: #{ks}"
 
       new r, ko, ks
