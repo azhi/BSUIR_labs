@@ -14,6 +14,7 @@ public:
   update_abonent_func update_abonent;
   insert_abonent_func insert_abonent;
   remove_abonent_func remove_abonent;
+  last_error_func last_error;
 
 private:
   HINSTANCE dll_handle;

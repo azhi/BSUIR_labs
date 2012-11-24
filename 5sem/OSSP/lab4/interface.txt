@@ -1,17 +1,3 @@
-typedef struct _Abonent
-{
-  DWORD id;
-  LPTSTR name;
-  LPTSTR phone_no;
-  LPTSTR address;
-} Abonent;
-
-BOOL init();
-// initialize DB
-
-void finalize();
-// end DB session
-
 DWORD find_by_{name,phone_no,address}(DWORD *ids, DWORD max_num, LPCTSTR $1);
 // Returns number of matches
 
@@ -26,3 +12,6 @@ DWORD insert_abonent(Abonent *new_abonent);
 
 BOOL remove_abonent(DWORD id);
 // Returns 0 if failed
+
+BOOL last_error();
+// Returns true if some error accured

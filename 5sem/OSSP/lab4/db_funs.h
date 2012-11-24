@@ -13,4 +13,6 @@ typedef DWORD (*insert_abonent_func)(Abonent *new_abonent);
 
 typedef BOOL (*remove_abonent_func)(DWORD id);
 
+typedef BOOL (*last_error_func)();
+
 #endif /* _DB_FUNS_H_ */

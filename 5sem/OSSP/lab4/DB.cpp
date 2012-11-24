@@ -2,9 +2,6 @@
 
 #include <stdio.h>
 
-List_element *head, *tail;
-int last_id;
-
 DWORD cmp_id(const Abonent* a1, const Abonent* a2)
 {
   return a1->id == a2->id;
@@ -64,92 +61,133 @@ DWORD cmp(const Abonent* a1, const Abonent* a2)
 #undef abonent_some_equal
 #undef abonent_some_similar
 
-void get_next_el(LPCTSTR buf, int* pi, LPTSTR res)
+void init()
+{
+  printf("initing\n");
+  last_id = -1;
+  mapAddingCapacity = ADDING_CAPACITY;
+
+  error = false;
+  HANDLE hFile=CreateFile(TEXT("phones.db"), GENERIC_READ | GENERIC_WRITE,
+                          0, NULL, OPEN_ALWAYS, 
+                          FILE_ATTRIBUTE_NORMAL, NULL);
+  if ( hFile == INVALID_HANDLE_VALUE )
+  {
+    error = true;
+    finalize();
+    return;
+  }
+
+  mapSize = GetFileSize(hFile, 0);
+  printf("Size: %d\n", mapSize);
+  hMap = CreateFileMapping(hFile, NULL, PAGE_READWRITE, 0, mapSize + mapAddingCapacity, NULL);
+  CloseHandle(hFile);
+  if ( !hMap )
+  {
+    error = true;
+    finalize();
+    return;
+  }
+
+  lpMapView = MapViewOfFile(hMap, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+  if ( !lpMapView )
+  {
+    error = true;
+    finalize();
+    return;
+  }
+
+  printf("getting last id\n");
+  TCHAR* last_record = (TCHAR*) ((BYTE*) (lpMapView) + mapSize - 2);
+  if ( (*last_record) == '\n' )
+    --last_record;
+  while ( last_record > lpMapView && (*last_record) != '\n' )
+    --last_record;
+  ++last_record;
+  Abonent* last_abonent = parse_abonent(&last_record, (TCHAR*) ((BYTE*) lpMapView + mapSize - 2));
+  last_id = last_abonent->id;
+  clear_abonent(last_abonent);
+  ++last_id;
+  printf("last id=%d\n", last_id);
+}
+
+void finalize()
+{
+  printf("finalizing\n");
+  if ( !error )
+    FlushViewOfFile(lpMapView, mapSize);
+  if ( hMap )
+    CloseHandle(hMap);
+  if ( lpMapView )
+    UnmapViewOfFile(lpMapView);
+
+  HANDLE hFile=CreateFile(TEXT("phones.db"), GENERIC_READ | GENERIC_WRITE,
+                          0, NULL, OPEN_ALWAYS, 
+                          FILE_ATTRIBUTE_NORMAL, NULL);
+  if ( hFile == INVALID_HANDLE_VALUE )
+    return;
+  printf("truncating to %d size\n", mapSize);
+  SetFilePointer(hFile, mapSize, 0, FILE_BEGIN);
+  SetEndOfFile(hFile);
+  CloseHandle(hFile);
+}
+
+void get_next_el(TCHAR** buf, LPTSTR res, TCHAR* max_pos)
 {
   int count = 0;
-  while ((*pi) < _tcslen(buf) && buf[*pi] != ',' && buf[*pi] != '\n')
+  while ( (*buf) < max_pos && (**buf) != '\n' && (**buf) != ',')
   {
-    res[count++] = buf[*pi];
-    (*pi)++;
+    res[count++] = **buf;
+    (*buf)++;
   }
   res[count] = '\0';
 }
 
-void skip_delimiters(LPCTSTR buf, int* pi)
+void skip_delimiters(TCHAR** buf, TCHAR* max_pos)
 {
-  while ( buf[*pi] == ',' || buf[*pi] == ' ' )
-    (*pi)++;
+  while ( (*buf) < max_pos && (**buf) != '\n' && ( (**buf) == ',' || (**buf) == ' ' ) )
+    (*buf)++;
 }
 
 #define read_field(field)\
-  skip_delimiters(buf, &i);\
-  get_next_el(buf, &i, tmp);\
+  skip_delimiters(pos, max_pos);\
+  get_next_el(pos, tmp, max_pos);\
   _tcscpy(field, tmp);
 
-void init()
+Abonent* parse_abonent(TCHAR** pos, TCHAR* max_pos)
 {
-  head = NULL; tail = NULL;
-  last_id = -1;
-  FILE *db_file = _tfopen(TEXT("phones.db"), TEXT("rb"));
-  if ( db_file == NULL )
-    return;
+  DWORD id;
+  TCHAR phone_no[256];
+  TCHAR family_name[256];
+  TCHAR name[256];
+  TCHAR middle_name[256];
+  TCHAR street[256];
+  TCHAR house[256];
+  TCHAR building[256];
+  TCHAR flat[256];
+  TCHAR tmp[256];
 
-  TCHAR buf[1024];
-  while ( _fgetts(buf, 1024, db_file) != NULL)
-  {
-    DWORD id;
-    TCHAR phone_no[256];
-    TCHAR family_name[256];
-    TCHAR name[256];
-    TCHAR middle_name[256];
-    TCHAR street[256];
-    TCHAR house[256];
-    TCHAR building[256];
-    TCHAR flat[256];
-    TCHAR tmp[256];
+  get_next_el(pos, tmp, max_pos);
+  id = _ttoi(tmp);
 
-    int i = 0, count = 0;
-    get_next_el(buf, &i, tmp);
-    id = _ttoi(tmp);
+  read_field(phone_no);
+  read_field(family_name);
+  read_field(name);
+  read_field(middle_name);
+  read_field(street);
+  read_field(house);
+  read_field(building);
+  read_field(flat);
 
-    read_field(phone_no);
-    read_field(family_name);
-    read_field(name);
-    read_field(middle_name);
-    read_field(street);
-    read_field(house);
-    read_field(building);
-    read_field(flat);
+  skip_delimiters(pos, max_pos);
+  (*pos)++;
 
-    Abonent* new_abonent = create_abonent(id, phone_no, family_name, name,
-                                          middle_name, street, house, building, flat);
-    add_to_list(new_abonent);
-    if ( id > last_id )
-      last_id = id;
-  }
-  last_id++;
-  fclose(db_file);
+  Abonent* abonent = create_abonent(id, phone_no, family_name, name,
+                                    middle_name, street, house, building, flat);
+  return abonent;
 }
 
 #undef read_field
-
-void finalize()
-{
-  FILE *db_file = _tfopen(TEXT("phones.db"), TEXT("wb"));
-  if ( db_file == NULL )
-    return;
-  List_element* iterator = head;
-  while (iterator != NULL)
-  {
-    Abonent* abonent = iterator->abonent;
-    _ftprintf(db_file, TEXT("%d, %s, %s, %s, %s, %s, %s, %s, %s\n"),
-              abonent->id, abonent->phone_no, abonent->family_name,
-              abonent->name, abonent->middle_name, abonent->street,
-              abonent->house, abonent->building, abonent->flat);
-    iterator = iterator->next;
-  }
-  fclose(db_file);
-}
 
 #define copy_res_array(sub_ar_index)\
   for ( int j = 0; j < counts[sub_ar_index]; ++j )\
@@ -162,17 +200,11 @@ DWORD FUNC_DECLARE find_abonents(DWORD *ids, DWORD max_num, Abonent* ab)
   for ( int i = 0; i < 3; ++i )
     level_ids[i] = (DWORD*) malloc(sizeof(DWORD) * max_num);
   DWORD* counts = (DWORD*) calloc(sizeof(DWORD), 3);
-  List_element* begin = head;
-  List_element* res = NULL;
-  int similar_level = 0;
-  while ( (res = find_element(begin, &cmp, ab, &similar_level)) != NULL )
-  {
-    count++;
-    if ( count >= max_num )
-      break;
-    level_ids[similar_level - 1][ counts[similar_level - 1]++ ] = res->abonent->id;
-    begin = res->next;
-  }
+  TCHAR* from = (TCHAR*) lpMapView;
+  TCHAR* to = (TCHAR*) ((BYTE*) lpMapView + mapSize - 1);
+  if ( (*to) == '\n' )
+    --to;
+  find_records(from, to, &cmp, ab, level_ids, counts, max_num, &count);
 
   DWORD fill = 0;
   copy_res_array(2);
@@ -200,23 +232,29 @@ DWORD FUNC_DECLARE find_abonents(DWORD *ids, DWORD max_num, Abonent* ab)
 BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
 {
   Abonent* cmp_ab = create_abonent(id);
-  List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
-  if (res == NULL)
+  TCHAR* from = (TCHAR*) lpMapView;
+  TCHAR* to = (TCHAR*) ((BYTE*) lpMapView + mapSize - 2);
+  if ( (*to) != '\n' )
+    ++to;
+  TCHAR* pos = find_single_record(from, to, &cmp_id, cmp_ab);
+  if (pos == NULL)
     return false;
-  abonent->id = res->abonent->id;
-  copy_abonent_fields(abonent, res->abonent);
+  Abonent* res_abonent = parse_abonent(&pos, to);
+  abonent->id = res_abonent->id;
+  copy_abonent_fields(abonent, res_abonent);
+  clear_abonent(res_abonent);
   clear_abonent(cmp_ab);
   return true;
 }
 
 BOOL FUNC_DECLARE update_abonent(Abonent *abonent)
 {
-  Abonent* cmp_ab = create_abonent(abonent->id);
-  List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
-  if (res == NULL)
-    return false;
-  copy_abonent_fields(res->abonent, abonent);
-  clear_abonent(cmp_ab);
+  // Abonent* cmp_ab = create_abonent(abonent->id);
+  // List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
+  // if (res == NULL)
+  //   return false;
+  // copy_abonent_fields(res->abonent, abonent);
+  // clear_abonent(cmp_ab);
   return true;
 }
 
@@ -224,82 +262,104 @@ BOOL FUNC_DECLARE update_abonent(Abonent *abonent)
 
 DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent)
 {
-  Abonent* abonent = create_abonent(last_id++, new_abonent->phone_no, new_abonent->family_name,
-                                    new_abonent->name, new_abonent->middle_name, new_abonent->street,
-                                    new_abonent->house, new_abonent->building, new_abonent->flat);
-  add_to_list(abonent);
-  return abonent->id;
+  new_abonent->id = last_id++;
+  TCHAR* end = (TCHAR*) ((BYTE*) lpMapView + mapSize - 2);
+  if ( (*end) != '\n' )
+  {
+    end++;
+    (*end) = '\n';
+  }
+  end++;
+
+  TCHAR buf[2500];
+  _stprintf(buf, TEXT("%d, %s, %s, %s, %s, %s, %s, %s, %s\n\0"), new_abonent->id, new_abonent->phone_no, new_abonent->family_name,
+            new_abonent->name, new_abonent->middle_name, new_abonent->street,
+            new_abonent->house, new_abonent->building, new_abonent->flat);
+
+  DWORD dSize = _tcslen(buf) * 2;
+  _tcscpy(end, buf);
+  if ( dSize <= mapAddingCapacity )
+  {
+    mapSize += dSize;
+    mapAddingCapacity -= dSize;
+  }
+  else
+  {
+    mapSize += dSize;
+    FlushViewOfFile(lpMapView, mapSize);
+    UnmapViewOfFile(lpMapView);
+    CloseHandle(hMap);
+    init();
+  }
+
+  return new_abonent->id;
 }
 
 BOOL FUNC_DECLARE remove_abonent(DWORD id)
 {
-  Abonent* cmp_ab = create_abonent(id);
-  List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
-  if (res == NULL)
-    return false;
-  remove_element(res);
+  // Abonent* cmp_ab = create_abonent(id);
+  // List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
+  // if (res == NULL)
+  //   return false;
+  // remove_element(res);
   return true;
 }
 
-void add_to_list(Abonent* abonent)
+void find_records(TCHAR* from, TCHAR* to, cmp_func cmp, Abonent* cmp_ab, DWORD** level_ids, DWORD* counts, DWORD max_num, DWORD* count)
 {
-  List_element *el = (List_element*) malloc(sizeof(List_element));
-  el->abonent = abonent;
-  el->next = NULL;
+  while ( from < to )
+  {
+    Abonent* abonent = parse_abonent(&from, to);
+    int similar_level = cmp(abonent, cmp_ab);
 
-  if (tail == NULL)
-  {
-    el->prev = NULL;
-    head = el;
-    tail = el;
-  }
-  else
-  {
-    el->prev = tail;
-    tail->next = el;
-    tail = el;
+    if ( similar_level > 0 )
+    {
+      (*count)++;
+      if ( (*count) >= max_num )
+      {
+        clear_abonent(abonent);
+        break;
+      }
+      level_ids[similar_level - 1][ counts[similar_level - 1]++ ] = abonent->id;
+    }
+    clear_abonent(abonent);
   }
 }
 
-List_element* find_element(List_element* begin, cmp_func cmp, Abonent* cmp_ab, int* sim_level)
+TCHAR* find_single_record(TCHAR* from, TCHAR* to, cmp_func cmp, Abonent* cmp_ab)
 {
-  List_element* iterator = begin;
-  int similar_level = 0;
-  while (iterator != NULL && ( similar_level = cmp(iterator->abonent, cmp_ab) ) == 0)
-    iterator = iterator->next;
-  if ( sim_level != NULL )
-    *sim_level = similar_level;
-  return iterator;
-}
+  TCHAR* back_from = from;
+  while ( from < to )
+  {
+    Abonent* abonent = parse_abonent(&from, to);
+    int similar_level = cmp(abonent, cmp_ab);
+    clear_abonent(abonent);
 
-void remove_element(List_element* rem_el)
-{
-  List_element* prev_el = rem_el->prev;
-  List_element* next_el = rem_el->next;
-  if (prev_el == NULL)
-    head = next_el;
-  else
-    prev_el->next = next_el;
-  if (next_el == NULL)
-    tail = prev_el;
-  else
-    next_el->prev = prev_el;
-  clear_abonent(rem_el->abonent);
-  free(rem_el);
+    if ( similar_level > 0 )
+    {
+      from -= 2;
+      while ( from >= back_from && (*from) != '\n' )
+        from--;
+      from++;
+      return from;
+    }
+  }
+  return NULL;
 }
 
 BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-  if ( reference_count == 0 )
-    init();
-
   switch (fdwReason)
   {
     case DLL_PROCESS_ATTACH:
+      if ( reference_count == 0 )
+        init();
       reference_count++;
       break;
     case DLL_PROCESS_DETACH:
       reference_count--;
+      if ( reference_count == 0 )
+        finalize();
       break;
     case DLL_THREAD_ATTACH:
       reference_count++;
@@ -308,9 +368,5 @@ BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       reference_count--;
       break;
   }
-
-  if ( reference_count == 0 )
-    finalize();
-
   return TRUE;
 }
