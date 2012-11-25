@@ -17,10 +17,10 @@ typedef struct _Abonent
 } Abonent;
 
 Abonent* create_abonent(DWORD id=0, LPCTSTR phone_no=NULL,
-			LPCTSTR family_name=NULL,
-                        LPCTSTR name=NULL, LPCTSTR middle_name=NULL,
-                        LPCTSTR street=NULL, LPCTSTR house=NULL,
-                        LPCTSTR building=NULL, LPCTSTR flat=NULL);
+    LPCTSTR family_name=NULL,
+    LPCTSTR name=NULL, LPCTSTR middle_name=NULL,
+    LPCTSTR street=NULL, LPCTSTR house=NULL,
+    LPCTSTR building=NULL, LPCTSTR flat=NULL);
 void clear_abonent(Abonent* abonent);
 
 #endif /* _ABONENT_H_ */

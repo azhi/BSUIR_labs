@@ -11,9 +11,6 @@ public:
 
   find_abonents_func find_abonents;
   get_by_id_func get_by_id;
-  update_abonent_func update_abonent;
-  insert_abonent_func insert_abonent;
-  remove_abonent_func remove_abonent;
   last_error_func last_error;
 
 private:

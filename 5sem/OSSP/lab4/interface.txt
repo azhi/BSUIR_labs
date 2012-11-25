@@ -1,17 +1,8 @@
-DWORD find_by_{name,phone_no,address}(DWORD *ids, DWORD max_num, LPCTSTR $1);
+DWORD find_abonent(Abonent *abonents, DWORD max_num, Abonent* cmp_ab);
 // Returns number of matches
 
 BOOL get_by_id(DWORD id, Abonent *abonent);
 // Returs 0 if not found, non-zero otherwise
-
-BOOL update_abonent(Abonent *abonent);
-// Returns 0 if failed, non-zero otherwise
-
-DWORD insert_abonent(Abonent *new_abonent);
-// Returns new id
-
-BOOL remove_abonent(DWORD id);
-// Returns 0 if failed
 
 BOOL last_error();
 // Returns true if some error accured

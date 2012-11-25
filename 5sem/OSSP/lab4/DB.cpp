@@ -63,13 +63,9 @@ DWORD cmp(const Abonent* a1, const Abonent* a2)
 
 void init()
 {
-  printf("initing\n");
-  last_id = -1;
-  mapAddingCapacity = ADDING_CAPACITY;
-
   error = false;
   HANDLE hFile=CreateFile(TEXT("phones.db"), GENERIC_READ | GENERIC_WRITE,
-                          0, NULL, OPEN_ALWAYS, 
+                          FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 
                           FILE_ATTRIBUTE_NORMAL, NULL);
   if ( hFile == INVALID_HANDLE_VALUE )
   {
@@ -79,8 +75,7 @@ void init()
   }
 
   mapSize = GetFileSize(hFile, 0);
-  printf("Size: %d\n", mapSize);
-  hMap = CreateFileMapping(hFile, NULL, PAGE_READWRITE, 0, mapSize + mapAddingCapacity, NULL);
+  hMap = CreateFileMapping(hFile, NULL, PAGE_READWRITE, 0, 0, NULL);
   CloseHandle(hFile);
   if ( !hMap )
   {
@@ -96,40 +91,16 @@ void init()
     finalize();
     return;
   }
-
-  printf("getting last id\n");
-  TCHAR* last_record = (TCHAR*) ((BYTE*) (lpMapView) + mapSize - 2);
-  if ( (*last_record) == '\n' )
-    --last_record;
-  while ( last_record > lpMapView && (*last_record) != '\n' )
-    --last_record;
-  ++last_record;
-  Abonent* last_abonent = parse_abonent(&last_record, (TCHAR*) ((BYTE*) lpMapView + mapSize - 2));
-  last_id = last_abonent->id;
-  clear_abonent(last_abonent);
-  ++last_id;
-  printf("last id=%d\n", last_id);
 }
 
 void finalize()
 {
-  printf("finalizing\n");
   if ( !error )
     FlushViewOfFile(lpMapView, mapSize);
   if ( hMap )
     CloseHandle(hMap);
   if ( lpMapView )
     UnmapViewOfFile(lpMapView);
-
-  HANDLE hFile=CreateFile(TEXT("phones.db"), GENERIC_READ | GENERIC_WRITE,
-                          0, NULL, OPEN_ALWAYS, 
-                          FILE_ATTRIBUTE_NORMAL, NULL);
-  if ( hFile == INVALID_HANDLE_VALUE )
-    return;
-  printf("truncating to %d size\n", mapSize);
-  SetFilePointer(hFile, mapSize, 0, FILE_BEGIN);
-  SetEndOfFile(hFile);
-  CloseHandle(hFile);
 }
 
 void get_next_el(TCHAR** buf, LPTSTR res, TCHAR* max_pos)
@@ -189,124 +160,174 @@ Abonent* parse_abonent(TCHAR** pos, TCHAR* max_pos)
 
 #undef read_field
 
-#define copy_res_array(sub_ar_index)\
-  for ( int j = 0; j < counts[sub_ar_index]; ++j )\
-    ids[fill++] = level_ids[sub_ar_index][j];
+#define copy_field(field)\
+  if ( src->field != NULL )\
+    _tcscpy(dest->field, src->field);
 
-DWORD FUNC_DECLARE find_abonents(DWORD *ids, DWORD max_num, Abonent* ab)
+void copy_abonent(Abonent* dest, Abonent* src)
 {
-  DWORD count = -1;
-  DWORD** level_ids = (DWORD**) malloc(sizeof(DWORD*) * 3);
-  for ( int i = 0; i < 3; ++i )
-    level_ids[i] = (DWORD*) malloc(sizeof(DWORD) * max_num);
-  DWORD* counts = (DWORD*) calloc(sizeof(DWORD), 3);
-  TCHAR* from = (TCHAR*) lpMapView;
-  TCHAR* to = (TCHAR*) ((BYTE*) lpMapView + mapSize - 1);
-  if ( (*to) == '\n' )
-    --to;
-  find_records(from, to, &cmp, ab, level_ids, counts, max_num, &count);
-
-  DWORD fill = 0;
-  copy_res_array(2);
-  copy_res_array(1);
-  copy_res_array(0);
-
-  for ( int i = 0; i < 3; ++i )
-    free(level_ids[i]);
-  free(level_ids);
-  free(counts);
-  return count + 1;
+  dest->id = src->id;
+  copy_field(phone_no);
+  copy_field(family_name);
+  copy_field(name);
+  copy_field(middle_name);
+  copy_field(street);
+  copy_field(house);
+  copy_field(building);
+  copy_field(flat);
 }
 
-#define copy_abonent_fields(ab1, ab2)\
-  _tcscpy(ab1->phone_no, ab2->phone_no);\
-  _tcscpy(ab1->family_name, ab2->family_name);\
-  _tcscpy(ab1->name, ab2->name);\
-  _tcscpy(ab1->middle_name, ab2->middle_name);\
-  _tcscpy(ab1->street, ab2->street);\
-  _tcscpy(ab1->house, ab2->house);\
-  _tcscpy(ab1->building, ab2->building);\
-  _tcscpy(ab1->flat, ab2->flat);
+#undef copy_field
 
+DWORD FUNC_DECLARE find_abonents(Abonent** abonents, DWORD max_num, Abonent* ab)
+{
+  DWORD count = -1;
+
+  Thread_resources resources[MAX_THREADS];
+  Thread_params params[MAX_THREADS];
+  HANDLE handles[MAX_THREADS];
+  DWORD thread_chunk_size = mapSize / MAX_THREADS;
+  if ( thread_chunk_size % 2 == 1 )
+    thread_chunk_size--;
+  TCHAR* from = (TCHAR*) lpMapView;
+
+  for ( int j = 0; j < MAX_THREADS; j++ )
+  {
+    resources[j].level_abonents = (Abonent***) malloc(sizeof(Abonent**) * 3);
+    for ( int i = 0; i < 3; ++i )
+      resources[j].level_abonents[i] = (Abonent**) malloc(sizeof(Abonent*) * max_num);
+    resources[j].counts = (DWORD*) calloc(sizeof(DWORD), 3);
+    while ( from >= lpMapView && (*from) != '\n' )
+      --from;
+    ++from;
+    TCHAR* to = (TCHAR*) ((BYTE*) from + thread_chunk_size - 2);
+    while ( to >= from && (*to) != '\n' )
+      --to;
+    ++to;
+    if ( j == MAX_THREADS - 1 )
+      to = (TCHAR*) ((BYTE*) lpMapView + mapSize - 2);
+    if ( (*to) == '\n' )
+      --to;
+
+    params[j].from = from; params[j].to = to;
+    params[j].cmp = &cmp; params[j].cmp_ab = ab;
+    params[j].level_abonents = resources[j].level_abonents;
+    params[j].counts = resources[j].counts;
+    params[j].max_num = max_num;
+    params[j].count = &count;
+    params[j].res_ab = NULL;
+    params[j].finish = NULL;
+
+    DWORD thread_id;
+    handles[j] = CreateThread(
+        NULL,                   // default security attributes
+        0,                      // use default stack size
+        find_records,           // thread function name
+        &params[j],             // argument to thread function
+        0,                      // use default creation flags
+        &thread_id);            // returns the thread identifier
+    from = to;
+  }
+
+  DWORD fill = 0;
+  DWORD dw_wait_result = WaitForMultipleObjects(MAX_THREADS, handles, TRUE, INFINITE);
+  if ( dw_wait_result >= WAIT_OBJECT_0 &&
+       dw_wait_result < WAIT_OBJECT_0 + MAX_THREADS ) {
+
+    for ( int i = 2; i > -1; --i )
+      for ( int j = 0; j < MAX_THREADS; ++j )
+      {
+        for ( int c = 0; c < resources[j].counts[i]; ++c )
+        {
+          if ( fill < max_num )
+            copy_abonent(abonents[fill++], resources[j].level_abonents[i][c]);
+          clear_abonent(resources[j].level_abonents[i][c]);
+        }
+      }
+
+    for ( int j = 0; j < MAX_THREADS; ++j )
+    {
+      for ( int i = 0; i < 3; ++i )
+        free(resources[j].level_abonents[i]);
+      free(resources[j].level_abonents);
+      free(resources[j].counts);
+    }
+    free(resources);
+    free(params);
+  }
+
+  return fill;
+}
 
 BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
 {
   Abonent* cmp_ab = create_abonent(id);
+
+  Thread_params params[MAX_THREADS];
+  HANDLE handles[MAX_THREADS];
+  DWORD thread_chunk_size = mapSize / MAX_THREADS;
+  Abonent* res_ab = NULL;
+  BOOL finish = false;
+
   TCHAR* from = (TCHAR*) lpMapView;
-  TCHAR* to = (TCHAR*) ((BYTE*) lpMapView + mapSize - 2);
-  if ( (*to) != '\n' )
-    ++to;
-  TCHAR* pos = find_single_record(from, to, &cmp_id, cmp_ab);
-  if (pos == NULL)
-    return false;
-  Abonent* res_abonent = parse_abonent(&pos, to);
-  abonent->id = res_abonent->id;
-  copy_abonent_fields(abonent, res_abonent);
-  clear_abonent(res_abonent);
-  clear_abonent(cmp_ab);
-  return true;
-}
-
-BOOL FUNC_DECLARE update_abonent(Abonent *abonent)
-{
-  // Abonent* cmp_ab = create_abonent(abonent->id);
-  // List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
-  // if (res == NULL)
-  //   return false;
-  // copy_abonent_fields(res->abonent, abonent);
-  // clear_abonent(cmp_ab);
-  return true;
-}
-
-#undef copy_abonent_fields
-
-DWORD FUNC_DECLARE insert_abonent(Abonent *new_abonent)
-{
-  new_abonent->id = last_id++;
-  TCHAR* end = (TCHAR*) ((BYTE*) lpMapView + mapSize - 2);
-  if ( (*end) != '\n' )
+  for ( int j = 0; j < MAX_THREADS; j++ )
   {
-    end++;
-    (*end) = '\n';
-  }
-  end++;
+    while ( from >= lpMapView && (*from) != '\n' )
+      from--;
+    from++;
+    TCHAR* to = (TCHAR*) ((BYTE*) from + thread_chunk_size - 2);
+    while ( to >= from && (*to) != '\n' )
+      to--;
+    to++;
+    if ( j == MAX_THREADS - 1 )
+      to = (TCHAR*) ((BYTE*) lpMapView + mapSize - 2);
+    if ( (*to) == '\n' )
+      --to;
 
-  TCHAR buf[2500];
-  _stprintf(buf, TEXT("%d, %s, %s, %s, %s, %s, %s, %s, %s\n\0"), new_abonent->id, new_abonent->phone_no, new_abonent->family_name,
-            new_abonent->name, new_abonent->middle_name, new_abonent->street,
-            new_abonent->house, new_abonent->building, new_abonent->flat);
+    params[j].from = from; params[j].to = to;
+    params[j].cmp = &cmp_id; params[j].cmp_ab = cmp_ab;
+    params[j].level_abonents = NULL; params[j].counts = NULL;
+    params[j].max_num = 0; params[j].count = 0;
+    params[j].res_ab = &res_ab;
+    params[j].finish = &finish;
 
-  DWORD dSize = _tcslen(buf) * 2;
-  _tcscpy(end, buf);
-  if ( dSize <= mapAddingCapacity )
-  {
-    mapSize += dSize;
-    mapAddingCapacity -= dSize;
-  }
-  else
-  {
-    mapSize += dSize;
-    FlushViewOfFile(lpMapView, mapSize);
-    UnmapViewOfFile(lpMapView);
-    CloseHandle(hMap);
-    init();
+    DWORD thread_id;
+    handles[j] = CreateThread(
+        NULL,                   // default security attributes
+        0,                      // use default stack size
+        find_single_record,     // thread function name
+        &params[j],             // argument to thread function
+        0,                      // use default creation flags
+        &thread_id);            // returns the thread identifier
+    from = to;
   }
 
-  return new_abonent->id;
+  DWORD dw_wait_result = WaitForMultipleObjects(MAX_THREADS, handles, TRUE, INFINITE);
+  if ( dw_wait_result >= WAIT_OBJECT_0 &&
+       dw_wait_result < WAIT_OBJECT_0 + MAX_THREADS ) {
+    if (res_ab == NULL)
+      return false;
+
+    copy_abonent(abonent, res_ab);
+    clear_abonent(res_ab);
+    clear_abonent(cmp_ab);
+    return true;
+  }
+  return false;
 }
 
-BOOL FUNC_DECLARE remove_abonent(DWORD id)
+DWORD WINAPI find_records(void* data)
 {
-  // Abonent* cmp_ab = create_abonent(id);
-  // List_element* res = find_element(head, &cmp_id, cmp_ab, NULL);
-  // if (res == NULL)
-  //   return false;
-  // remove_element(res);
-  return true;
-}
+  Thread_params* tp = (Thread_params*) data;
+  TCHAR* from = tp->from; TCHAR* to = tp->to;
+  cmp_func cmp = tp->cmp; Abonent* cmp_ab = tp->cmp_ab;
+  Abonent*** level_abonents = tp->level_abonents;
+  DWORD* counts = tp->counts;
+  DWORD max_num = tp->max_num;
+  DWORD* count = tp->count;
 
-void find_records(TCHAR* from, TCHAR* to, cmp_func cmp, Abonent* cmp_ab, DWORD** level_ids, DWORD* counts, DWORD max_num, DWORD* count)
-{
+  // _tprintf(TEXT("Thread started from=%c%c%c%c%c%c:%d to=%c%c%c%c%c%c:%d"), *from, *(from+1), *(from+2), *(from+3), *(from+4), *(from+5), from,
+  //     *to, *(to+1), *(to+2), *(to+3), *(to+4), *(to+5), to);
   while ( from < to )
   {
     Abonent* abonent = parse_abonent(&from, to);
@@ -320,31 +341,41 @@ void find_records(TCHAR* from, TCHAR* to, cmp_func cmp, Abonent* cmp_ab, DWORD**
         clear_abonent(abonent);
         break;
       }
-      level_ids[similar_level - 1][ counts[similar_level - 1]++ ] = abonent->id;
+      level_abonents[similar_level - 1][ counts[similar_level - 1]++ ] = abonent;
     }
-    clear_abonent(abonent);
+    else
+      clear_abonent(abonent);
   }
+
+  return 0;
 }
 
-TCHAR* find_single_record(TCHAR* from, TCHAR* to, cmp_func cmp, Abonent* cmp_ab)
+DWORD WINAPI find_single_record(void* data)
 {
+  Thread_params* tp = (Thread_params*) data;
+  TCHAR* from = tp->from; TCHAR* to = tp->to;
+  cmp_func cmp = tp->cmp; Abonent* cmp_ab = tp->cmp_ab;
+  Abonent** res_ab = tp->res_ab;
+  BOOL* finish = tp->finish;
+
   TCHAR* back_from = from;
   while ( from < to )
   {
+    if ( (*finish) )
+      break;
+
     Abonent* abonent = parse_abonent(&from, to);
     int similar_level = cmp(abonent, cmp_ab);
-    clear_abonent(abonent);
 
     if ( similar_level > 0 )
     {
-      from -= 2;
-      while ( from >= back_from && (*from) != '\n' )
-        from--;
-      from++;
-      return from;
+      (*finish) = true;
+      (*res_ab) = abonent;
+      break;
     }
+    clear_abonent(abonent);
   }
-  return NULL;
+  return 0;
 }
 
 BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -352,20 +383,14 @@ BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
   switch (fdwReason)
   {
     case DLL_PROCESS_ATTACH:
-      if ( reference_count == 0 )
-        init();
-      reference_count++;
+      init();
       break;
     case DLL_PROCESS_DETACH:
-      reference_count--;
-      if ( reference_count == 0 )
-        finalize();
+      finalize();
       break;
     case DLL_THREAD_ATTACH:
-      reference_count++;
       break;
     case DLL_THREAD_DETACH:
-      reference_count--;
       break;
   }
   return TRUE;

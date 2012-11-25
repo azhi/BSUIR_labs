@@ -19,33 +19,29 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE _hPrevInst,
       throw;
 
     App(hInst).run(nCmdShow);
-    Abonent *ab = create_abonent(0, TEXT("1234567"), TEXT("Ivanov"), TEXT("Ivan"),
-                                 TEXT("Ivanovich"), TEXT("Ivanovskaya"), TEXT("10"), TEXT("1"), TEXT("234"));
-    db_w.insert_abonent(ab);
-    clear_abonent(ab);
 
-    ab = create_abonent(0, TEXT("7654321"), TEXT("Ivanova"), TEXT("Vasilisa"),
-                                 TEXT("Ivanovich"), TEXT("Ivanovskaya"), TEXT("20"), TEXT("2"), TEXT("291"));
-    db_w.insert_abonent(ab);
-    clear_abonent(ab);
-
-    ab = create_abonent(0, TEXT("123"), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    DWORD *ids = (DWORD*) malloc(sizeof(DWORD) * 10);
-    DWORD count = db_w.find_abonents(ids, 10, ab);
-    for ( int i = 0; i < (count > 10 ? 10 : count); ++i )
+    Abonent* ab = create_abonent(0, TEXT("1234"), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    Abonent** abonents = (Abonent**) malloc(sizeof(Abonent*) * 1000);
+    for ( int i = 0; i < 1000; ++i )
+      abonents[i] = create_abonent();
+    DWORD count = db_w.find_abonents(abonents, 1000, ab);
+    _tprintf(TEXT("Count=%d\n"), count);
+    for ( int i = 0; i < (count > 1000 ? 1000 : count); ++i )
     {
-      Abonent* tmp_ab = create_abonent();
-      db_w.get_by_id(ids[i], tmp_ab);
-      _tprintf(TEXT("%d %s %s %s %s %s %s %s %s\n"), tmp_ab->id, tmp_ab->phone_no, tmp_ab->family_name, tmp_ab->name,
-                                      tmp_ab->middle_name, tmp_ab->street, tmp_ab->house,
-                                      tmp_ab->building, tmp_ab->flat);
-      clear_abonent(tmp_ab);
+      _tprintf(TEXT("%d %s %s %s %s %s %s %s %s\n"), abonents[i]->id,
+               abonents[i]->phone_no, abonents[i]->family_name,
+               abonents[i]->name, abonents[i]->middle_name,
+               abonents[i]->street, abonents[i]->house,
+               abonents[i]->building, abonents[i]->flat);
     }
+    for ( int i = 0; i < 1000; ++i )
+      clear_abonent(abonents[i]);
+    free(abonents);
     clear_abonent(ab);
-
   } catch (...) {
     throw;
   }
+
 
   return 0;
 }

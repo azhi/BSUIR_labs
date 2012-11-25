@@ -3,15 +3,9 @@
 
 #include "abonent.h"
 
-typedef DWORD (*find_abonents_func)(DWORD *ids, DWORD max_num,
+typedef DWORD (*find_abonents_func)(Abonent** abonents, DWORD max_num,
                                        Abonent* ab);
 typedef BOOL (*get_by_id_func)(DWORD id, Abonent *abonent);
-
-typedef BOOL (*update_abonent_func)(Abonent *abonent);
-
-typedef DWORD (*insert_abonent_func)(Abonent *new_abonent);
-
-typedef BOOL (*remove_abonent_func)(DWORD id);
 
 typedef BOOL (*last_error_func)();
 
