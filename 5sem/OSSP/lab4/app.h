@@ -24,7 +24,7 @@ private:
   Abonent *loadAbonent();
 
   void initializeList(HWND hwndList);
-  void updateList(DWORD *ids=NULL, DWORD num=0);
+  void updateList(Abonent **ids=NULL, DWORD num=0);
   void updateStatus(LPCTSTR status, BOOL in_progress=FALSE);
 
   HINSTANCE hInst;

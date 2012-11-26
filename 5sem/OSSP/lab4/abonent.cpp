@@ -44,3 +44,18 @@ void clear_abonent(Abonent* abonent)
     free(abonent);
   }
 }
+
+Abonent **waste_my_memory(size_t num)
+{
+  Abonent **abonents = (Abonent **) malloc(sizeof(Abonent *) * num);
+  for (size_t i = 0; i < num; ++i)
+    abonents[i] = create_abonent();
+  return abonents;
+}
+
+void i_want_my_memory_back1(Abonent **abonents, size_t num)
+{
+  for (size_t i = 0; i < num; ++i)
+    clear_abonent(abonents[i]);
+  free(abonents);
+}

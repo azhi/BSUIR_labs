@@ -23,4 +23,7 @@ Abonent* create_abonent(DWORD id=0, LPCTSTR phone_no=NULL,
     LPCTSTR building=NULL, LPCTSTR flat=NULL);
 void clear_abonent(Abonent* abonent);
 
+Abonent **waste_my_memory(size_t num=256);
+void i_want_my_memory_back1(Abonent **abonents, size_t num=256);
+
 #endif /* _ABONENT_H_ */

@@ -252,8 +252,6 @@ DWORD FUNC_DECLARE find_abonents(Abonent** abonents, DWORD max_num, Abonent* ab)
       free(resources[j].level_abonents);
       free(resources[j].counts);
     }
-    free(resources);
-    free(params);
   }
 
   return fill;

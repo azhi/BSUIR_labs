@@ -1,5 +1,9 @@
-CC=i586-mingw32msvc-g++
-CFLAGS=-c -D_UNICODE -DUNICODE
+ifeq ($(OS), Windows_NT)
+  CC=g++
+else
+  CC=i586-mingw32msvc-g++
+endif
+CFLAGS=-c -ggdb -D_UNICODE -DUNICODE -D_WIN32_WINNT=0x0501 -D_WIN32_IE=0x0700
 LDFLAGS=-static -mwindows -lcomctl32
 LIBCFLAGS=-DBUILDING_DLL
 LIBFLAGS=-shared -Wl,-soname,
