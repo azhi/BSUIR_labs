@@ -55,7 +55,7 @@ App::App(HINSTANCE hInst, LPCTSTR szAppTitle) : in_progress(FALSE),
   hwnd = CreateWindow(szAppTitle, szAppTitle,
                       WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU |
                       WS_MINIMIZEBOX,
-                      CW_USEDEFAULT, CW_USEDEFAULT, 600, 450,
+                      CW_USEDEFAULT, CW_USEDEFAULT, 720, 450,
                       NULL, NULL, hInst, NULL);
 
   if (!hwnd)
@@ -83,18 +83,17 @@ void App::run(int nCmdShow)
 
 void App::findAbonent(Abonent *abonent)
 {
+  updateStatus(TEXT("Searching..."), TRUE);
   BOOL bCr = abonent == NULL;
   if (!abonent) {
     abonent = loadAbonent();
-    printf("Abonent loaded.\n");
   }
 
-  updateStatus(TEXT("Searching..."), TRUE);
-  Abonent **abonents = waste_my_memory(256);
-  DWORD count = db_w.find_abonents(abonents, 256, abonent);
+  Abonent **abonents = waste_my_memory(2048);
+  DWORD count = db_w.find_abonents(abonents, 2048, abonent);
   clear_abonent(abonent);
   if (count) {
-    updateList(abonents, count < 256 ? count : 256);
+    updateList(abonents, count < 2048 ? count : 2048);
     LPTSTR status = (LPTSTR) malloc(sizeof(TCHAR) * 256);
     _stprintf(status, TEXT("%d record(s) found."), count);
     updateStatus(status);
@@ -104,7 +103,7 @@ void App::findAbonent(Abonent *abonent)
     updateStatus(TEXT("Sorry, no records found."));
   }
   if (bCr)
-    i_want_my_memory_back1(abonents);
+    i_want_my_memory_back1(abonents, 2048);
 }
 
 #define LOAD(c_id, where) {                    \
@@ -146,15 +145,15 @@ void App::initializeList(HWND hwndList)
   LV_COLUMN lvC = { mask : LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM,
                     fmt  : LVCFMT_LEFT };
 
-  INS_CLMN(0, "id", 24);
+  INS_CLMN(0, "id",           50);
   INS_CLMN(1, "Phone no.",    60);
-  INS_CLMN(2, "Family name",  90);
-  INS_CLMN(3, "Name",        110);
-  INS_CLMN(4, "Middle name", 100);
-  INS_CLMN(5, "Street",       90);
-  INS_CLMN(6, "House",        30);
-  INS_CLMN(7, "Building",     30);
-  INS_CLMN(8, "Flat",         30);
+  INS_CLMN(2, "Family name", 100);
+  INS_CLMN(3, "Name",        100);
+  INS_CLMN(4, "Middle name", 120);
+  INS_CLMN(5, "Street",      120);
+  INS_CLMN(6, "House",        50);
+  INS_CLMN(7, "Building",     25);
+  INS_CLMN(8, "Flat",         40);
 }
 
 #undef INS_CLMN
@@ -244,7 +243,7 @@ LRESULT CALLBACK App::WndProc(HWND hwnd, UINT msg,
 
     hwndChld = CreateWindow(WC_LISTVIEW, TEXT(""),
                             WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT,
-                            10, 120, 570, 270,
+                            10, 120, 690, 270,
                             hwnd, (HMENU) C_LIST, NULL, NULL);
 
     self->initializeList(hwndChld);

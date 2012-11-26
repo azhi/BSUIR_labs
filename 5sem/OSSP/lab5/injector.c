@@ -87,8 +87,6 @@ int main(int argc, char **argv)
   printf("Writing to allocated target memory: ");
   WriteProcessMemory(proc_infn.hProcess, vpointer,
                      &init_info, init_info_size, NULL);
-  ReadProcessMemory(proc_infn.hProcess, vpointer,
-                    &init_info, init_info_size, NULL);
 
   printf("done.\n");
 

@@ -33,6 +33,16 @@ DWORD cmp_id(const Abonent* a1, const Abonent* a2)
   str_equal(ab1->building, ab2->building) ||\
   str_equal(ab1->flat, ab2->flat)
 
+#define abonent_all_similar(ab1, ab2)\
+  ( ab2->phone_no[0] == '\0' || ( ab2->phone_no[0] != '\0' && str_similar(ab1->phone_no, ab2->phone_no) ) ) &&\
+  ( ab2->family_name[0] == '\0' || ( ab2->family_name[0] != '\0' && str_similar(ab1->family_name, ab2->family_name) ) ) &&\
+  ( ab2->name[0] == '\0' || ( ab2->name[0] != '\0' && str_similar(ab1->name, ab2->name) ) ) &&\
+  ( ab2->middle_name[0] == '\0' || ( ab2->middle_name[0] != '\0' && str_similar(ab1->middle_name, ab2->middle_name) ) ) &&\
+  ( ab2->street[0] == '\0' || ( ab2->street[0] != '\0' && str_similar(ab1->street, ab2->street) ) ) &&\
+  ( ab2->house[0] == '\0' || ( ab2->house[0] != '\0' && str_similar(ab1->house, ab2->house) ) ) &&\
+  ( ab2->building[0] == '\0' || ( ab2->building[0] != '\0' && str_similar(ab1->building, ab2->building) ) ) &&\
+  ( ab2->flat[0] == '\0' || ( ab2->flat[0] != '\0' && str_similar(ab1->flat, ab2->flat) ) )
+
 #define abonent_some_similar(ab1, ab2)\
   ( ab2->phone_no[0] != '\0' && str_similar(ab1->phone_no, ab2->phone_no) ) ||\
   ( ab2->family_name[0] != '\0' && str_similar(ab1->family_name, ab2->family_name) ) ||\
@@ -47,8 +57,10 @@ DWORD cmp_id(const Abonent* a1, const Abonent* a2)
 DWORD cmp(const Abonent* a1, const Abonent* a2)
 {
   if ( abonent_all_equal(a1, a2) )
-    return 3;
+    return 4;
   if ( abonent_some_equal(a1, a2) )
+    return 3;
+  if ( abonent_all_similar(a1, a2) )
     return 2;
   if ( abonent_some_similar(a1, a2) )
     return 1;
@@ -59,6 +71,7 @@ DWORD cmp(const Abonent* a1, const Abonent* a2)
 #undef str_similar
 #undef abonent_all_equal
 #undef abonent_some_equal
+#undef abonent_all_similar
 #undef abonent_some_similar
 
 void init()
@@ -193,10 +206,10 @@ DWORD FUNC_DECLARE find_abonents(Abonent** abonents, DWORD max_num, Abonent* ab)
 
   for ( int j = 0; j < MAX_THREADS; j++ )
   {
-    resources[j].level_abonents = (Abonent***) malloc(sizeof(Abonent**) * 3);
-    for ( int i = 0; i < 3; ++i )
+    resources[j].level_abonents = (Abonent***) malloc(sizeof(Abonent**) * 4);
+    for ( int i = 0; i < 4; ++i )
       resources[j].level_abonents[i] = (Abonent**) malloc(sizeof(Abonent*) * max_num);
-    resources[j].counts = (DWORD*) calloc(sizeof(DWORD), 3);
+    resources[j].counts = (DWORD*) calloc(sizeof(DWORD), 4);
     while ( from >= lpMapView && (*from) != '\n' )
       --from;
     ++from;
@@ -234,7 +247,7 @@ DWORD FUNC_DECLARE find_abonents(Abonent** abonents, DWORD max_num, Abonent* ab)
   if ( dw_wait_result >= WAIT_OBJECT_0 &&
        dw_wait_result < WAIT_OBJECT_0 + MAX_THREADS ) {
 
-    for ( int i = 2; i > -1; --i )
+    for ( int i = 3; i > -1; --i )
       for ( int j = 0; j < MAX_THREADS; ++j )
       {
         for ( int c = 0; c < resources[j].counts[i]; ++c )
@@ -247,7 +260,7 @@ DWORD FUNC_DECLARE find_abonents(Abonent** abonents, DWORD max_num, Abonent* ab)
 
     for ( int j = 0; j < MAX_THREADS; ++j )
     {
-      for ( int i = 0; i < 3; ++i )
+      for ( int i = 0; i < 4; ++i )
         free(resources[j].level_abonents[i]);
       free(resources[j].level_abonents);
       free(resources[j].counts);
@@ -264,6 +277,8 @@ BOOL FUNC_DECLARE get_by_id(DWORD id, Abonent *abonent)
   Thread_params params[MAX_THREADS];
   HANDLE handles[MAX_THREADS];
   DWORD thread_chunk_size = mapSize / MAX_THREADS;
+  if ( thread_chunk_size % 2 == 1 )
+    thread_chunk_size--;
   Abonent* res_ab = NULL;
   BOOL finish = false;
 
@@ -365,7 +380,7 @@ DWORD WINAPI find_single_record(void* data)
     Abonent* abonent = parse_abonent(&from, to);
     int similar_level = cmp(abonent, cmp_ab);
 
-    if ( similar_level > 0 )
+    if ( similar_level == 4 )
     {
       (*finish) = true;
       (*res_ab) = abonent;
