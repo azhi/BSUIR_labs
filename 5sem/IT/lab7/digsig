@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require File.join(File.dirname(__FILE__), 'digsig.rb')
+
+def wrong_usage
+  STDERR.puts "Wrong arguments.\nUsage: ./digsig [--sign/--check] filename"
+  exit
+end
+
+if ARGV[0] == '--sign'
+  RSA_DigitalSignature.sign_file ARGV[1]
+elsif ARGV[0] == '--check'
+  RSA_DigitalSignature.check_signature ARGV[1]
+else
+  wrong_usage
+end

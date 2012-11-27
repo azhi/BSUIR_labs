@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require File.join(File.dirname(__FILE__), 'sha1.rb')
+
+puts SHA_1.sha_from_stream(STDIN).to_s(16)
