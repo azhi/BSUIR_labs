@@ -35,11 +35,10 @@ end
   min = dist_matr.max.last.max.last + 1
   min_i = 0
   min_j = 0
-  dist_matr.size.times do |i|
-    dist_matr.size.times do |j|
-      if ( dist_matr.has_key?(i) && dist_matr[i].has_key?(j) &&
-          dist_matr[i][j] < min && dist_matr[i][j] != 0 &&
-          !h[i][:grouped] && !h[j][:grouped] )
+  dist_matr.keys.each do |i|
+    dist_matr[i].keys.each do |j|
+      if ( dist_matr[i][j] < min && dist_matr[i][j] != 0 &&
+           !h[i][:grouped] && !h[j][:grouped] )
         min = dist_matr[i][j]
         min_i = i
         min_j = j
@@ -83,7 +82,8 @@ g.edge[:arrowsize]= "0.5"
 nodes = {}
 h.each do |k,v|
   nodes[k] = g.add_nodes(k.to_s)
-  nodes[k].label = v[:data].size > 1 ? "#{k+1} - #{dist_matr[v[:data].first][v[:data].last]}" : (k+1).to_s
+  nodes[k].label = v[:data].size > 1 ? "#{k < n ? k+1 : ('a'.ord + (k-n).ord).chr} - " + 
+  "#{dist_matr[v[:data].first][v[:data].last].round(2)}" : (k+1).to_s
 end
 
 h.find_all{ |k, v| v[:data].size > 1 }.each do |k, v|
