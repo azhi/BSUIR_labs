@@ -10,8 +10,8 @@ $cheppin = 0
 $mayers = nil
 $variable_collection = []
 $cheppin_counts = {calc: 0, io: 0, control: 0, unused: 0}
-$w = 0
-$e = 0
+$cond_complication = 0
+$v = 0
 
 def init_graph
   graph = GraphViz.new( :G, :type => :digraph )
@@ -265,6 +265,7 @@ def go_deeper! sexp = nil, ext_vars = [], int_vars = [], level = 0, cur_graph = 
   when :and, :or
     # Args:     sexp[1..2]
     puts ' ' * level + "Logic op: name=#{sexp[1..2].inspect}"
+    $cond_complication += 1
     sub_hash = go_deeper! sexp[1], ext_vars, int_vars, level+1, cur_graph, tailes
     sub_hash[:vars].each do |var_id|
       $variable_collection[var_id][:type][:control] = true
@@ -287,6 +288,7 @@ def go_deeper! sexp = nil, ext_vars = [], int_vars = [], level = 0, cur_graph = 
     # Locals:   sexp[2]          s(:args, *names) | s(:args)
     # Body:     sexp[3]          block / expression
     puts ' ' * level + "Iterator: obj=#{sexp[1].inspect} locals=#{sexp[2].inspect} body=#{sexp[3].inspect}"
+    $v += 1
     sub_hash = go_deeper! sexp[1], ext_vars, int_vars, level+1, cur_graph, tailes unless sexp[1] == s(:call, nil, :lambda)
     sub_hash = process_iterator sexp, ext_vars + int_vars, [], level, res_hash, cur_graph, sub_hash[:tailes]
     res_hash[:tailes] = sub_hash[:tailes]
@@ -300,6 +302,7 @@ def go_deeper! sexp = nil, ext_vars = [], int_vars = [], level = 0, cur_graph = 
       $variable_collection[var_id][:type][:control] = true
     end unless sub_hash.nil? || sub_hash[:vars].nil?
 
+    $v += 1
     if_tail = add_node cur_graph, tailes, "if"
     if_tail.freeze
     then_tail = []
@@ -338,6 +341,7 @@ def go_deeper! sexp = nil, ext_vars = [], int_vars = [], level = 0, cur_graph = 
       $variable_collection[var_id][:type][:control] = true
     end unless sub_hash.nil? || sub_hash[:vars].nil?
     sexp[2..-2].each do |sexp|
+      $v += 1
       when_tail = add_node cur_graph, case_tail, "when"
       go_deeper! sexp[1], ext_vars, int_vars, level+1, cur_graph, tailes
       sexp[2..-1].each do |sexp|
@@ -349,6 +353,7 @@ def go_deeper! sexp = nil, ext_vars = [], int_vars = [], level = 0, cur_graph = 
 
     else_tail = []
     unless sexp[-1].nil?
+      $v += 1
       else_tail = add_node cur_graph, case_tail, "else"
       sub_hash = go_deeper! sexp[-1], ext_vars, int_vars, level+1, cur_graph, else_tail
       else_tail = sub_hash[:tailes]
@@ -360,6 +365,7 @@ def go_deeper! sexp = nil, ext_vars = [], int_vars = [], level = 0, cur_graph = 
     # What:     sexp[2]          s(:lasgn, :name)
     # Body:     sexp[3]          block / expression
     puts ' ' * level + "For: where=#{sexp[1].inspect} what=#{sexp[2].inspect} body=#{sexp[3].inspect}"
+    $v += 1
     sub_hash = go_deeper! sexp[1], ext_vars, int_vars, level+1, cur_graph, tailes
     sub_hash[:vars].each do |var_id|
       $variable_collection[var_id][:type][:control] = true
@@ -416,6 +422,7 @@ def go_deeper! sexp = nil, ext_vars = [], int_vars = [], level = 0, cur_graph = 
   when :return
     # Returning expr  sexp[1]
     puts ' ' * level + "return " + sexp[1].inspect
+    $v += 1
     go_deeper! sexp[1], ext_vars, int_vars, level+1, cur_graph, tailes unless sexp[1].nil?
   when :break
     # No params
@@ -463,7 +470,7 @@ $variable_collection.each do |var|
 end
 puts "Cheppin: #$cheppin"
 
-puts "Mayers:  #$mayers"
+puts "Mayers:  #[#$v, #{$v+$cond_complication}]"
 
-$graphs.each.with_index{ |graph, i| graph.output( :png => "graph#{i}.png" ) }
+$graphs.each.with_index{ |graph, i| begin ; graph.output( :png => "graph#{i}.png" ) ; rescue ; end }
 # puts "DEBUG: " + Ruby19Parser.new.parse(File.open(__FILE__){ |f| f.read }).inspect
