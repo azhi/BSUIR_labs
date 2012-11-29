@@ -10,7 +10,10 @@ end
 if ARGV[0] == '--sign'
   RSA_DigitalSignature.sign_file ARGV[1]
 elsif ARGV[0] == '--check'
-  RSA_DigitalSignature.check_signature ARGV[1]
+  params_hash = Hash[ *ARGV[2..-1].join.split(?,).map{ |el| [el.split(?=)[0], el.split(?=)[1]] }.flatten ]
+  wrong_usage unless params_hash.has_key?('r') && params_hash.has_key?('ko')
+  r = params_hash['r'].to_i; ko = params_hash['ko'].to_i;
+  RSA_DigitalSignature.check_signature ARGV[1], ko, r
 else
   wrong_usage
 end

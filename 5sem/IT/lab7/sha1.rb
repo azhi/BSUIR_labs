@@ -4,17 +4,14 @@ class SHA_1
     def sha_from_stream stream
       init
       size = 0
-      [@@A, @@B, @@C, @@D, @@E]
       until stream.eof? do
         block = stream.binmode.read(64).split('').map(&:ord)
         size += block.size
         break if block.size < 64
         input = block.each_slice(4).map{ |_4bytes| _4bytes.inject(0){ |res, byte| (res << 8) | byte } }
         calc_block input
-        [@@A, @@B, @@C, @@D, @@E]
       end
       align_last_block(block, size)
-      [@@A, @@B, @@C, @@D, @@E]
       res = [@@A, @@B, @@C, @@D, @@E].inject(0){ |res, _32bytes| (res << 32) | _32bytes }
     end
 

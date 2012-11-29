@@ -5,33 +5,45 @@ class RSA_DigitalSignature
   class << self
     def sign_file filename
       f = File.open(filename, 'r')
-      str_sha = SHA_1.sha_from_stream(f).to_s(16)
+      sha1sum = SHA_1.sha_from_stream(f)
+      str_sha = ""
+      while sha1sum != 0 do
+        byte = sha1sum & 0xFF
+        sha1sum >>= 8
+        str_sha += byte.chr
+      end
+      str_sha += '\0' if str_sha.size % 2 == 1
       f.close
+
       p = Math::get_primes(rand(100..256)).last
       q = Math::get_primes(rand(100..256)).last
       rsa = RSA.create_encoding(p, q, nil)
-      # STDERR.puts "#{rsa.r} #{rsa.ko}"
-      print ((rsa.r >> 8) & 0xFF).chr
-      print (rsa.r & 0xFF).chr
-      print ((rsa.ko >> 8) & 0xFF).chr
-      print (rsa.ko & 0xFF).chr
+      STDERR.puts "ko:#{rsa.ko} r:#{rsa.r}"
       print rsa.encode(str_sha, rsa.ks)
     end
 
-    def check_signature filename
+    def check_signature filename, ko, r
       f = File.open(filename, 'r')
-      p str_sha = SHA_1.sha_from_stream(f).to_s(16)
+      sha_num = SHA_1.sha_from_stream(f)
       f.close
-      r = STDIN.binmode.read(2).split('').map(&:ord).inject(0){ |res, byte| (res << 8) | byte }
-      ko = STDIN.binmode.read(2).split('').map(&:ord).inject(0){ |res, byte| (res << 8) | byte }
-      # p [r, ko]
       rsa = RSA.create_decoding(r, ko, nil)
       text = STDIN.binmode.read
-      p sha_from_sig = rsa.decode(text, rsa.ko)
-      if ( str_sha == sha_from_sig )
-        STDERR.puts "Signature verified!"
+      begin
+        sha_from_sig = rsa.decode(text, rsa.ko)
+      rescue Object => e
+        puts e
+        puts
+        puts "[FAIL] Signature verification failed!"
+        exit(1)
+      end
+      sha_from_sig_num = sha_from_sig.each_byte.to_a.reverse.inject(0){ |res, byte| (res << 8) | byte }
+      puts "file SHA-1:      " + sha_num.to_s(16)
+      puts "signature SHA-1: " + sha_from_sig_num.to_s(16)
+      puts
+      if ( sha_num == sha_from_sig_num )
+        puts "[SUCCESS] Signature verified!"
       else
-        STDERR.puts "Signature verification fail"
+        puts "[FAIL] Signature verification failed!"
       end
     end
   end
