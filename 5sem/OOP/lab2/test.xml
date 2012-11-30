@@ -1,0 +1,12 @@
+<div id="5" class="ololo">
+  <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+  textdivhead
+  some other text
+  <div id="2" float="center">
+    textdivchild
+    <!-- Inside comment -->
+    <![CDATA[<tags>indside</cdata>]]>
+  </div>
+  and text after all
+  <!-- Some comment -->
+</div>

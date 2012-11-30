@@ -1,0 +1,9 @@
+" grom build directories
+grom/bin/*
+grom/build/*
+
+" object files
+*.o
+
+" executable
+lab2
