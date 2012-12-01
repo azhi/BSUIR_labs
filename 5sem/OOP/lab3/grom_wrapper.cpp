@@ -9,14 +9,14 @@ using namespace Rice;
 
 typedef void (Sys::XMLNode::*SetValue1Arg)(const char* value);
 
-Sys::XMLNode* CreateXMLNodeWrapper()
+Sys::XMLNode* CreateXMLNodeWithNullOwnerWrapper()
 {
   return Sys::Create<Sys::XMLNode>(NULL);
 }
 
-void DestroyXMLNodeWrapper(Sys::XMLNode* node)
+Sys::XMLNode* CreateXMLNodeWrapper(Sys::XMLNode* owner)
 {
-  node->Destroy();
+  return Sys::Create<Sys::XMLNode>(owner);
 }
 
 template<>
@@ -33,14 +33,13 @@ Object to_ruby<short>(short const & x)
   return to_ruby<int>(i_x);
 }
 
-
 extern "C"
 void Init_grom_wrapper()
 {
   Module rb_mGOC =
     define_module("GromXmlNodeCreator")
     .define_module_function("create", &CreateXMLNodeWrapper)
-    .define_module_function("destroy", &DestroyXMLNodeWrapper)
+    .define_module_function("create_without_owner", &CreateXMLNodeWithNullOwnerWrapper)
     ;
 
   Data_Type<Sys::Object> rb_cObject =
@@ -52,7 +51,7 @@ void Init_grom_wrapper()
     .define_method("type", &Sys::XMLNode::Type)
     .define_method("name", &Sys::XMLNode::Name)
     .define_method("value", &Sys::XMLNode::Value)
-    .define_method("set_value", (SetValue1Arg) &Sys::XMLNode::SetValue)
+    .define_method("set_value", (SetValue1Arg) &Sys::XMLNode::SetValue, Arg("value"))
     .define_method("child_count", &Sys::XMLNode::ChildCount)
     .define_method("child", &Sys::XMLNode::Child)
     .define_method("destroy", &Sys::XMLNode::Destroy)
