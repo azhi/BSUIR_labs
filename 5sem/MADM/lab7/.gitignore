@@ -1,0 +1,6 @@
+" cpp build files
+*.o
+*.d
+
+" executable
+Gramm
