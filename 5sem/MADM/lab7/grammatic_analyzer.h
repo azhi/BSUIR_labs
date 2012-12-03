@@ -7,16 +7,45 @@
 
 using namespace std;
 
-struct Range
+struct Terminal_element_combination
 {
-  int p1, p2;
-  Range() : p1(0), p2(0) {};
-  Range(int p1, int p2) : p1(p1), p2(p2) {};
-};
+  int count;
+  int count_in_each;
+  int** data;
 
-struct Rect_range
-{
-  Range xrange, yrange;
+  Terminal_element_combination() : count(0), count_in_each(0), data(NULL) {};
+  Terminal_element_combination(int count, int count_in_each) : count(count), count_in_each(count_in_each)
+  {
+    data = (int**) malloc( sizeof(int*) * count );
+    for ( int i = 0; i < count; ++i )
+      data[i] = (int*) malloc ( sizeof(int) * count_in_each );
+  };
+
+  void reserve(int count, int count_in_each)
+  {
+    if ( data )
+    {
+      for ( int i = 0; i < this->count; ++i )
+        free(data[i]);
+      free(data);
+    }
+
+    this->count = count;
+    this->count_in_each = count_in_each;
+    data = (int**) malloc( sizeof(int*) * count );
+    for ( int i = 0; i < count; ++i )
+      data[i] = (int*) malloc ( sizeof(int) * count_in_each );
+  };
+
+  ~Terminal_element_combination()
+  {
+    if ( data )
+    {
+      for ( int i = 0; i < this->count; ++i )
+        free(data[i]);
+      free(data);
+    }
+  }
 };
 
 class Grammatic_analyzer
@@ -30,6 +59,10 @@ class Grammatic_analyzer
 
   private:
     Tree* grammar;
+
+    Terminal_element_combination* build_match_combinations(Tree_node* node, vector<Figure*>* figures);
+    void find_figures_by_type(vector<Figure*>* figures, short figure_type, Terminal_element_combination* res);
+    bool check_for_descriptor(short pos_descriptor, int* left_comb, int left_count, int* right_comb, int right_count, vector<Figure*>* figures);
 
     Rect_range draw_node(Tree_node* node, int x, int y, int width, int height, Scene* scene);
     Range generate_range(int base, int wid, short comp_flag, float coeff);

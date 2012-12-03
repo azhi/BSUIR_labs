@@ -11,6 +11,8 @@ class Rectangle : public Figure
 
     void draw();
 
+    Rect_range get_rect_space();
+
   private:
     Point p1, p2;
 

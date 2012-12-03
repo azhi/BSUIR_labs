@@ -24,9 +24,10 @@ using namespace std;
 
 // terminal elements
 #define FIG_HZ_LINE 1
-#define FIG_RECTANGLE 2
-#define FIG_CIRCLE 3
-#define FIG_ROOF 4
+#define FIG_LINE 2
+#define FIG_RECTANGLE 3
+#define FIG_CIRCLE 4
+#define FIG_ROOF 5
 
 struct Tree_node
 {

@@ -43,6 +43,20 @@ void Main_controller::main_loop()
             gm->build_match_scene(scene);
             scene->set_working_surface( sdl_controller->get_surface() );
             break;
+          case SDLK_a:
+            {
+              bool res = gm->match_grammar(scene);
+              fprintf(stderr, "res=%d\n", res);
+              // not a good idea, but using kdialog to display information here
+              if ( res )
+                system("kdialog --msgbox \"It's a valid house\"");
+              else
+                system("kdialog --msgbox \"It's not a valid house\"");
+            }
+            break;
+          case SDLK_c:
+            scene->clear();
+            break;
         }
         break;
       case SDL_MOUSEBUTTONDOWN:

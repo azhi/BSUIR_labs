@@ -26,7 +26,14 @@ Grammatic_analyzer::Grammatic_analyzer()
 
   // roof
   Tree_node* roof = new Tree_node(FIG_ROOF, LENGTH_HORIZONTAL, COMP_GREATER, 1 / 3.0, LENGTH_VERTICAL, COMP_GREATER, 1 / 5.0);
+  roof->pos_descriptor = POS_LEFT;
   grammar->add_node(roof, house);
+
+  Tree_node* lroof = new Tree_node(FIG_LINE, 0, 0, 1, 0, 0, 1);
+  grammar->add_node(lroof, roof);
+
+  Tree_node* rroof = new Tree_node(FIG_LINE, 0, 0, 1, 0, 0, 1);
+  grammar->add_node(rroof, roof);
 
   // house body
   Tree_node* body = new Tree_node(POS_INSIDE);
@@ -56,11 +63,146 @@ Grammatic_analyzer::~Grammatic_analyzer()
 
 bool Grammatic_analyzer::match_grammar(Scene* scene)
 {
-  //TODO: ascending bypass of grammar tree with all possible combination of
-  //terminal elements
-  return false;
+  bool res;
+  Terminal_element_combination* comb = build_match_combinations(grammar->root, scene->get_figures());
+  res = comb->count >= 1;
+  if ( comb->count_in_each != scene->size() )
+    res = false;
+  delete comb;
+  return res;
 }
 
+Terminal_element_combination* Grammatic_analyzer::build_match_combinations(Tree_node* node, vector<Figure*>* figures)
+{
+  if ( node->left == NULL && node->right == NULL)
+  {
+    Terminal_element_combination* res = new Terminal_element_combination(10, 1);
+    find_figures_by_type(figures, node->figure_type, res);
+    return res;
+  }
+
+  Terminal_element_combination* left_comb = build_match_combinations(node->left, figures);
+  Terminal_element_combination* right_comb = build_match_combinations(node->right, figures);
+
+  fprintf(stderr, "trying to gather, %d\n", left_comb->count_in_each + right_comb->count_in_each);
+  Terminal_element_combination* res = new Terminal_element_combination(10, left_comb->count_in_each + right_comb->count_in_each);
+  int count = 0;
+  bool is_busy[figures->size()];
+  for ( int i = 0; i < figures->size(); ++i )
+    is_busy[i] = false;
+  
+  for ( int i = 0; i < left_comb->count; ++i )
+  {
+    for ( int j = 0; j < left_comb->count_in_each; ++j )
+      is_busy[ left_comb->data[i][j] ] = true;
+
+    for ( int j = 0; j < right_comb->count; ++j )
+    {
+      bool fit = true;
+      for ( int k = 0; k < right_comb->count_in_each; ++k )
+        if ( is_busy[ right_comb->data[j][k] ] )
+        {
+          fit = false;
+          break;
+        }
+      if ( fit )
+        fit = check_for_descriptor(node->pos_descriptor, left_comb->data[i], left_comb->count_in_each,
+                                   right_comb->data[j], right_comb->count_in_each, figures);
+      if ( fit )
+      {
+        fprintf(stderr, "adding %d %d %d - %d %d %d\n", left_comb->data[i][0], left_comb->data[i][1], left_comb->data[i][2],
+            right_comb->data[j][0], right_comb->data[j][1], right_comb->data[j][2]);
+        for ( int k = 0; k < left_comb->count_in_each; ++k )
+          res->data[count][k] = left_comb->data[i][k];
+        for ( int k = 0; k < right_comb->count_in_each; ++k )
+          res->data[count][left_comb->count_in_each + k] = right_comb->data[j][k];
+        count++;
+      }
+    }
+
+    for ( int j = 0; j < left_comb->count_in_each; ++j )
+      is_busy[ left_comb->data[i][j] ] = false;
+  }
+
+  delete left_comb;
+  delete right_comb;
+
+  res->count = count;
+  fprintf(stderr, "count=%d\n", count);
+  return res;
+}
+
+bool Grammatic_analyzer::check_for_descriptor(short pos_descriptor, int* left_comb, int left_count, int* right_comb, int right_count, vector<Figure*>* figures)
+{
+  bool res = true;
+  bool one_right_beneath = false;
+  bool all_beneath = true;
+  switch ( pos_descriptor )
+  {
+    case POS_ABOVE:
+      for ( int i = 0; i < left_count; ++i )
+        for ( int j = 0; j < right_count; ++j )
+        {
+          res &= (*figures)[left_comb[i]]->is_above((*figures)[right_comb[j]]);
+          if ( !res )
+            break;
+        }
+      break;
+    case POS_LEFT:
+      for ( int i = 0; i < left_count; ++i )
+        for ( int j = 0; j < right_count; ++j )
+        {
+          res &= (*figures)[left_comb[i]]->is_left((*figures)[right_comb[j]]);
+          if ( !res )
+            break;
+        }
+      break;
+    case POS_INSIDE:
+      for ( int i = 0; i < left_count; ++i )
+        for ( int j = 0; j < right_count; ++j )
+        {
+          res &= (*figures)[right_comb[j]]->is_inside((*figures)[left_comb[i]]);
+          if ( !res )
+            break;
+        }
+      break;
+    case POS_CONNECTED_BENEATH:
+      for ( int i = 0; i < left_count; ++i )
+        for ( int j = 0; j < right_count; ++j )
+        {
+          one_right_beneath |= (*figures)[right_comb[j]]->is_rigth_beneath((*figures)[left_comb[i]]);
+          all_beneath &= (*figures)[right_comb[j]]->is_under((*figures)[left_comb[i]]);
+        }
+      res = (one_right_beneath && all_beneath);
+      break;
+  }
+
+  return res;
+}
+
+void Grammatic_analyzer::find_figures_by_type(vector<Figure*>* figures, short figure_type, Terminal_element_combination* res)
+{
+  int count = 0;
+  for ( int i = 0; i < figures->size(); i++ )
+  {
+    short actual_fig_type = (*figures)[i]->get_type();
+    if ( actual_fig_type == T_LINE && figure_type == FIG_HZ_LINE )
+    {
+      if ( abs( ((Line*) (*figures)[i])->get_p1().y - ((Line*) (*figures)[i])->get_p2().y ) < 20 )
+        res->data[count++][0] = i;
+    }
+    else if ( actual_fig_type == T_LINE && figure_type == FIG_LINE )
+      res->data[count++][0] = i;
+    else if ( actual_fig_type == T_ELLIPSE && figure_type == FIG_CIRCLE )
+    {
+      if ( abs( ((Ellipse*) (*figures)[i])->get_rx() - ((Ellipse*) (*figures)[i])->get_ry() ) < 10 )
+        res->data[count++][0] = i;
+    }
+    else if ( actual_fig_type == T_RECTANGLE && figure_type == FIG_RECTANGLE )
+      res->data[count++][0] = i;
+  }
+  res->count = count;
+}
 
 void Grammatic_analyzer::build_match_scene(Scene* scene)
 {
