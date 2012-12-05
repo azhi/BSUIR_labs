@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require File.join(File.dirname(__FILE__), 'elliptic_group.rb')
+
+m = ARGV[0].to_i
+
+list = EllipticGroup.get_all_existing_elliptic_groups m
+list.each do |eg|
+  puts "E#{eg.m} (#{eg.a}; #{eg.b})"
+end

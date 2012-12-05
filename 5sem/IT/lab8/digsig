@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+
+require File.join(File.dirname(__FILE__), 'digsig.rb')
+
+def wrong_usage
+  STDERR.puts "Wrong arguments.\nUsage: ./digsig [--sign/--check] a=<a>, b=<b>, m=<m> [, pa=<pa>, r=<r>, s=<s>] filename"
+  exit
+end
+
+params_hash = Hash[ *ARGV[1..3].join.split(?,).map{ |el| [el.split(?=)[0], el.split(?=)[1]] }.flatten ]
+wrong_usage unless params_hash.has_key?('a') && params_hash.has_key?('b') && params_hash.has_key?('m')
+a = params_hash['a'].to_i; b = params_hash['b'].to_i; m = params_hash['m'].to_i; 
+eg = EllipticGroup.new a, b, m
+g, c = eg.elements.map{ |p| [p, eg.order(p)] }.max_by{ |p, order| Math::prime?(order) ? order : 0 }
+egsign = EllipticGroup_DigitalSignature.new eg, g, c
+
+if ARGV[0] == '--sign'
+  pa, r, s = egsign.sign_file ARGV[-1]
+  puts "Open key : #{pa}"
+  puts "Signature: r=#{r}, s=#{s}"
+elsif ARGV[0] == '--check'
+  params_hash = Hash[ *ARGV[4..-2].join.split(?,).map{ |el| [el.split(?=)[0], el.split(?=)[1]] }.flatten ]
+  wrong_usage unless params_hash.has_key?('pa') && params_hash.has_key?('r') && params_hash.has_key?('s')
+  pax, pay = params_hash['pa'][1...-1].split(?;)
+  pa = Point.new(pax.to_i, pay.to_i); r = params_hash['r'].to_i; s = params_hash['s'].to_i;
+  res = egsign.check_signature pa, r, s, ARGV[-1]
+  if res
+    puts "[SUCCESS] Signature verified!"
+  else
+    puts "[FAIL] Signature verification failed!"
+  end
+else
+  wrong_usage
+end
