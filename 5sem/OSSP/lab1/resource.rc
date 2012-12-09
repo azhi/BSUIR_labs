@@ -1,0 +1,27 @@
+#include "resources.h"
+
+// Win32 application icon.
+IDI_APPICON ICON "Application.ico"
+
+IDR_MAINMENU MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New",              ID_NEW
+        MENUITEM "&Open",             ID_OPEN
+        MENUITEM "&Save as",          ID_SAVEAS
+        MENUITEM "&Exit",             ID_FILE_EXIT
+    END
+
+    POPUP "&Color"
+    BEGIN
+        MENUITEM "&Pen color",        ID_PEN_COLOR
+        MENUITEM "&Brush color",      ID_BRUSH_COLOR
+    END
+
+    POPUP "&Print"
+    BEGIN
+        MENUITEM "&Set print region", ID_SET_CLIP
+        MENUITEM "&Print",            ID_PRINT
+    END
+END

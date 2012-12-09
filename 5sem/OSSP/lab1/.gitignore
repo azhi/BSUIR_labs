@@ -1,0 +1,5 @@
+" obj files
+*.o
+
+" Executable
+lab1.exe
