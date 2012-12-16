@@ -84,6 +84,7 @@ void App::run(int nCmdShow)
 void App::findAbonent(Abonent *abonent)
 {
   updateStatus(TEXT("Searching..."), TRUE);
+
   BOOL bCr = abonent == NULL;
   if (!abonent) {
     abonent = loadAbonent();
