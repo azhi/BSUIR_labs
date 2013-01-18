@@ -3,7 +3,7 @@
 require File.join(File.dirname(__FILE__), 'digsig.rb')
 
 def wrong_usage
-  STDERR.puts "Wrong arguments.\nUsage: ./digsig [--sign/--check] filename"
+  STDERR.puts "Wrong arguments.\nUsage: ./digsig [--sign/--check] [r=<r>, ko=<ko>] filename"
   exit
 end
 
