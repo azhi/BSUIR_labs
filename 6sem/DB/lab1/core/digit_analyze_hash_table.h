@@ -5,12 +5,13 @@
 
 class DigitAnalyzeHashTable : public VirtualHashTable
 {
-  DigitAnalyzeHashTable(int package_count, int package_size)
-    : VirtualHashTable(package_count, package_size) {};
+  public:
+    DigitAnalyzeHashTable(unsigned package_count, unsigned package_size)
+      : VirtualHashTable(package_count, package_size) {};
 
   private:
-    virtual long calc_hash(long key);
-    virtual int scale_hash(long hash);
+    virtual unsigned calc_hash(unsigned key);
+    virtual unsigned scale_hash(unsigned hash);
 };
 
 #endif // __DIGIT_ANALYZE_HASH_TABLE_H_

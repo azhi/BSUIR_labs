@@ -13,34 +13,34 @@ struct Item
 struct Package
 {
   Item *data;
-  long count;
+  unsigned count;
 };
 
 class VirtualHashTable
 {
   public:
-    VirtualHashTable(int package_count, int package_size);
+    VirtualHashTable(unsigned package_count, unsigned package_size);
     virtual ~VirtualHashTable();
 
     void add_record(Item& record);
     Item* find_record(std::string& key);
 
+    unsigned count_in_packages, count_in_overflow;
 
   protected:
-    virtual long calc_hash(long key) = 0;
-    virtual int scale_hash(long hash);
+    virtual unsigned calc_hash(unsigned key) = 0;
+    virtual unsigned scale_hash(unsigned hash) = 0;
+
+    unsigned package_count_order;
+    unsigned package_count, package_size;
 
   private:
     Package* packages;
-    int package_count, package_size;
-    int package_count_order;
 
-    int count_in_packages, count_in_overflow;
+    unsigned convert_key_to_int(std::string& key);
 
-    long convert_key_to_long(std::string& key);
-
-    bool add_record_to_package(int package_index, Item& record);
-    Item* find_record_in_package(int package_index, std::string& key);
+    bool add_record_to_package(unsigned package_index, Item& record);
+    Item* find_record_in_package(unsigned package_index, std::string& key);
 
 };
 

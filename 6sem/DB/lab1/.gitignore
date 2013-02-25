@@ -1,0 +1,9 @@
+" cpp build files
+*.o
+*.d
+
+" executable
+core/hash
+
+" base
+base.txt
