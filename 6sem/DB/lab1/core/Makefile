@@ -1,5 +1,5 @@
-CC=g++
-CFLAGS=-c -Wall -std=c++0x -O2 -march=native
+CC=clang
+CFLAGS=-c -Wall -std=c++11 -O2 -march=native
 CPP_SOURCES=$(wildcard *.cpp)
 OBJECTS=$(CPP_SOURCES:.cpp=.o)
 EXECUTABLE=hash

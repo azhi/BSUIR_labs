@@ -5,15 +5,12 @@ require 'set'
 MAX_KEY = 0xffffff
 SIZE = 1_000_000
 
-N_MIN_STEP = 1
-N_MAX_STEP = MAX_KEY * 2 / SIZE - 1
-
 class Generator
 
   CHARS = [?a..?z, ?A..?Z, ?0..?9, %W[_ -]].map(&:to_a).flatten
 
   class << self
-    def generate_string length=6, collision_rate=7
+    def generate_string length=6, collision_rate=3
       if @str_list && (rand(100) < collision_rate)
         @str_list.sample
       else
@@ -38,17 +35,18 @@ end
 class Entry < Struct.new(:key, :string, :number)
 
   def initialize
-    @@n ||= 0
-    @@n += rand(N_MIN_STEP..N_MAX_STEP)
-    @@n %= MAX_KEY + 1
-    self.key = @@n
+    self.key = rand(1...MAX_KEY)
     self.string = Generator.generate_string 10..12
     self.number = Generator.generate_number 0..800_000
   end
 
+  def hash
+    self.key.hash
+  end
+
   def ==(other)
-    self.key == other.key or
-      self.string == other.string && self.number=other.number
+    self.string == other.string && self.number == other.number or
+      self.key == other.key
   end
 
   def to_s
@@ -56,9 +54,25 @@ class Entry < Struct.new(:key, :string, :number)
   end
 end
 
-elems = loop.with_object(Set.new) do |_, set|
-  set << candidate = Entry.new
-  break set if set.size >= SIZE
+elems = loop.with_object(Array.new) do |_, array|
+  break array if array.size >= SIZE * 1.1
+  array << Entry.new
+end
+
+# $stderr.puts elems.size.to_s
+
+elems.uniq! { |el| "#{el.string} #{el.number}" }
+# $stderr.puts elems.size.to_s
+
+elems.uniq! { |el| el.key}
+# $stderr.puts elems.size.to_s
+
+elems = elems.first SIZE
+
+elems = loop.with_object(elems) do |_, array|
+  break array if array.size >= SIZE
+  candidate = Entry.new
+  array << candidate  if array.none? { |el| el == candidate }
 end
 
 $stderr.puts("Total: #{elems.size}")
@@ -67,4 +81,4 @@ $stderr.puts("String field collisions: " +
 $stderr.puts("Numeric field collisions: " +
              (elems.size - elems.group_by(&:number).keys.size).to_s)
 
-puts elems.map(&:to_s).shuffle.join(?\n)
+puts elems.map(&:to_s).join(?\n)

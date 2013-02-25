@@ -22,7 +22,8 @@ int main (int argc, char const* argv[])
     sht->add_record(it);
   }
   in.close();
-  fprintf(stderr, "in packages: %u, overflowed: %u\n", sht->count_in_packages, sht->count_in_overflow);
+  fprintf(stderr, "in packages: %u, overflowed: %u\n",
+          sht->count_in_packages, sht->count_in_overflow);
   fprintf(stderr, "start testing...\n");
   in.open("../base.txt", fstream::in);
   for(int i = 0; i < 1000000; ++i)
