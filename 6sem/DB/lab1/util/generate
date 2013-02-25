@@ -3,7 +3,7 @@
 require 'set'
 
 MAX_KEY = 0xffffff
-SIZE = 1000000
+SIZE = 1_000_000
 
 N_MIN_STEP = 1
 N_MAX_STEP = MAX_KEY * 2 / SIZE - 1
@@ -13,15 +13,23 @@ class Generator
   CHARS = [?a..?z, ?A..?Z, ?0..?9, %W[_ -]].map(&:to_a).flatten
 
   class << self
-    def generate_string length=6
-      length = rand(length) if length.is_a? Range
+    def generate_string length=6, collision_rate=7
+      if @str_list && (rand(100) < collision_rate)
+        @str_list.sample
+      else
+        length = rand(length) if length.is_a? Range
 
-      length.times.with_object("") do |_, res|
-        res << CHARS[rand(CHARS.length)]
+        res = length.times.with_object("") do |_, res|
+          res << CHARS.sample
+        end
+        @str_list ||= []
+        @str_list << res
+
+        res
       end
     end
 
-    def generate_number range = 0..10000
+    def generate_number range = 0..10_000
       rand(range)
     end
   end
@@ -35,7 +43,7 @@ class Entry < Struct.new(:key, :string, :number)
     @@n %= MAX_KEY + 1
     self.key = @@n
     self.string = Generator.generate_string 10..12
-    self.number = Generator.generate_number
+    self.number = Generator.generate_number 0..800_000
   end
 
   def ==(other)
@@ -53,4 +61,10 @@ elems = loop.with_object(Set.new) do |_, set|
   break set if set.size >= SIZE
 end
 
-puts elems.map(&:to_s).join(?\n)
+$stderr.puts("Total: #{elems.size}")
+$stderr.puts("String field collisions: " +
+             (elems.size - elems.group_by(&:string).keys.size).to_s)
+$stderr.puts("Numeric field collisions: " +
+             (elems.size - elems.group_by(&:number).keys.size).to_s)
+
+puts elems.map(&:to_s).shuffle.join(?\n)
