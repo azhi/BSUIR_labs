@@ -3,6 +3,8 @@
 
 #include "virtual_hash_table.h"
 
+using namespace std;
+
 VirtualHashTable::VirtualHashTable(int package_count, int package_size)
   : package_count(package_count), package_size(package_size)
 {
@@ -41,7 +43,7 @@ void VirtualHashTable::add_record(Item& record)
     count_in_overflow++;
 }
 
-Item* VirtualHashTable::find_record(std::string& key)
+Item* VirtualHashTable::find_record(string& key)
 {
   long numeric_key = convert_key_to_long(key);
   long hash = calc_hash(numeric_key);
@@ -54,7 +56,7 @@ Item* VirtualHashTable::find_record(std::string& key)
   } while ( packages[package_index].count == package_size && res == NULL );
 }
 
-long VirtualHashTable::convert_key_to_long(std::string& key)
+long VirtualHashTable::convert_key_to_long(string& key)
 {
   return strtol(key.c_str(), NULL, 16);
 }
@@ -74,7 +76,7 @@ bool VirtualHashTable::add_record_to_package(int package_index, Item& record)
   return true;
 }
 
-Item* VirtualHashTable::find_record_in_package(int package_index, std::string& key)
+Item* VirtualHashTable::find_record_in_package(int package_index, string& key)
 {
   Item* res = NULL;
   for (int i = 0; i < packages[package_index].count; ++i)

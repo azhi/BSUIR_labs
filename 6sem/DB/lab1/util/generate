@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+
+require 'set'
+
+MAX_KEY = 0xffffff
+SIZE = 1000000
+
+N_MIN_STEP = 1
+N_MAX_STEP = MAX_KEY * 2 / SIZE - 1
+
+class Generator
+
+  CHARS = [?a..?z, ?A..?Z, ?0..?9, %W[_ -]].map(&:to_a).flatten
+
+  class << self
+    def generate_string length=6
+      length = rand(length) if length.is_a? Range
+
+      length.times.with_object("") do |_, res|
+        res << CHARS[rand(CHARS.length)]
+      end
+    end
+
+    def generate_number range = 0..10000
+      rand(range)
+    end
+  end
+end
+
+class Entry < Struct.new(:key, :string, :number)
+
+  def initialize
+    @@n ||= 0
+    @@n += rand(N_MIN_STEP..N_MAX_STEP)
+    @@n %= MAX_KEY + 1
+    self.key = @@n
+    self.string = Generator.generate_string 10..12
+    self.number = Generator.generate_number
+  end
+
+  def ==(other)
+    self.key == other.key or
+      self.string == other.string && self.number=other.number
+  end
+
+  def to_s
+     '%0.6x %d %s' % [key, number, string]
+  end
+end
+
+elems = loop.with_object(Set.new) do |_, set|
+  set << candidate = Entry.new
+  break set if set.size >= SIZE
+end
+
+puts elems.map(&:to_s).join(?\n)
