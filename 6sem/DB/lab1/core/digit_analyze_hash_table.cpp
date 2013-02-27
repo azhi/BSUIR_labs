@@ -1,12 +1,12 @@
 #include "digit_analyze_hash_table.h"
 
-unsigned DigitAnalyzeHashTable::calc_hash(unsigned key)
+ull DigitAnalyzeHashTable::calc_hash(ull key)
 {
   // TODO: calcing digit analyze hash algorithm
   return 0;
 }
 
-unsigned DigitAnalyzeHashTable::scale_hash(unsigned hash)
+ull DigitAnalyzeHashTable::scale_hash(ull hash)
 {
   // TODO: calcing digit analyze scale algorithm
   return 0;

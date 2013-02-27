@@ -10,15 +10,11 @@ VirtualHashTable::VirtualHashTable(unsigned package_count, unsigned package_size
 {
   packages = new Package[package_count];
   for (unsigned i = 0; i < package_count; ++i)
-    packages[i].data = new Item[package_size];
-  package_count_order = 0;
-  unsigned package_count_tmp = package_count;
-  while ( package_count_tmp != 0 )
   {
-    package_count_order++;
-    package_count_tmp /= 10;
+    packages[i].data = new Item[package_size];
+    packages[i].count = 0;
   }
-  fprintf(stderr, "order: %d\n", package_count_order);
+  package_count_order = find_order(package_count);
 }
 
 VirtualHashTable::~VirtualHashTable()
@@ -30,9 +26,9 @@ VirtualHashTable::~VirtualHashTable()
 
 void VirtualHashTable::add_record(Item& record)
 {
-  unsigned numeric_key = convert_key_to_int(record.key);
-  unsigned hash = calc_hash(numeric_key);
-  unsigned package_index = scale_hash(hash);
+  ull numeric_key = convert_key_to_int(record.key);
+  ull hash = calc_hash(numeric_key);
+  ull package_index = scale_hash(hash);
 
   unsigned actual_package_index = package_index;
   while( !add_record_to_package(actual_package_index, record) )
@@ -45,21 +41,35 @@ void VirtualHashTable::add_record(Item& record)
 
 Item* VirtualHashTable::find_record(string& key)
 {
-  unsigned numeric_key = convert_key_to_int(key);
-  unsigned hash = calc_hash(numeric_key);
-  unsigned package_index = scale_hash(hash);
+  ull numeric_key = convert_key_to_int(key);
+  ull hash = calc_hash(numeric_key);
+  ull package_index = scale_hash(hash);
 
   Item* res = NULL;
   do
   {
-    res = find_record_in_package(package_index++, key);
-  } while ( packages[package_index].count == package_size && res == NULL );
+    res = find_record_in_package(package_index, key);
+    package_index = (package_index + 1) % package_count;
+  } while ( packages[package_index - 1].count == package_size && res == NULL );
   return res;
 }
 
-unsigned VirtualHashTable::convert_key_to_int(string& key)
+ull VirtualHashTable::convert_key_to_int(string& key)
 {
-  return strtol(key.c_str(), NULL, 16);
+  ull res = 0;
+  for (int i = 0; i < 6; ++i)
+  {
+    char sym = key[i];
+    if ( sym >= '0' && sym <= '9' )
+      sym -= '0';
+    else if ( sym >= 'a' && sym <= 'z' )
+      sym -= 'a' + '9' - '0';
+    else if ( sym >= 'A' && sym <= 'Z' )
+      sym -= 'A' + 'z' - 'a' + '9' - '0';
+    res *= 62;
+    res += sym;
+  }
+  return res;
 }
 
 bool VirtualHashTable::add_record_to_package(unsigned package_index, Item& record)
@@ -76,7 +86,21 @@ Item* VirtualHashTable::find_record_in_package(unsigned package_index, string& k
   for (unsigned i = 0; i < packages[package_index].count; ++i)
   {
     if ( packages[package_index].data[i].key.compare(key) == 0 )
+    {
       res = &packages[package_index].data[i];
+      break;
+    }
+  }
+  return res;
+}
+
+unsigned VirtualHashTable::find_order(ull number)
+{
+  unsigned res = 0;
+  while ( number != 0 )
+  {
+    res++;
+    number /= 10;
   }
   return res;
 }

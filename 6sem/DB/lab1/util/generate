@@ -4,12 +4,17 @@ require 'set'
 
 MAX_KEY = 0xffffff
 SIZE = 1_000_000
+FAKE_KEYS_SIZE = 200
 
 class Generator
 
-  CHARS = [?a..?z, ?A..?Z, ?0..?9, %W[_ -]].map(&:to_a).flatten
+  CHARS = [?a..?z, ?A..?Z, ?0..?9].map(&:to_a).flatten
 
   class << self
+    def generate_key
+      generate_string 6, 0
+    end
+
     def generate_string length=6, collision_rate=3
       if @str_list && (rand(100) < collision_rate)
         @str_list.sample
@@ -35,7 +40,7 @@ end
 class Entry < Struct.new(:key, :string, :number)
 
   def initialize
-    self.key = rand(1...MAX_KEY)
+    self.key = Generator.generate_key
     self.string = Generator.generate_string 10..12
     self.number = Generator.generate_number 0..800_000
   end
@@ -50,7 +55,7 @@ class Entry < Struct.new(:key, :string, :number)
   end
 
   def to_s
-     '%0.6x %d %s' % [key, number, string]
+     '%s %d %s' % [key, number, string]
   end
 end
 
@@ -81,4 +86,16 @@ $stderr.puts("String field collisions: " +
 $stderr.puts("Numeric field collisions: " +
              (elems.size - elems.group_by(&:number).keys.size).to_s)
 
-puts elems.map(&:to_s).join(?\n)
+fake_find_keys = loop.with_object(Array.new) do |_, array|
+  break array if array.size >= FAKE_KEYS_SIZE
+  key = Generator.generate_key
+  array << key if elems.none? { |el| el.key == key }
+end
+
+File.open(ARGV[0], 'w') do |file|
+  file.puts elems.map(&:to_s).join(?\n)
+end
+
+File.open(ARGV[1], 'w') do |file|
+  file.puts (elems.map(&:key) + fake_find_keys).shuffle.join(?\n)
+end

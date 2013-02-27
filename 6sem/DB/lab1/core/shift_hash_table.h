@@ -7,11 +7,15 @@ class ShiftHashTable : public VirtualHashTable
 {
   public:
     ShiftHashTable(unsigned package_count, unsigned package_size)
-      : VirtualHashTable(package_count, package_size) {};
+      : VirtualHashTable(package_count, package_size) {
+        for ( int i = 0; i < 1000000; i++ )
+          distr[i] = 0;
+      };
+    long distr[1000000];
 
   private:
-    virtual unsigned calc_hash(unsigned key);
-    virtual unsigned scale_hash(unsigned hash);
+    virtual ull calc_hash(ull key);
+    virtual ull scale_hash(ull hash);
 };
 
 #endif // __SHIFT_HASH_TABLE_H_

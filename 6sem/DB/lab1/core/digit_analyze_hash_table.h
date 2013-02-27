@@ -10,8 +10,8 @@ class DigitAnalyzeHashTable : public VirtualHashTable
       : VirtualHashTable(package_count, package_size) {};
 
   private:
-    virtual unsigned calc_hash(unsigned key);
-    virtual unsigned scale_hash(unsigned hash);
+    virtual ull calc_hash(ull key);
+    virtual ull scale_hash(ull hash);
 };
 
 #endif // __DIGIT_ANALYZE_HASH_TABLE_H_

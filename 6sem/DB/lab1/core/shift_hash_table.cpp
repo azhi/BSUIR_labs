@@ -3,22 +3,29 @@
 #include <math.h>
 #include <stdio.h>
 
-unsigned ShiftHashTable::calc_hash(unsigned key)
+ull ShiftHashTable::calc_hash(ull key)
 {
-  unsigned res = key;
-  unsigned length = 32;
+  ull res = key;
+  unsigned order = find_order(res);
+  // res %= (ull) pow(10, order - 1);
+  // order = find_order(res);
+  unsigned half_order;
   do
   {
-    unsigned right_mask = (1l << (length / 2)) - 1;
-    unsigned left_mask = ((1l << length) - 1) ^ right_mask;
-    res = (res & left_mask) + (res & right_mask);
-    length /= 2;
-  }
-  while ( res > pow(10, package_count_order) );
+    if ( order < package_count_order * 2 )
+      res = (res % (ull) pow(10, package_count_order)) + (res / (ull) pow(10, package_count_order));
+    else
+    {
+      half_order = (order + 1) / 2;
+      res = (res % (ull) pow(10, half_order)) + (res / (ull) pow(10, half_order));
+    }
+    order = find_order(res);
+  } while ( order > package_count_order );
+  distr[res]++;
   return res;
 }
 
-unsigned ShiftHashTable::scale_hash(unsigned hash)
+ull ShiftHashTable::scale_hash(ull hash)
 {
-  return hash * (package_count - 1) / (pow(10, package_count_order) - 1);
+  return hash * (package_count - 1) / (ull) (pow(10, package_count_order) - 1);
 }
