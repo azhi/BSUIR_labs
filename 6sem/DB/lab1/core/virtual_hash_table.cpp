@@ -39,7 +39,7 @@ void VirtualHashTable::add_record(Item& record)
     count_in_overflow++;
 }
 
-Item* VirtualHashTable::find_record(string& key)
+Item* VirtualHashTable::find_record(char* key)
 {
   ull numeric_key = convert_key_to_int(key);
   ull hash = calc_hash(numeric_key);
@@ -54,7 +54,7 @@ Item* VirtualHashTable::find_record(string& key)
   return res;
 }
 
-ull VirtualHashTable::convert_key_to_int(string& key)
+ull VirtualHashTable::convert_key_to_int(char* key)
 {
   ull res = 0;
   for (int i = 0; i < 6; ++i)
@@ -80,18 +80,25 @@ bool VirtualHashTable::add_record_to_package(unsigned package_index, Item& recor
   return true;
 }
 
-Item* VirtualHashTable::find_record_in_package(unsigned package_index, string& key)
+Item* VirtualHashTable::find_record_in_package(unsigned package_index, char* key)
 {
   Item* res = NULL;
   for (unsigned i = 0; i < packages[package_index].count; ++i)
   {
-    if ( packages[package_index].data[i].key.compare(key) == 0 )
+    if ( str_comparer(packages[package_index].data[i].key, key) )
     {
       res = &packages[package_index].data[i];
       break;
     }
   }
   return res;
+}
+
+bool VirtualHashTable::str_comparer(char* s1, char* s2)
+{
+  int* pi1 = (int*) s1; int* pi2 = (int*) s2;
+  short* ps1 = (short*) s1 + 2; short* ps2 = (short*) s2 + 2;
+  return *pi1 == *pi2 && *ps1 == *ps2;
 }
 
 unsigned VirtualHashTable::find_order(ull number)

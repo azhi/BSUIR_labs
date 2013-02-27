@@ -1,6 +1,7 @@
 #include "shift_hash_table.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <math.h>
 #include <iostream>
@@ -17,14 +18,14 @@ int main (int argc, char const* argv[])
   unsigned package_count = atoi(argv[1]);
   ShiftHashTable* sht = new ShiftHashTable(package_count, SPACE_COUNT / package_count);
   fstream in("../base.txt", fstream::in);
-  string key;
+  char key[7];
   long val2;
-  string val1;
+  char val1[13];
   Item *pit = new Item;
   for(int i = 0; i < RECORDS_COUNT; ++i)
   {
     in >> key; in >> val2; in >> val1;
-    pit->key = key; pit->field1 = val1; pit->field2 = val2;
+    strcpy(pit->key, key); strcpy(pit->field1, val1); pit->field2 = val2;
     sht->add_record(*pit);
   }
   delete pit;

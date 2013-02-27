@@ -7,8 +7,8 @@ typedef unsigned long long ull;
 
 struct Item
 {
-  std::string key;
-  std::string field1;
+  char key[7];
+  char field1[13];
   long field2;
 };
 
@@ -25,7 +25,7 @@ class VirtualHashTable
     virtual ~VirtualHashTable();
 
     void add_record(Item& record);
-    Item* find_record(std::string& key);
+    Item* find_record(char* key);
 
     unsigned count_in_packages, count_in_overflow;
     unsigned package_count_order;
@@ -40,10 +40,11 @@ class VirtualHashTable
   private:
     Package* packages;
 
-    ull convert_key_to_int(std::string& key);
+    ull convert_key_to_int(char* key);
 
     bool add_record_to_package(unsigned package_index, Item& record);
-    Item* find_record_in_package(unsigned package_index, std::string& key);
+    Item* find_record_in_package(unsigned package_index, char* key);
+    static bool str_comparer(char* s1, char* s2);
 
 };
 
