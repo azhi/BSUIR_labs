@@ -2,7 +2,6 @@
 
 require 'set'
 
-MAX_KEY = 0xffffff
 SIZE = 1_000_000
 FAKE_KEYS_SIZE = 200
 

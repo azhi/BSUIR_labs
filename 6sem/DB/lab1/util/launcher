@@ -2,23 +2,33 @@
 
 include Process
 
-def spawn_process
-  spawn(File.join(Dir.pwd, "../core/hash"), @p_sizes.pop.to_s, :chdir => File.join(Dir.pwd, "../results"))
-  @children_count += 1
+EXECUTABLE = File.expand_path("../../core/hash", __FILE__)
+RES_DIR = File.expand_path("../../results", __FILE__)
+THREADS_NUM = 4
+
+def spawn_process args
   print '.'
+  spawn(EXECUTABLE, *args.map(&:to_s), chdir: RES_DIR)
 end
 
-@p_sizes = [20]
-@p_sizes += [20, 200, 2000, 20000].map{ |i| (i..(i * 10)).step(i).to_a[1..-1] }.flatten
-@p_sizes.reverse!
-@children_count = 0
+Dir.mkdir(RES_DIR) unless Dir.exists?(RES_DIR)
 
-4.times{ spawn_process }
-while ( wait && @p_sizes.any? ) do
-  spawn_process
+p_sizes = [20, 200, 2000, 20000].map { |i|
+  (i..(i * 10)).step(i).to_a
+}.flatten.uniq.reverse
+
+queue = p_sizes.map{ |sz| [["--dig", sz], ["--shift", sz]] }.reduce(&:+)
+running = []
+
+while queue.any? || running.any?
+  begin
+    if running.size >= THREADS_NUM || queue.empty?
+      running -= [wait]
+    else
+      running << spawn_process(queue.pop)
+    end
+  rescue
+  end
 end
 
-begin
-  4.times{ wait }
-rescue
-end
+puts ""

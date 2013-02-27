@@ -45,7 +45,6 @@ class VirtualHashTable
     bool add_record_to_package(unsigned package_index, Item& record);
     Item* find_record_in_package(unsigned package_index, char* key);
     static bool str_comparer(char* s1, char* s2);
-
 };
 
 #endif // __VIRTUAL_HASH_TABLE_H_

@@ -1,11 +1,14 @@
+#include "digit_analyze_hash_table.h"
 #include "shift_hash_table.h"
 
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <math.h>
+#include <string.h>
+
+#include <ctime>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -13,10 +16,20 @@ using namespace std;
 #define SPACE_COUNT 1200000
 #define KEYS_COUNT 1000200
 
-int main (int argc, char const* argv[])
+int main (int argc, char const *argv[])
 {
-  unsigned package_count = atoi(argv[1]);
-  ShiftHashTable* sht = new ShiftHashTable(package_count, SPACE_COUNT / package_count);
+  unsigned package_count = atoi(argv[2]);
+  VirtualHashTable *sht;
+  char const *suffix;
+  if (string(argv[1]) == "--shift") {
+    suffix = "shift";
+    sht = new ShiftHashTable(package_count, SPACE_COUNT / package_count);
+  } else if(string(argv[1]) == "--dig") {
+    suffix = "dig";
+    sht = new DigitAnalyzeHashTable(package_count, SPACE_COUNT / package_count);
+  } else
+    throw("Wrong number of arguments.");
+
   fstream in("../base.txt", fstream::in);
   char key[7];
   long val2;
@@ -43,17 +56,12 @@ int main (int argc, char const* argv[])
 
   fstream out;
   char path[1000];
-  sprintf(path, "%d_results.txt", package_count);
+  sprintf(path, "%d_%s_results.txt", package_count, suffix);
   out.open(path, fstream::out);
   out << sht->count_in_packages / (double) SPACE_COUNT << " ";
   out << sht->count_in_overflow / (double) sht->count_in_packages << " ";
   out << (t2 - t1) / (double) CLOCKS_PER_SEC << endl;
   out.close();
-
-  sprintf(path, "%d_distr.txt", package_count);
-  out.open(path, fstream::out);
-  for ( int i = 0; i < pow(10, sht->package_count_order); ++i )
-    out << i << " " << sht->distr[i] << endl;
-  out.close();
+  delete sht;
   return 0;
 }

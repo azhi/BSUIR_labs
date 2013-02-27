@@ -21,7 +21,6 @@ ull ShiftHashTable::calc_hash(ull key)
     }
     order = find_order(res);
   } while ( order > package_count_order );
-  distr[res]++;
   return res;
 }
 
