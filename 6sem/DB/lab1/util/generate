@@ -23,8 +23,10 @@ class Generator
         res = length.times.with_object("") do |_, res|
           res << CHARS.sample
         end
-        @str_list ||= []
-        @str_list << res
+        unless collision_rate.zero?
+          @str_list ||= []
+          @str_list << res
+        end
 
         res
       end
