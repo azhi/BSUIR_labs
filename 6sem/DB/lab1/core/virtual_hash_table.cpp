@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "virtual_hash_table.h"
+
+#include <cstdlib>
+#include <cstdio>
 
 using namespace std;
 

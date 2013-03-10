@@ -1,13 +1,12 @@
 #include "digit_analyze_hash_table.h"
 #include "shift_hash_table.h"
 
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 #include <ctime>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 using namespace std;

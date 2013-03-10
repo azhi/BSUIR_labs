@@ -1,7 +1,7 @@
 #include "shift_hash_table.h"
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 
 ull ShiftHashTable::calc_hash(ull key)
 {
