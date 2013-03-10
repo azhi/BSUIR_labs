@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+RES_DIR = File.expand_path(ARGV[0])
+FILES = Dir.new(RES_DIR).select { |f| /_results\.txt/ =~ f }.
+                         map    { |f| File.join(RES_DIR, f) }
+
+TYPES = %w[shift dig]
+FIELDS = %w[packaged owerflowed time]
+
+RES_FILES = FIELDS.map { |fl|
+  {fl => File.open(File.join(RES_DIR, "#{fl}_result.txt"), 'w')}
+}.reduce(:merge)
+
+FILES.group_by { |f| /\/(\d+)[^\/\\]+\z/.match(f)[1] }.each do |num, fls|
+
+  lines = FIELDS.map{ |fld| {fld => [num]} }.reduce(:merge)
+
+  for type in TYPES
+    file = fls.select { |f| Regexp.new(type) =~ f }.first
+    input = File.read(file).split
+
+    for fld in FIELDS
+      lines[fld] << input.shift
+    end
+  end
+
+  for fld in FIELDS
+    RES_FILES[fld] << lines[fld].join(' ') << "\n"
+  end
+end
+
+RESULTS = RES_FILES.map { |_, a| p = a.path; a.close; p }
+
+RESULTS.each do |f|
+  lines = File.open(f).sort_by { |ln| ln.split.first.to_i }.join
+  File.open(f, 'w') do |f|
+    f.write lines
+  end
+end

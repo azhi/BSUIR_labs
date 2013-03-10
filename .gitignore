@@ -1,3 +1,6 @@
 " vim files
 *.swp
 *.swo
+
+" emacs files
+*~

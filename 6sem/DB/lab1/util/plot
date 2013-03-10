@@ -1,0 +1,14 @@
+#/bin/sh
+
+case "$1" in
+    --pkg )  FILE="packaged_result.txt" ;;
+    --owf )  FILE="owerflowed_result.txt" ;;
+    --time ) FILE="time_result.txt" ;;
+    * ) echo "specify --pkg --owf or --time, please" && exit ;;
+esac
+
+DIR=$(realpath $2)
+echo $FILE
+
+gnuplot -p -e "plot \"$DIR/$FILE\" using 1:2 with lines, \
+                \"$DIR/$FILE\" using 1:3 with lines"
