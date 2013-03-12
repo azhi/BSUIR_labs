@@ -5,6 +5,11 @@
 
 using namespace std;
 
+VirtualHashTable::VirtualHashTable()
+  : packages(nullptr)
+{
+}
+
 VirtualHashTable::VirtualHashTable(unsigned package_count, unsigned package_size)
   : package_count(package_count), package_size(package_size)
 {
@@ -45,13 +50,20 @@ Item* VirtualHashTable::find_record(char* key)
   ull hash = calc_hash(numeric_key);
   ull package_index = scale_hash(hash);
 
-  Item* res = NULL;
+  Item* res = nullptr;
   do
   {
     res = find_record_in_package(package_index, key);
     package_index = (package_index + 1) % package_count;
   } while ( packages[package_index - 1].count == package_size && res == NULL );
   return res;
+}
+
+void VirtualHashTable::dump(ofstream &ofs)
+{
+  if (!ofs) return;
+  boost::archive::binary_oarchive oa(ofs);
+  oa << BOOST_SERIALIZATION_NVP(this);
 }
 
 ull VirtualHashTable::convert_key_to_int(char* key)

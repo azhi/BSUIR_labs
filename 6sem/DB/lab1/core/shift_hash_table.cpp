@@ -3,6 +3,13 @@
 #include <cmath>
 #include <cstdio>
 
+BOOST_CLASS_EXPORT_IMPLEMENT(ShiftHashTable)
+
+ShiftHashTable::ShiftHashTable()
+      : VirtualHashTable()
+{
+}
+
 ShiftHashTable::ShiftHashTable(unsigned package_count, unsigned package_size)
       : VirtualHashTable(package_count, package_size)
 {
