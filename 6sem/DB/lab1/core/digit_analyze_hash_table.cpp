@@ -17,6 +17,7 @@ DigitAnalyzeHashTable::DigitAnalyzeHashTable(unsigned package_count,
 {
   unsigned order = min(6u, package_count_order);
   mod = pow(10, order);
+  scale_multiplier = (package_count - 1) / (double) (mod - 1);
 }
 
 ull DigitAnalyzeHashTable::calc_hash(ull key)
@@ -26,5 +27,5 @@ ull DigitAnalyzeHashTable::calc_hash(ull key)
 
 ull DigitAnalyzeHashTable::scale_hash(ull hash)
 {
-  return hash * (package_count - 1) / (mod - 1);
+  return llround(hash * scale_multiplier);
 }

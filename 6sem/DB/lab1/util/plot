@@ -1,16 +1,49 @@
 #/bin/sh
 
 case "$1" in
-    --pkg )  FILE="packaged_result.txt"; TITLE="Percents in packages"; YLABEL="%"; XRANGE="[1:200000]" ;;
-    --owf )  FILE="owerflowed_result.txt"; TITLE="Percents in overflow"; YLABEL="%"; XRANGE="[1:200000]" ;;
-    --time ) FILE="time_result.txt"; TITLE="Find time"; YLABEL="s"; XRANGE="[1:200000]" ;;
-    --time1 ) FILE="time_result.txt"; TITLE="Find time"; YLABEL="s"; XRANGE="[1:200]" ;;
-    --time2 ) FILE="time_result.txt"; TITLE="Find time"; YLABEL="s"; XRANGE="[200:200000]" ;;
-    * ) echo "specify --pkg --owf --time1 or --time2, please" && exit ;;
+    --pkg )
+        FILE="packaged_result.txt"
+        TITLE="Percents in packages"
+        YLABEL="%"
+        XRANGE="[1:200000]"
+        ;;
+
+    --owf )
+        FILE="owerflowed_result.txt"
+        TITLE="Percents in overflow"
+        YLABEL="%"
+        XRANGE="[1:200000]"
+        ;;
+
+    --time )
+        FILE="time_result.txt"
+        TITLE="Find time"
+        YLABEL="s"
+        XRANGE="[1:200000]"
+        ;;
+
+    --time1 )
+        FILE="time_result.txt"
+        TITLE="Find time"
+        YLABEL="s"
+        XRANGE="[1:200]"
+        ;;
+
+    --time2 )
+        FILE="time_result.txt"
+        TITLE="Find time"
+        YLABEL="s"
+        XRANGE="[200:200000]"
+        ;;
+
+    * )
+        echo "specify --pkg --owf --time1 or --time2, please" &&
+        exit
+        ;;
 esac
 
 case "$2" in
-    --logscale ) SCALE="set logscale x;" ;;
+    --logscale )    SCALE="set   logscale x;" ;;
     --linearscale ) SCALE="unset logscale x;" ;;
 esac
 
@@ -23,5 +56,7 @@ gnuplot -p -e "set title \"$TITLE\"; \
                set grid; \
                $SCALE
                set xrange $XRANGE; \
-               plot \"$DIR/$FILE\" using 1:2 with lines title \"Shift hash\", \
-                 \"$DIR/$FILE\" using 1:3 with lines title \"Digit analyze hash\""
+               plot \"$DIR/$FILE\" using 1:2 with lines \
+                 title \"Shift hash\", \
+                    \"$DIR/$FILE\" using 1:3 with lines \
+                 title \"Digit analyze hash\""

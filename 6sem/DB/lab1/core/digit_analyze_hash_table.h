@@ -17,6 +17,7 @@ class DigitAnalyzeHashTable : public VirtualHashTable
     virtual ull calc_hash(ull key);
     virtual ull scale_hash(ull hash);
 
+    double scale_multiplier;
     unsigned mod;
 };
 
@@ -26,6 +27,7 @@ template<class Archive>
 void DigitAnalyzeHashTable::serialize(Archive &ar, const unsigned version)
 {
   ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(VirtualHashTable);
+  ar & BOOST_SERIALIZATION_NVP(scale_multiplier);
   ar & BOOST_SERIALIZATION_NVP(mod);
 }
 
