@@ -16,7 +16,7 @@ DigitAnalyzeHashTable::DigitAnalyzeHashTable(unsigned package_count,
   : VirtualHashTable(package_count, package_size)
 {
   unsigned order = min(6u, package_count_order);
-  mod = pow(10, order + 1);
+  mod = pow(10, order);
 }
 
 ull DigitAnalyzeHashTable::calc_hash(ull key)

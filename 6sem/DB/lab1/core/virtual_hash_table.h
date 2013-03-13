@@ -37,15 +37,16 @@ class VirtualHashTable
     Item* find_record(char* key);
     virtual void dump(std::ofstream &ofs);
 
+    static bool is_key(char* key);
+
     unsigned count_in_packages, count_in_overflow;
     unsigned package_count_order;
+    unsigned package_count, package_size;
 
   protected:
     virtual ull calc_hash(ull key) = 0;
     virtual ull scale_hash(ull hash) = 0;
     unsigned find_order(ull number);
-
-    unsigned package_count, package_size;
 
   private:
     friend class boost::serialization::access;

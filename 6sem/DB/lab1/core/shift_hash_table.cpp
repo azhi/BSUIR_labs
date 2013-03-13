@@ -38,5 +38,5 @@ ull ShiftHashTable::calc_hash(ull key)
 
 ull ShiftHashTable::scale_hash(ull hash)
 {
-  return hash * scale_multiplier;
+  return llround(hash * scale_multiplier);
 }

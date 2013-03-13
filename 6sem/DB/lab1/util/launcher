@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require 'open3'
+
 include Process
 
 EXECUTABLE = File.expand_path("../../core/hash", __FILE__)
@@ -7,8 +9,10 @@ RES_DIR = File.expand_path("../../results", __FILE__)
 THREADS_NUM = 4
 
 def spawn_process args
-  print '.'
-  spawn(EXECUTABLE, *args.map(&:to_s), chdir: RES_DIR)
+  r, w = IO.pipe
+  pid = spawn(EXECUTABLE, *args.map(&:to_s), chdir: RES_DIR, out: w, err: "/dev/null")
+  @stds[pid] = r
+  pid
 end
 
 Dir.mkdir(RES_DIR) unless Dir.exists?(RES_DIR)
@@ -17,18 +21,40 @@ p_sizes = [20, 200, 2000, 20000].map { |i|
   (i..(i * 10)).step(i).to_a
 }.flatten.uniq.reverse
 
-queue = p_sizes.map{ |sz| [["--dig", sz], ["--shift", sz]] }.reduce(&:+)
+queue = p_sizes.map{ |sz| [["-k shift", "-p #{sz}"], ["-k analyze", "-p #{sz}"]] }.
+  reduce(&:+).map{ |args| (args + ["-t ../base.txt", "-i ../keys.txt"]).map{ |arg| arg.split }.flatten }
 running = []
+@stds = {}
+results = {}
 
 while queue.any? || running.any?
   begin
     if running.size >= THREADS_NUM || queue.empty?
-      running -= [wait]
+      pid = wait
+      running -= [pid]
+      res = @stds[pid].gets.split
+      results[res.first] ||= {}
+      results[res.first][res[1].to_sym] = res[2..-1]
+      print '.'
     else
       running << spawn_process(queue.pop)
     end
-  rescue
+  rescue Exception => e
+    puts e.message
   end
 end
 
 puts ""
+
+FIELDS = %w[packaged owerflowed time]
+
+FIELDS.each.with_index do |fl, i|
+  lines = []
+  results.each{ |k, v| lines << "#{k} #{v[:shift][i]} #{v[:analyze][i]}" }
+  lines = lines.sort_by{ |ln| ln.split.first.to_i }
+
+  fl = File.open(File.join(RES_DIR, "#{fl}_result.txt"), 'w')
+  fl.write lines.join("\n")
+  fl.puts
+  fl.close
+end

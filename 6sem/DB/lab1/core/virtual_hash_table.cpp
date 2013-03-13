@@ -20,6 +20,8 @@ VirtualHashTable::VirtualHashTable(unsigned package_count, unsigned package_size
     packages[i].count = 0;
   }
   package_count_order = find_order(package_count);
+  count_in_packages = 0;
+  count_in_overflow = 0;
 }
 
 VirtualHashTable::~VirtualHashTable()
@@ -27,6 +29,19 @@ VirtualHashTable::~VirtualHashTable()
   for (unsigned i = 0; i < package_count; ++i)
     delete packages[i].data;
   delete packages;
+}
+
+bool VirtualHashTable::is_key(char* key)
+{
+  if ( strlen(key) != 6 )
+    return false;
+  for ( int i = 0; i < 6; ++i)
+    if ( !( (key[i] >= '0' && key[i] <= '9') ||
+            (key[i] >= 'a' && key[i] <= 'z') ||
+            (key[i] >= 'A' && key[i] <= 'Z')
+          ))
+      return false;
+  return true;
 }
 
 void VirtualHashTable::add_record(Item& record)
