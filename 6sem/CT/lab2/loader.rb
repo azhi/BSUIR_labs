@@ -1,0 +1,5 @@
+require File.join(File.dirname(__FILE__), 'repeat_coder.rb')
+require File.join(File.dirname(__FILE__), 'odd_coder.rb')
+require File.join(File.dirname(__FILE__), 'rect_coder.rb')
+require File.join(File.dirname(__FILE__), 'tr_coder.rb')
+require File.join(File.dirname(__FILE__), 'tester.rb')
