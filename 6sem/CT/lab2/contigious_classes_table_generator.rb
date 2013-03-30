@@ -1,20 +1,17 @@
+require 'set'
+
 class ContigiousClassesTableGenerator
   def self.generate n, first_line
     res = [first_line]
-    (1...n).each do |i|
-      candidates = all_power i, n
-      candidates.each do |candidate|
-        unless res.flatten.include?(candidate)
+    els = first_line.to_set
+    (1..(2 ** n - 1)).to_a.
+      sort_by{ |el| el.to_s(2).count('1') * (2 ** n) - el }.
+      each do |candidate|
+        unless els.include?(candidate)
           res << first_line.map{ |el| el ^ candidate }
+          els = els.merge first_line.map{ |el| el ^ candidate }
         end
       end
-    end
     res
   end
-
-  private
-    def self.all_power power, n
-      [ ['0'] * (n - power) + ['1'] * power ].flatten.permutation.to_a.
-        reverse.uniq.map{ |el| el.join.to_i(2) }
-    end
 end

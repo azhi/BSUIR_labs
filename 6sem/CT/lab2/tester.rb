@@ -1,6 +1,8 @@
+require 'set'
+
 class Tester
   def self.test_decode num, lc, dec_sym
-    errors = get_all_errors num.to_s(2).rjust(lc.n, '0'), [false] * lc.n
+    errors = get_all_errors num, lc.n
     res = {}
     decoded_num = lc.send(dec_sym, num)
     decoded_num = decoded_num[0] if decoded_num.is_a?(Array)
@@ -38,17 +40,12 @@ class Tester
   end
 
   private
-    def self.get_all_errors num, errors, res = []
-      (0...num.length).each do |i|
-        unless errors[i]
-          num[i] = num[i] == '0' ? '1' : '0'
-          errors[i] = true
-          res << [num.to_i(2), errors.count(true)] unless res.any?{ |el| el[0] == num.to_i(2) }
-          get_all_errors num, errors, res
-          errors[i] = false
-          num[i] = num[i] == '0' ? '1' : '0'
-        end
+    def self.get_all_errors num, n
+      res = []
+      1.upto(2**n-1) do |error|
+        res << [error, (error ^ num).to_s(2).count('1')]
       end
+      res.sort_by!{ |el| el.last }.shift
       res
     end
 end
