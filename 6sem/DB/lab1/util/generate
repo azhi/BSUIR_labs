@@ -70,7 +70,7 @@ end
 elems.uniq! { |el| "#{el.string} #{el.number}" }
 # $stderr.puts elems.size.to_s
 
-elems.uniq! { |el| el.key}
+elems.uniq! &:key
 # $stderr.puts elems.size.to_s
 
 elems = elems.first SIZE
