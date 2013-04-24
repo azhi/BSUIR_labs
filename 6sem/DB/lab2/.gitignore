@@ -3,7 +3,7 @@
 *.d
 
 " executable
-core/hash
+/vsam
 
 " base
 base.txt

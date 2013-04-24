@@ -6,26 +6,43 @@ struct Item
 {
   Tk key;
   Tf field;
+
+  int compare_to(Tk key);
+};
+
+template<class Tf>
+struct Item<char *, Tf>
+{
+  char* key;
+  Tf field;
+
+  int compare_to(char* key)
+  {
+    return strcmp(this->key, key);
+  }
+};
+
+template<class Tf>
+struct Item<long, Tf>
+{
+  long key;
+  Tf field;
+
+  int compare_to(long key)
+  {
+    if ( this->key == key )
+      return 0;
+    else if ( this->key < key )
+      return -1;
+    else
+      return 1;
+  }
 };
 
 template<class Tk, class Tf>
-int item_comparer(const Item<Tk, Tf> item1, const Item<Tk, Tf> item2);
-
-template<char*, class Tf>
-int item_comparer(const Item<char*, Tf> &item1, const Item<char*, Tf> &item2)
+int item_comparer(const Item<Tk, Tf> &item1, const Item<Tk, Tf> &item2)
 {
-  return strcmp(item1.key, item2.key);
-}
-
-template<long, class Tf>
-int item_comparer(const Item<long, Tf> item1, const Item<long, Tf> item2)
-{
-  if ( item1.key == item2.key )
-    return 0;
-  else if ( item1.key < item2.key )
-    return -1;
-  else
-    return 1;
+  return item1.compare_to(item2.key);
 }
 
 #endif // __ITEMS_H_
