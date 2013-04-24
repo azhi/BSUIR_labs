@@ -13,14 +13,15 @@ template<class Tk, class Tf>
 class Interspace
 {
   public:
-    Interspace(int length, const Tk max_key);
-    Interspace(int length, Item<Tk, Tf> *items);
+    Interspace(int length);
+    Interspace(int length, vector< Item<Tk, Tf> > *items);
 
     Item<Tk, Tf> *find_item(Tk key);
     bool add_item(Item<Tk, Tf>& item);
     Interspace<Tk, Tf> *divide();
 
     Tk get_max_key();
+    bool is_free();
 
   private:
     int length;
@@ -42,22 +43,29 @@ Tk Interspace<Tk, Tf>::get_max_key()
 }
 
 template<class Tk, class Tf>
-Interspace<Tk, Tf>::Interspace(int length, const Tk max_key)
-  : length(length), max_key(max_key)
+bool Interspace<Tk, Tf>::is_free()
+{
+  return free;
+}
+
+template<class Tk, class Tf>
+Interspace<Tk, Tf>::Interspace(int length)
+  : length(length)
 {
   items = new vector< Item<Tk ,Tf> >();
   items->reserve(length);
-  max_key_item.key = max_key;
+  max_key_item.key = Tk();
   max_key_item.field = Tf();
   free = true;
 }
 
 template<class Tk, class Tf>
-Interspace<Tk, Tf>::Interspace(int length, Item<Tk, Tf> *items)
+Interspace<Tk, Tf>::Interspace(int length, vector< Item<Tk, Tf> > *items)
   : length(length), items(items)
 {
-  max_key_item = max_element(items->begin(), items->end(),
+  items_iterator max_key_it = max_element(items->begin(), items->end(),
                              item_comparer<Tk, Tf>);
+  max_key_item = *max_key_it;
   max_key = max_key_item.key;
   free = false;
 }

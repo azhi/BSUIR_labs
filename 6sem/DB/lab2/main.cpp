@@ -1,26 +1,67 @@
 #include "area_container.h"
 
+#include <iostream>
+#include <fstream>
+#include <cstring>
+
+using namespace std;
+
+#define SORT_RECORDS_COUNT 800000
+#define UNSORT_RECORDS_COUNT 200000
+
+#define INTERSPACE_LENGTH 100
+#define EFFECTIVE_INTERSPACE_LENGTH 90
+#define AREA_SIZE 40
+
 int main(int argc, char **argv)
 {
-  list< Area<char const *, char *> >* ari1 = new list< Area<char const *, char *> >;
-  for( int i = 0; i < 100; ++i )
+  ifstream in("base1.txt");
+  if (!in.is_open())
   {
-    vector< Interspace<char const *, char *> >* index1 = new vector< Interspace<char const *, char *> >;
-    for( int j = 0; j < 100; ++j )
-      index1->push_back(Interspace<char const *, char *>(50, "aaaa"));
-    ari1->push_back(Area<char const *, char *>(200, index1));
+    cerr << "Can't open file base1.txt" << endl;
+    return 1;
   }
-  AreaContainer<char const *, char *> ar1(ari1);
+  char key[7];
+  char val1[13];
+  long val2;
+  Item<char *, char *> *pit = new Item<char *, char *>;
+  vector< Item<char *, char *> >* items = new vector< Item<char *, char *> >;
+  vector< Interspace<char *, char *> *>* interspaces = new vector< Interspace<char *, char *> *>;
+  list< Area<char *, char *> >* areas = new list< Area<char *, char *> >;
+  int items_count = 0, interspaces_count = 0;
 
-  list< Area<long, char *> >* ari2 = new list< Area<long, char *> >;
-  for( int i = 0; i < 100; ++i )
-  {
-    vector< Interspace<long, char *> >* index2 = new vector< Interspace<long, char *> >;
-    for( int j = 0; j < 100; ++j )
-      index2->push_back(Interspace<long, char *>(50, 2000));
-    ari2->push_back(Area<long, char *>(200, index2));
+  for(int i = 0; i < SORT_RECORDS_COUNT; ++i) {
+    in >> key >> val2 >> val1;
+
+    strcpy(pit->key, val1);
+    strcpy(pit->field, key);
+    items->push_back(*pit);
+    items_count++;
+
+    if ( items_count == EFFECTIVE_INTERSPACE_LENGTH )
+    {
+      if ( interspaces_count % 10 == 9 )
+      {
+        interspaces->push_back(new Interspace<char *, char *>(INTERSPACE_LENGTH));
+        interspaces_count++;
+      }
+      interspaces->push_back(new Interspace<char *, char *>(INTERSPACE_LENGTH, items));
+      interspaces_count++;
+      items->clear();
+      items_count = 0;
+    }
+
+    if ( interspaces_count == AREA_SIZE )
+    {
+      areas->push_back(Area<char *, char *>(AREA_SIZE, interspaces));
+      interspaces->clear();
+      interspaces_count = 0;
+    }
   }
-  AreaContainer<long, char *> ar2(ari2);
+  AreaContainer<char *, char *> ac(areas);
+  delete pit;
+  in.close();
 
+  cerr << "File " << "base1.txt" << " loaded." << endl;
   return 0;
 }

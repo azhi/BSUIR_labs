@@ -1,6 +1,8 @@
 #ifndef __ITEMS_H_
 #define __ITEMS_H_
 
+#include <cstring>
+
 template<class Tk, class Tf>
 struct Item
 {
@@ -40,7 +42,7 @@ struct Item<long, Tf>
 };
 
 template<class Tk, class Tf>
-int item_comparer(const Item<Tk, Tf> &item1, const Item<Tk, Tf> &item2)
+int item_comparer(Item<Tk, Tf> &item1, Item<Tk, Tf> &item2)
 {
   return item1.compare_to(item2.key);
 }
