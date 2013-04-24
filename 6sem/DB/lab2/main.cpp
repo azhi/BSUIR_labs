@@ -1,8 +1,11 @@
-#include "area_container.h"
-
 #include <iostream>
 #include <fstream>
-#include <cstring>
+#include <string>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/export.hpp>
+
+#include "area_container.h"
 
 using namespace std;
 
@@ -24,17 +27,17 @@ int main(int argc, char **argv)
   char key[7];
   char val1[13];
   long val2;
-  Item<char *, char *> *pit = new Item<char *, char *>;
-  vector< Item<char *, char *> >* items = new vector< Item<char *, char *> >;
-  vector< Interspace<char *, char *> *>* interspaces = new vector< Interspace<char *, char *> *>;
-  list< Area<char *, char *> >* areas = new list< Area<char *, char *> >;
+  Item<string, string> *pit = new Item<string, string>;
+  vector< Item<string, string> >* items = new vector< Item<string, string> >;
+  vector< Interspace<string, string> *>* interspaces = new vector< Interspace<string, string> *>;
+  list< Area<string, string> >* areas = new list< Area<string, string> >;
   int items_count = 0, interspaces_count = 0;
 
   for(int i = 0; i < SORT_RECORDS_COUNT; ++i) {
     in >> key >> val2 >> val1;
 
-    strcpy(pit->key, val1);
-    strcpy(pit->field, key);
+    pit->key = val1;
+    pit->field = key;
     items->push_back(*pit);
     items_count++;
 
@@ -42,10 +45,10 @@ int main(int argc, char **argv)
     {
       if ( interspaces_count % 10 == 9 )
       {
-        interspaces->push_back(new Interspace<char *, char *>(INTERSPACE_LENGTH));
+        interspaces->push_back(new Interspace<string, string>(INTERSPACE_LENGTH));
         interspaces_count++;
       }
-      interspaces->push_back(new Interspace<char *, char *>(INTERSPACE_LENGTH, items));
+      interspaces->push_back(new Interspace<string, string>(INTERSPACE_LENGTH, items));
       interspaces_count++;
       items->clear();
       items_count = 0;
@@ -53,15 +56,26 @@ int main(int argc, char **argv)
 
     if ( interspaces_count == AREA_SIZE )
     {
-      areas->push_back(Area<char *, char *>(AREA_SIZE, interspaces));
+      areas->push_back(Area<string, string>(AREA_SIZE, interspaces));
       interspaces->clear();
       interspaces_count = 0;
     }
   }
-  AreaContainer<char *, char *> ac(areas);
+  AreaContainer<string, string> ac(areas);
   delete pit;
   in.close();
 
   cerr << "File " << "base1.txt" << " loaded." << endl;
   return 0;
+}
+
+void load_sample()
+{
+  // Sample method, never used.
+  ofstream ofs("./test.bin");
+  boost::archive::binary_oarchive oa(ofs);
+  oa.register_type< Item<string, string> >();
+  oa.register_type< Interspace<string, string> >();
+  oa.register_type< Area<string, string> >();
+  oa.register_type< AreaContainer<string, string> >();
 }

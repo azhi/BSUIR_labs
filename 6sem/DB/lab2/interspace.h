@@ -5,6 +5,14 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/nvp.hpp>
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+
+
 #include "item.h"
 
 using namespace std;
@@ -24,6 +32,11 @@ class Interspace
     bool is_free();
 
   private:
+    Interspace(){};
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned version);
+
     int length;
     Item<Tk, Tf> max_key_item;
     Tk max_key;
@@ -142,6 +155,17 @@ typename vector< Item<Tk, Tf> >::iterator Interspace<Tk, Tf>::get_middle_iterato
   }
 
   return middle;
+}
+
+template<class Tk, class Tf>
+template<class Archive>
+void Interspace<Tk, Tf>::serialize(Archive &ar, const unsigned version)
+{
+  ar & BOOST_SERIALIZATION_NVP(length);
+  ar & BOOST_SERIALIZATION_NVP(max_key_item);
+  ar & BOOST_SERIALIZATION_NVP(max_key);
+  ar & BOOST_SERIALIZATION_NVP(free);
+  ar & BOOST_SERIALIZATION_NVP(items);
 }
 
 #endif // __INTERSPACE_H_

@@ -3,6 +3,13 @@
 
 #include <list>
 
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/nvp.hpp>
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+
 #include "area.h"
 
 using namespace std;
@@ -19,6 +26,11 @@ class AreaContainer
     void add_area(Area<Tk, Tf> *area);
 
   private:
+    AreaContainer() {};
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned version);
+
     list< Area<Tk, Tf> > *area_index;
 
     typedef Area<Tk, Tf> TArea;
@@ -70,6 +82,15 @@ void AreaContainer<Tk, Tf>::add_area(Area<Tk, Tf> *area)
   area_index->insert(ub, *area);
 }
 
+
+template<class Tk, class Tf>
+template<class Archive>
+void AreaContainer<Tk, Tf>::serialize(Archive &ar, const unsigned version)
+{
+  ar & BOOST_SERIALIZATION_NVP(area_index);
+}
+
+
 template<class Tk, class Tf>
 int AreaContainer<Tk, Tf>::compare(TArea ar1, TArea ar2)
 {
@@ -82,4 +103,5 @@ int AreaContainer<Tk, Tf>::compare(TArea ar1, TArea ar2)
   else
     return 1;
 }
+
 #endif // __AREA_CONTAINER_H_

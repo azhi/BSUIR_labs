@@ -3,6 +3,13 @@
 
 #include <vector>
 
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/nvp.hpp>
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+
 #include "interspace.h"
 
 using namespace std;
@@ -23,6 +30,11 @@ class Area
     void add_interspace(Interspace<Tk, Tf> *interspace);
 
   private:
+    Area() {};
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned version);
+
     int size, interspace_length;
     Tk max_key;
     Item<Tk, Tf> max_key_item;
@@ -157,6 +169,18 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
   }
   interspace_index->insert(it, interspace);
 }
+
+template<class Tk, class Tf>
+template<class Archive>
+void Area<Tk, Tf>::serialize(Archive &ar, const unsigned version)
+{
+  ar & BOOST_SERIALIZATION_NVP(size);
+  ar & BOOST_SERIALIZATION_NVP(interspace_length);
+  ar & BOOST_SERIALIZATION_NVP(max_key);
+  ar & BOOST_SERIALIZATION_NVP(max_key_item);
+  ar & BOOST_SERIALIZATION_NVP(interspace_index);
+}
+
 
 template<class Tk, class Tf>
 int Area<Tk, Tf>::compare(TInterspace* int1, TInterspace* int2)
