@@ -6,6 +6,6 @@
 /vsam
 
 " base
-base.txt
-keys.txt
+*.txt
+*.bin
 results

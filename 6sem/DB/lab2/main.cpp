@@ -16,6 +16,9 @@ using namespace std;
 #define EFFECTIVE_INTERSPACE_LENGTH 90
 #define AREA_SIZE 40
 
+template<class Tk, class Tf>
+void save_sample(const AreaContainer<Tk, Tf> &ac);
+
 int main(int argc, char **argv)
 {
   ifstream in("base1.txt");
@@ -48,20 +51,22 @@ int main(int argc, char **argv)
         interspaces->push_back(new Interspace<string, string>(INTERSPACE_LENGTH));
         interspaces_count++;
       }
-      interspaces->push_back(new Interspace<string, string>(INTERSPACE_LENGTH, items));
-      interspaces_count++;
-      items->clear();
-      items_count = 0;
-    }
 
-    if ( interspaces_count == AREA_SIZE )
-    {
-      areas->push_back(Area<string, string>(AREA_SIZE, interspaces));
-      interspaces->clear();
-      interspaces_count = 0;
+      if ( interspaces_count == AREA_SIZE )
+      {
+        areas->push_back(Area<string, string>(AREA_SIZE, interspaces));
+        interspaces->clear();
+        interspaces_count = 0;
+      } else {
+        interspaces->push_back(new Interspace<string, string>(INTERSPACE_LENGTH, items));
+        interspaces_count++;
+        items->clear();
+        items_count = 0;
+      }
     }
   }
   AreaContainer<string, string> ac(areas);
+  save_sample(ac);
   delete pit;
   in.close();
 
@@ -69,13 +74,16 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void load_sample()
+template<class Tk, class Tf>
+void save_sample(const AreaContainer<Tk, Tf> &ac)
 {
   // Sample method, never used.
   ofstream ofs("./test.bin");
   boost::archive::binary_oarchive oa(ofs);
-  oa.register_type< Item<string, string> >();
-  oa.register_type< Interspace<string, string> >();
-  oa.register_type< Area<string, string> >();
-  oa.register_type< AreaContainer<string, string> >();
+  oa.register_type< Item<Tk, Tf> >();
+  oa.register_type< Interspace<Tk, Tf> >();
+  oa.register_type< Area<Tk, Tf> >();
+  oa.register_type< AreaContainer<Tk, Tf> >();
+  oa << ac;
+  ofs.close();
 }

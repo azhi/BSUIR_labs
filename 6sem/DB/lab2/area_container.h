@@ -21,7 +21,7 @@ class AreaContainer
     AreaContainer(list< Area<Tk, Tf> > *areas);
 
     Item<Tk, Tf> *find_item(Tk key);
-    void add_item(Item<Tk, Tf> &item);
+    bool add_item(Item<Tk, Tf> &item);
 
     void add_area(Area<Tk, Tf> *area);
 
@@ -57,7 +57,7 @@ Item<Tk, Tf> *AreaContainer<Tk, Tf>::find_item(Tk key)
 }
 
 template<class Tk, class Tf>
-void AreaContainer<Tk, Tf>::add_item(Item<Tk, Tf> &item)
+bool AreaContainer<Tk, Tf>::add_item(Item<Tk, Tf> &item)
 {
   TArea key_area(item.key);
   area_iterator ub = upper_bound(area_index->first(), area_index->last(), key_area,
