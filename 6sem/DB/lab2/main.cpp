@@ -102,6 +102,12 @@ int main(int argc, char **argv)
   printf("%u\n", ac.get_size());
   delete pit;
   save_sample(ac);
+
+  ofstream ofs("./out.json");
+  ofs << ac.to_json();
+  ofs.close();
+
+  return 0;
 }
 
 template<class Tk, class Tf>

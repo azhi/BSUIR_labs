@@ -1,8 +1,9 @@
 #ifndef __AREA_CONTAINER_H_
 #define __AREA_CONTAINER_H_
 
-#include <list>
 #include <cstdio>
+#include <list>
+#include <string>
 
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/list.hpp>
@@ -25,8 +26,8 @@ class AreaContainer
     bool add_item(Item<Tk, Tf> &item);
 
     void add_area(Area<Tk, Tf> *area);
-
-    unsigned get_size()
+    std::string to_json() const;
+    inline unsigned get_size()
     {
       return area_index->size();
     }
@@ -94,8 +95,19 @@ void AreaContainer<Tk, Tf>::add_area(Area<Tk, Tf> *area)
 }
 
 template<class Tk, class Tf>
-string to_html();
-
+std::string AreaContainer<Tk, Tf>::to_json() const
+{
+  std::string res = std::string("{\"areas\" : [\n");
+  for (auto it = area_index->begin(); it != area_index->end(); ++it) {
+    res += it->to_json();
+    if (boost::next(it) == area_index->end())
+      res += "\n";
+    else
+      res += ",\n";
+  }
+  res += std::string("]}");
+  return res;
+}
 
 template<class Tk, class Tf>
 template<class Archive>

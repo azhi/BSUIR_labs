@@ -1,9 +1,11 @@
 #ifndef __AREA_H_
 #define __AREA_H_
 
-#include <vector>
 #include <cstdio>
 #include <iostream>
+#include <vector>
+
+#include <boost/utility.hpp>
 
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/vector.hpp>
@@ -31,6 +33,7 @@ class Area
     void set_max_key(Tk val);
 
     void add_interspace(Interspace<Tk, Tf> *interspace);
+    std::string to_json() const;
 
   private:
     Area() {};
@@ -183,6 +186,24 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
   }
   interspace_index->insert(it, interspace);
 }
+
+template<class Tk, class Tf>
+std::string Area<Tk, Tf>::to_json() const
+{
+  std::string res = std::string("{\"interspaces\" : [\n");
+  for (auto it = interspace_index->begin();
+       it != interspace_index->end();
+       ++it) {
+    res += (*it)->to_json();
+    if (boost::next(it) == interspace_index->end())
+      res += "\n";
+    else
+      res += ",\n";
+  }
+  res += std::string("]}");
+  return res;
+}
+
 
 template<class Tk, class Tf>
 template<class Archive>

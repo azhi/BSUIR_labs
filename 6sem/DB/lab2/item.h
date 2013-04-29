@@ -1,6 +1,7 @@
 #ifndef __ITEMS_H_
 #define __ITEMS_H_
 
+#include <cstdlib>
 #include <string>
 
 #include <boost/serialization/export.hpp>
@@ -12,6 +13,14 @@
 template<class Tk>
 bool key_compare(const Tk key, const Tk key2);
 
+namespace std
+{
+  std::string to_string(std::string str)
+  {
+    return str;
+  }
+}
+
 template<class Tk, class Tf>
 struct Item
 {
@@ -19,6 +28,7 @@ struct Item
   Tf field;
 
   bool compare_to(const Tk key) const;
+  std::string to_json() const;
 
 private:
   friend class boost::serialization::access;
@@ -30,6 +40,14 @@ template<class Tk, class Tf>
 bool Item<Tk, Tf>::compare_to(const Tk key) const
 {
   return key_compare(this->key, key);
+}
+
+template<class Tk, class Tf>
+std::string Item<Tk, Tf>::to_json() const
+{
+  return std::string("{\"key\" : \"") + std::to_string(key) +
+    std::string("\" , \"field\" : \"") + std::to_string(field) +
+    std::string("\"}");
 }
 
 template<class Tk, class Tf>

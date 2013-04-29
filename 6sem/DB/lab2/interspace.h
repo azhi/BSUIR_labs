@@ -1,9 +1,12 @@
 #ifndef __INTERSPACE_H_
 #define __INTERSPACE_H_
 
-#include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <boost/utility.hpp>
 
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/vector.hpp>
@@ -11,7 +14,6 @@
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-
 
 #include "item.h"
 
@@ -27,6 +29,7 @@ class Interspace
     vector< Item<Tk, Tf> *> *find_item(Tk key);
     bool add_item(Item<Tk, Tf>& item);
     Interspace<Tk, Tf> *divide();
+    std::string to_json() const;
 
     Tk get_max_key();
     void set_max_key(Tk val);
@@ -149,6 +152,21 @@ Interspace<Tk, Tf> *Interspace<Tk, Tf>::divide()
   max_key = max_key_item.key;
 
   return new Interspace(length, o_items);
+}
+
+template<class Tk, class Tf>
+std::string Interspace<Tk, Tf>::to_json() const
+{
+  std::string res = std::string("{\"items\" : [\n");
+  for (auto it = items->begin(); it != items->end(); ++it) {
+    res += it->to_json();
+    if (boost::next(it) == items->end())
+      res += "\n";
+    else
+      res += ",\n";
+  }
+  res += std::string("]}");
+  return res;
 }
 
 template<class Tk, class Tf>
