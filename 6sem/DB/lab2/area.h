@@ -2,6 +2,8 @@
 #define __AREA_H_
 
 #include <vector>
+#include <cstdio>
+#include <iostream>
 
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/vector.hpp>
@@ -19,13 +21,14 @@ class Area
 {
   public:
     Area(Tk max_key);
-    Area(int size, vector< Interspace<Tk, Tf> *> *index);
+    Area(unsigned size, vector< Interspace<Tk, Tf> *> *index);
 
-    Item<Tk, Tf> *find_item(Tk key);
+    vector< Item<Tk, Tf> *> *find_item(Tk key);
     bool add_item(Item<Tk, Tf> &item);
     Area<Tk, Tf> *divide();
 
     Tk get_max_key();
+    void set_max_key(Tk val);
 
     void add_interspace(Interspace<Tk, Tf> *interspace);
 
@@ -35,7 +38,7 @@ class Area
     template<class Archive>
     void serialize(Archive &ar, const unsigned version);
 
-    int size, interspace_length;
+    unsigned size, interspace_length;
     Tk max_key;
     Item<Tk, Tf> max_key_item;
     vector< Interspace<Tk, Tf>* > *interspace_index;
@@ -45,16 +48,16 @@ class Area
 
     interspace_iterator get_middle_iterator();
 
-    static int compare(TInterspace* int1, TInterspace* int2);
+    static bool compare(TInterspace* int1, TInterspace* int2);
 };
 
 template<class Tk, class Tf>
 Area<Tk, Tf>::Area(Tk max_key) : size(0), interspace_length(0),
-  interspace_index(0), max_key(max_key)
+  max_key(max_key), interspace_index(0)
 {}
 
 template<class Tk, class Tf>
-Area<Tk, Tf>::Area(int size, vector< Interspace<Tk, Tf> *> *index) :
+Area<Tk, Tf>::Area(unsigned size, vector< Interspace<Tk, Tf> *> *index) :
   size(size)
 {
   interspace_index = index;
@@ -72,45 +75,54 @@ Tk Area<Tk, Tf>::get_max_key()
 }
 
 template<class Tk, class Tf>
-Item<Tk, Tf> *Area<Tk, Tf>::find_item(Tk key)
+void Area<Tk, Tf>::set_max_key(Tk val)
+{
+  max_key = val;
+  max_key_item.key = max_key;
+  interspace_iterator last = --interspace_index->end();
+  (*last)->set_max_key(val);
+}
+
+template<class Tk, class Tf>
+vector< Item<Tk, Tf> *> *Area<Tk, Tf>::find_item(Tk key)
 {
   if (max_key_item.compare_to(key) > 0)
-    return nullptr;
+    return new vector< Item<Tk, Tf> *>;
 
   Item<Tk, Tf> key_item;
   key_item.key = key;
   key_item.field = Tf();
 
   interspace_iterator it;
-  for (it = interspace_index->first(); it < interspace_index->last(); ++it)
+  for (it = interspace_index->begin(); it < interspace_index->end(); ++it)
   {
     if ( (*it)->is_free() )
       continue;
     Item<Tk, Tf> interspace_max_key_item;
     interspace_max_key_item.key = (*it)->get_max_key();
     interspace_max_key_item.field = Tf();
-    if ( item_comparer<Tk, Tf>(interspace_max_key_item, key_item) > 0 )
+    if ( item_comparer<Tk, Tf>(key_item, interspace_max_key_item) )
       break;
   }
 
-  return (*--it)->find_item(key);
+  return (*it)->find_item(key);
 }
 
 template<class Tk, class Tf>
 bool Area<Tk, Tf>::add_item(Item<Tk, Tf> &item)
 {
-  if (item_comparer<Tk, Tf>(max_key_item, item) > 0)
+  if (item_comparer<Tk, Tf>(max_key_item, item))
     throw new invalid_argument("key is larger than max_key");
 
   interspace_iterator it;
-  for (it = interspace_index->first(); it < interspace_index->last(); ++it)
+  for (it = interspace_index->begin(); it < interspace_index->end(); ++it)
   {
     if ( (*it)->is_free() )
       continue;
     Item<Tk, Tf> interspace_max_key_item;
     interspace_max_key_item.key = (*it)->get_max_key();
     interspace_max_key_item.field = Tf();
-    if ( item_comparer<Tk, Tf>(interspace_max_key_item, item) > 0 )
+    if ( !item_comparer<Tk, Tf>(interspace_max_key_item, item) )
       break;
   }
 
@@ -118,8 +130,10 @@ bool Area<Tk, Tf>::add_item(Item<Tk, Tf> &item)
   if ( !res )
     if ( interspace_index->size() < size )
     {
+      cout << "DIVIDING interspace " << (*it)->get_max_key() << endl;
       TInterspace* spl_interspace = (*it)->divide();
       add_interspace(spl_interspace);
+      cout << "RESULT interspaces: " << (*it)->get_max_key() << " -- " << spl_interspace->get_max_key() << endl;
       // WARNING: potential never-ending recursion!
       res = add_item(item);
     }
@@ -137,9 +151,9 @@ Area<Tk, Tf> *Area<Tk, Tf>::divide()
   // Clean the interspace vector up.
   interspace_index->erase(interspace_index->begin() + size / 2, interspace_index->end());
 
-  TInterspace max_key_interspace = max_element(interspace_index->begin(), interspace_index->end(),
+  interspace_iterator max_key_interspace_it = max_element(interspace_index->begin(), interspace_index->end(),
                                                compare);
-  max_key = max_key_interspace.get_max_key();
+  max_key = (*max_key_interspace_it)->get_max_key();
   max_key_item.key = max_key;
   max_key_item.field = Tf();
 
@@ -157,14 +171,14 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
   key_item.field = Tf();
 
   interspace_iterator it;
-  for (it = interspace_index->first(); it < interspace_index->last(); ++it)
+  for (it = interspace_index->begin(); it < interspace_index->end(); ++it)
   {
     if ( (*it)->is_free() )
       continue;
     Item<Tk, Tf> interspace_max_key_item;
     interspace_max_key_item.key = (*it)->get_max_key();
     interspace_max_key_item.field = Tf();
-    if ( item_comparer<Tk, Tf>(interspace_max_key_item, key_item) > 0 )
+    if ( item_comparer<Tk, Tf>(key_item, interspace_max_key_item) )
       break;
   }
   interspace_index->insert(it, interspace);
@@ -183,16 +197,11 @@ void Area<Tk, Tf>::serialize(Archive &ar, const unsigned version)
 
 
 template<class Tk, class Tf>
-int Area<Tk, Tf>::compare(TInterspace* int1, TInterspace* int2)
+bool Area<Tk, Tf>::compare(TInterspace* int1, TInterspace* int2)
 {
   Tk k1 = int1->get_max_key();
   Tk k2 = int2->get_max_key();
-  if ( k1 == k2 )
-    return 0;
-  else if ( k1 < k2 )
-    return -1;
-  else
-    return 1;
+  return key_compare(k1, k2);
 }
 
 #endif // __AREA_H_

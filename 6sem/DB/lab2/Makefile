@@ -1,4 +1,4 @@
-CC=clang++
+CC=g++
 #CFLAGS=-c -Wall -std=c++11 -O0 -ggdb
 CFLAGS=-c -Wall -std=c++11 -O2 -fomit-frame-pointer -pipe -mtune=native
 LDFLAGS=-Wl,--as-needed -Wl,-O1 -lboost_program_options -lboost_serialization

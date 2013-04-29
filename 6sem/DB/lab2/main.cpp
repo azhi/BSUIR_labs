@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 #include <string>
 
 #include <boost/serialization/serialization.hpp>
@@ -16,24 +17,26 @@ using namespace std;
 #define EFFECTIVE_INTERSPACE_LENGTH 90
 #define AREA_SIZE 40
 
+#define KEY_TYPE string
+
 template<class Tk, class Tf>
 void save_sample(const AreaContainer<Tk, Tf> &ac);
 
 int main(int argc, char **argv)
 {
-  ifstream in("base1.txt");
+  ifstream in("base2.txt");
   if (!in.is_open())
   {
-    cerr << "Can't open file base1.txt" << endl;
+    cerr << "Can't open file base2.txt" << endl;
     return 1;
   }
   char key[7];
   char val1[13];
   long val2;
-  Item<string, string> *pit = new Item<string, string>;
-  vector< Item<string, string> >* items = new vector< Item<string, string> >;
-  vector< Interspace<string, string> *>* interspaces = new vector< Interspace<string, string> *>;
-  list< Area<string, string> >* areas = new list< Area<string, string> >;
+  Item<KEY_TYPE, string> *pit = new Item<KEY_TYPE, string>;
+  vector< Item<KEY_TYPE, string> >* items = new vector< Item<KEY_TYPE, string> >;
+  vector< Interspace<KEY_TYPE, string> *>* interspaces = new vector< Interspace<KEY_TYPE, string> *>;
+  list< Area<KEY_TYPE, string> >* areas = new list< Area<KEY_TYPE, string> >;
   int items_count = 0, interspaces_count = 0;
 
   for(int i = 0; i < SORT_RECORDS_COUNT; ++i) {
@@ -48,30 +51,57 @@ int main(int argc, char **argv)
     {
       if ( interspaces_count % 10 == 9 )
       {
-        interspaces->push_back(new Interspace<string, string>(INTERSPACE_LENGTH));
+        interspaces->push_back(new Interspace<KEY_TYPE, string>(INTERSPACE_LENGTH));
         interspaces_count++;
       }
 
       if ( interspaces_count == AREA_SIZE )
       {
-        areas->push_back(Area<string, string>(AREA_SIZE, interspaces));
-        interspaces->clear();
+        areas->push_back(Area<KEY_TYPE, string>(AREA_SIZE, interspaces));
+        interspaces = new vector< Interspace<KEY_TYPE, string> *>;
         interspaces_count = 0;
-      } else {
-        interspaces->push_back(new Interspace<string, string>(INTERSPACE_LENGTH, items));
-        interspaces_count++;
-        items->clear();
-        items_count = 0;
       }
+
+      interspaces->push_back(new Interspace<KEY_TYPE, string>(INTERSPACE_LENGTH, items));
+      interspaces_count++;
+      items = new vector< Item<KEY_TYPE, string> >;
+      items_count = 0;
     }
   }
-  AreaContainer<string, string> ac(areas);
-  save_sample(ac);
-  delete pit;
-  in.close();
+  interspaces->push_back(new Interspace<KEY_TYPE, string>(INTERSPACE_LENGTH, items));
+  areas->push_back(Area<KEY_TYPE, string>(AREA_SIZE, interspaces));
+  AreaContainer<KEY_TYPE, string> ac(areas);
 
-  cerr << "File " << "base1.txt" << " loaded." << endl;
-  return 0;
+  printf("%d %lu\n", items_count, areas->size());
+  in.close();
+  cerr << "File " << "base2.txt" << " loaded." << endl;
+
+  in.open("base_tail.txt");
+  if (!in.is_open())
+  {
+    cerr << "Can't open file base_tail.txt" << endl;
+    return 1;
+  }
+
+  for(int i = 0; i < UNSORT_RECORDS_COUNT; ++i) {
+    in >> key >> val2 >> val1;
+
+    pit->key = val1;
+    pit->field = key;
+    try {
+      ac.add_item(*pit);
+    } catch (invalid_argument* ex)
+    {
+      cerr << ex->what() << endl;
+      throw;
+    }
+  }
+  in.close();
+  cerr << "File " << "base_tail.txt" << " loaded." << endl;
+
+  printf("%u\n", ac.get_size());
+  delete pit;
+  save_sample(ac);
 }
 
 template<class Tk, class Tf>
