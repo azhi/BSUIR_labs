@@ -157,7 +157,10 @@ Interspace<Tk, Tf> *Interspace<Tk, Tf>::divide()
 template<class Tk, class Tf>
 std::string Interspace<Tk, Tf>::to_json() const
 {
-  std::string res = std::string("{\"items\" : [\n");
+  std::string res = std::string("{\"maxKey\" : \"") +
+    std::to_string(max_key) +
+    "\", \"items\" : [\n";
+
   for (auto it = items->begin(); it != items->end(); ++it) {
     res += it->to_json();
     if (boost::next(it) == items->end())

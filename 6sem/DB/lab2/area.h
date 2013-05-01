@@ -190,7 +190,10 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
 template<class Tk, class Tf>
 std::string Area<Tk, Tf>::to_json() const
 {
-  std::string res = std::string("{\"interspaces\" : [\n");
+  std::string res = std::string("{\"maxKey\" : \"") +
+    std::to_string(max_key) +
+    "\", \"interspaces\" : [\n";
+
   for (auto it = interspace_index->begin();
        it != interspace_index->end();
        ++it) {
