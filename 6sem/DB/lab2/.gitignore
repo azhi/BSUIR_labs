@@ -10,3 +10,9 @@
 *.txt
 *.bin
 results
+dump.bin
+
+"html
+jquery.min.js
+/*.html
+/*.json

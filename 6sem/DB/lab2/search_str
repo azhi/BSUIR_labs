@@ -1,0 +1,12 @@
+#!/bin/bash
+
+[ -a ./dump.bin ] ||
+  ../lab1/core/hash -t ../lab1/base.txt -k analyze -p 100000 --dump dump.bin
+
+keys=$(./vsam_${0##*_} 200 $1 2>/dev/null | sed s/^.*\ //)
+
+for key in $keys
+do
+  ../lab1/core/hash -b dump.bin -f "$key" 2>/dev/null
+done
+

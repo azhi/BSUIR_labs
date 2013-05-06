@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+a2 = `./search_str #{ARGV[1]}`.split("\n")
+a1 = `./search_num #{ARGV[0]}`.split("\n")
+
+aa = a1.select{ |i| a2.include? i }
+
+puts aa.join("/n")
+
+
+aa.each{ |a| puts "\n#{a.split[1]}:\n", `./vsam_str 200 #{a.split[1]} 2>/dev/null`.to_s }
+aa.each{ |a| puts "\n#{a.split[2]}:\n", `./vsam_num 200 #{a.split[2]} 2>/dev/null`.to_s }
