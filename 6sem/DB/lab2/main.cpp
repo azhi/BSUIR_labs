@@ -17,17 +17,25 @@ using namespace std;
 #define EFFECTIVE_INTERSPACE_LENGTH 90
 #define AREA_SIZE 40
 
+#if TYPE == 0
 #define KEY_TYPE string
+#else
+#define KEY_TYPE long
+#endif
 
 template<class Tk, class Tf>
 void save_sample(const AreaContainer<Tk, Tf> &ac);
 
 int main(int argc, char **argv)
 {
-  ifstream in("base2.txt");
+  #if TYPE == 0
+    ifstream in("base2.txt");
+  #else
+    ifstream in("base1.txt");
+  #endif
   if (!in.is_open())
   {
-    cerr << "Can't open file base2.txt" << endl;
+    cerr << "Can't open file base" << endl;
     return 1;
   }
   char key[7];
@@ -42,7 +50,11 @@ int main(int argc, char **argv)
   for(int i = 0; i < SORT_RECORDS_COUNT; ++i) {
     in >> key >> val2 >> val1;
 
-    pit->key = val1;
+    #if TYPE == 0
+      pit->key = val1;
+    #else
+      pit->key = val2;
+    #endif
     pit->field = key;
     items->push_back(*pit);
     items_count++;
@@ -72,9 +84,12 @@ int main(int argc, char **argv)
   areas->push_back(Area<KEY_TYPE, string>(AREA_SIZE, interspaces));
   AreaContainer<KEY_TYPE, string> ac(areas);
 
-  printf("%d %lu\n", items_count, areas->size());
   in.close();
-  cerr << "File " << "base2.txt" << " loaded." << endl;
+  #if TYPE == 0
+    cerr << "File " << "base2.txt" << " loaded." << endl;
+  #else
+    cerr << "File " << "base1.txt" << " loaded." << endl;
+  #endif
 
   in.open("base_tail.txt");
   if (!in.is_open())
@@ -83,10 +98,18 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  ofstream ofs("./before.json");
+  ofs << ac.to_json();
+  ofs.close();
+
   for(int i = 0; i < UNSORT_RECORDS_COUNT; ++i) {
     in >> key >> val2 >> val1;
 
-    pit->key = val1;
+    #if TYPE == 0
+      pit->key = val1;
+    #else
+      pit->key = val2;
+    #endif
     pit->field = key;
     try {
       ac.add_item(*pit);
@@ -98,14 +121,35 @@ int main(int argc, char **argv)
   }
   in.close();
   cerr << "File " << "base_tail.txt" << " loaded." << endl;
+  cerr << "Areas count after: " << ac.get_size() << endl;
 
-  printf("%u\n", ac.get_size());
   delete pit;
-  save_sample(ac);
 
-  ofstream ofs("./out.json");
+  ofs.open("./after.json");
   ofs << ac.to_json();
   ofs.close();
+
+  if ( argc > 1 )
+  {
+    vector< Item<KEY_TYPE, string> *> *res;
+    #if TYPE == 0
+      res = ac.find_item(argv[1]);
+    #else
+      res = ac.find_item(atol(argv[1]));
+    #endif
+    if ( res == nullptr )
+      cerr << "No records found" << endl;
+    else
+    {
+      vector< Item<KEY_TYPE, string> *>::iterator it;
+      for( it = res->begin(); it < res->end(); ++it )
+      #if TYPE == 0
+        printf("%s %s\n", (*it)->key.c_str(), (*it)->field.c_str());
+      #else
+        printf("%ld %s\n", (*it)->key, (*it)->field.c_str());
+      #endif
+    }
+  }
 
   return 0;
 }
@@ -113,7 +157,6 @@ int main(int argc, char **argv)
 template<class Tk, class Tf>
 void save_sample(const AreaContainer<Tk, Tf> &ac)
 {
-  // Sample method, never used.
   ofstream ofs("./test.bin");
   boost::archive::binary_oarchive oa(ofs);
   oa.register_type< Item<Tk, Tf> >();

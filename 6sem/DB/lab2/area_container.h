@@ -76,10 +76,11 @@ bool AreaContainer<Tk, Tf>::add_item(Item<Tk, Tf> &item)
   bool res = ub->add_item(item);
   if ( !res )
   {
-    cout << "DIVIDING area " << ub->get_max_key() << endl;
+    // cerr << "DIVIDING area " << ub->get_max_key() << endl;
     TArea* spl_area = ub->divide();
     add_area(spl_area);
-    cout << "RESULT areas: " << ub->get_max_key() << " -- " << spl_area->get_max_key() << endl;
+    // cerr << "RESULT areas: " << ub->get_max_key() << " -- " << spl_area->get_max_key() << endl;
+
     // WARNING: potential never-ending recursion!
     res = add_item(item);
   }

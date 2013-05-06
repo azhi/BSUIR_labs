@@ -3,7 +3,8 @@
 *.d
 
 " executable
-/vsam
+/vsam_num
+/vsam_str
 
 " base
 *.txt

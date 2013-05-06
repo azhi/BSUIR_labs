@@ -133,10 +133,11 @@ bool Area<Tk, Tf>::add_item(Item<Tk, Tf> &item)
   if ( !res )
     if ( interspace_index->size() < size )
     {
-      cout << "DIVIDING interspace " << (*it)->get_max_key() << endl;
+      // cerr << "DIVIDING interspace " << (*it)->get_max_key() << endl;
       TInterspace* spl_interspace = (*it)->divide();
       add_interspace(spl_interspace);
-      cout << "RESULT interspaces: " << (*it)->get_max_key() << " -- " << spl_interspace->get_max_key() << endl;
+      // cerr << "RESULT interspaces: " << (*it)->get_max_key() << " -- " << spl_interspace->get_max_key() << endl;
+
       // WARNING: potential never-ending recursion!
       res = add_item(item);
     }

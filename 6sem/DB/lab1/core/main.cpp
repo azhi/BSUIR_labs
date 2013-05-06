@@ -22,6 +22,7 @@ void print_help_and_exit()
 
 void batch(VirtualHashTable *ht, const string &in_filename, const string &type);
 void load_text(VirtualHashTable *ht, const string &in_filename);
+void find_mode(VirtualHashTable *ht, const string &k);
 void interactive_mode(VirtualHashTable *ht);
 
 #define RECORDS_COUNT 1000000
@@ -41,6 +42,7 @@ int main(int argc, char const *argv[])
     ("package-count,p", po::value<unsigned>(), "package count")
 
     ("batch,i",         po::value<string>(),   "run batch mode")
+    ("find,f",          po::value<string>(),   "find sigle record")
     ("interactive",                            "run interactive mode")
     ("dump",            po::value<string>(),   "dump base to binary file");
 
@@ -97,6 +99,8 @@ int main(int argc, char const *argv[])
     ht->dump(ofs);
     ofs.close();
     cerr << "Done." << endl;
+  } else if (vm.count("find")) {
+    find_mode(ht, vm["find"].as<string>());
   } else if (vm.count("interactive")) {
     interactive_mode(ht);
   } else
@@ -105,6 +109,24 @@ int main(int argc, char const *argv[])
   if (ht)
     delete ht;
   return 0;
+}
+
+void find_mode(VirtualHashTable *ht, const string &k)
+{
+  Item *pit = nullptr;
+  if ( !VirtualHashTable::is_key(const_cast<char *>(k.c_str())) )
+    cerr << "It's not a valid key." << endl;
+  else
+  {
+    pit = ht->find_record(const_cast<char *>(k.c_str()));
+
+    if ( pit == nullptr )
+      cerr << "No record found." << endl;
+    else
+      cout << pit->key << " "
+        << pit->field1 << " "
+        << pit->field2 << endl;
+  }
 }
 
 void interactive_mode(VirtualHashTable *ht)
