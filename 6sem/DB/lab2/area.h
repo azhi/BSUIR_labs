@@ -178,14 +178,17 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
   for (it = interspace_index->begin(); it < interspace_index->end(); ++it)
   {
     if ( (*it)->is_free() )
-      continue;
+      break;
     Item<Tk, Tf> interspace_max_key_item;
     interspace_max_key_item.key = (*it)->get_max_key();
     interspace_max_key_item.field = Tf();
     if ( item_comparer<Tk, Tf>(key_item, interspace_max_key_item) )
       break;
   }
-  interspace_index->insert(it, interspace);
+  if ( (*it)->is_free() )
+    *it = interspace;
+  else
+    interspace_index->insert(it, interspace);
 }
 
 template<class Tk, class Tf>

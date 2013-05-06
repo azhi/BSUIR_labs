@@ -13,8 +13,6 @@ using namespace std;
 #define SORT_RECORDS_COUNT 800000
 #define UNSORT_RECORDS_COUNT 200000
 
-#define INTERSPACE_LENGTH 100
-#define EFFECTIVE_INTERSPACE_LENGTH 90
 #define AREA_SIZE 40
 
 #if TYPE == 0
@@ -28,6 +26,8 @@ void save_sample(const AreaContainer<Tk, Tf> &ac);
 
 int main(int argc, char **argv)
 {
+  int interspace_length = atoi(argv[1]);
+  int effective_interspace_length = round(0.9 * interspace_length);
   #if TYPE == 0
     ifstream in("base2.txt");
   #else
@@ -59,11 +59,11 @@ int main(int argc, char **argv)
     items->push_back(*pit);
     items_count++;
 
-    if ( items_count == EFFECTIVE_INTERSPACE_LENGTH )
+    if ( items_count == effective_interspace_length )
     {
       if ( interspaces_count % 10 == 9 )
       {
-        interspaces->push_back(new Interspace<KEY_TYPE, string>(INTERSPACE_LENGTH));
+        interspaces->push_back(new Interspace<KEY_TYPE, string>(interspace_length));
         interspaces_count++;
       }
 
@@ -74,13 +74,13 @@ int main(int argc, char **argv)
         interspaces_count = 0;
       }
 
-      interspaces->push_back(new Interspace<KEY_TYPE, string>(INTERSPACE_LENGTH, items));
+      interspaces->push_back(new Interspace<KEY_TYPE, string>(interspace_length, items));
       interspaces_count++;
       items = new vector< Item<KEY_TYPE, string> >;
       items_count = 0;
     }
   }
-  interspaces->push_back(new Interspace<KEY_TYPE, string>(INTERSPACE_LENGTH, items));
+  interspaces->push_back(new Interspace<KEY_TYPE, string>(interspace_length, items));
   areas->push_back(Area<KEY_TYPE, string>(AREA_SIZE, interspaces));
   AreaContainer<KEY_TYPE, string> ac(areas);
 
@@ -91,16 +91,18 @@ int main(int argc, char **argv)
     cerr << "File " << "base1.txt" << " loaded." << endl;
   #endif
 
+  cerr << "Areas count before: " << ac.get_size() << endl;
+
+  ofstream ofs("./before.json");
+  ofs << ac.to_json();
+  ofs.close();
+
   in.open("base_tail.txt");
   if (!in.is_open())
   {
     cerr << "Can't open file base_tail.txt" << endl;
     return 1;
   }
-
-  ofstream ofs("./before.json");
-  ofs << ac.to_json();
-  ofs.close();
 
   for(int i = 0; i < UNSORT_RECORDS_COUNT; ++i) {
     in >> key >> val2 >> val1;
@@ -129,13 +131,13 @@ int main(int argc, char **argv)
   ofs << ac.to_json();
   ofs.close();
 
-  if ( argc > 1 )
+  if ( argc > 2 )
   {
     vector< Item<KEY_TYPE, string> *> *res;
     #if TYPE == 0
-      res = ac.find_item(argv[1]);
+      res = ac.find_item(argv[2]);
     #else
-      res = ac.find_item(atol(argv[1]));
+      res = ac.find_item(atol(argv[2]));
     #endif
     if ( res == nullptr )
       cerr << "No records found" << endl;

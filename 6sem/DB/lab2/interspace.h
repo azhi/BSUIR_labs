@@ -25,6 +25,7 @@ class Interspace
   public:
     Interspace(unsigned length);
     Interspace(unsigned length, vector< Item<Tk, Tf> > *items);
+    ~Interspace();
 
     vector< Item<Tk, Tf> *> *find_item(Tk key);
     bool add_item(Item<Tk, Tf>& item);
@@ -92,6 +93,12 @@ Interspace<Tk, Tf>::Interspace(unsigned length, vector< Item<Tk, Tf> > *items)
   max_key_item = *max_key_it;
   max_key = max_key_item.key;
   free = false;
+}
+
+template<class Tk, class Tf>
+Interspace<Tk, Tf>::~Interspace()
+{
+  delete items;
 }
 
 template<class Tk, class Tf>
