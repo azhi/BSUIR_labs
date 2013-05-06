@@ -1,0 +1,126 @@
+.gallery {
+  width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ppy-placeholder {
+  height: 215px !important;
+}
+
+.ppy-expanded {
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.ppy-outer {
+  padding: 0 46px 0 0;
+}
+
+.ppy-stagewrap {
+  padding: 7px;
+  border-radius: 5px 0 5px 5px;
+  -moz-border-radius: 5px 0 5px 5px;
+  -webkit-border-radius: 5px 0 5px 5px;
+  background: #c1eaff;
+  background: rgba(193,234,255,0.7);
+}
+
+.ppy-stage {
+  width: 160px;
+  height: 160px;
+  border: 2px solid #fff;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  background-color: #777;
+  cursor: pointer;
+}
+
+.ppy-counter {
+  background: #fff;
+  color: #333;
+  padding: 0 5px;
+  font-size: 0.8em;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  opacity: 0.7;
+  border-radius: 5px 0 0 0;
+  -moz-border-radius: 5px 0 0 0;
+  -khtml-border-radius: 5px 0 0 0;
+  -webkit-border-radius: 5px 0 0 0;
+}
+
+.ppy-loading {
+  background-image: url(../popeye/gfx/popeye/loading2.gif);
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.ppy-nav {
+  border-radius: 5px 5px 5px 5px;
+  -moz-border-radius: 5px 5px 5px 5px;
+  -webkit-border-radius: 5px 5px 5px 5px;
+  background: #76c6ee;
+
+  background: -webkit-gradient(
+    linear,
+    left top,
+    right bottom,
+    color-stop(0, rgb(118,198,238)),
+    color-stop(1, rgb(45,158,214))
+  );
+
+  background: -moz-linear-gradient(
+    left top,
+    rgb(118,198,238) 0%,
+    rgb(45,158,214) 100%
+  );
+
+  height: 30px;
+  position: absolute;
+  left: 56px;
+}
+
+.nav-wrap {
+  padding: 3px 0;
+}
+
+.ppy-nav a {
+  display: block;
+  overflow: hidden;
+  text-indent: -900em;
+  height: 22px;
+  padding: 1px;
+  border-radius: 5px 5px 5px 5px;
+  -moz-border-radius: 5px 5px 5px 5px;
+  -webkit-border-radius: 5px 5px 5px 5px;
+  width: 30px;
+  float: left;
+}
+
+.ppy-prev {
+  background: url(../popeye/gfx/popeye/prev3.png) no-repeat center;
+}
+
+.ppy-next {
+  background: url(../popeye/gfx/popeye/next3.png) no-repeat center;
+}
+
+.ppy-switch-enlarge {
+  background: url(../popeye/gfx/popeye/enlarge4.png) no-repeat center;
+}
+
+.ppy-switch-compact {
+  background: url(../popeye/gfx/popeye/compact4.png) no-repeat center;
+}
+
+.ppy-nav a:hover {
+  background-color: #378eba;
+  cursor: pointer;
+  opacity: 0.8;
+}
