@@ -21,7 +21,7 @@ void print_help_and_exit()
 }
 
 template<class Tk, class Tf>
-void load_sample(const AreaContainer<Tk, Tf> *ac, const string filename);
+AreaContainer<Tk, Tf> *load_sample(const string filename);
 
 template<class Tk, class Tf>
 void save_sample(const AreaContainer<Tk, Tf> *ac, const string filename);
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
   AreaContainer<KEY_TYPE, string> *ac = nullptr;
   if (vm.count("bin-source")) {
     cerr << "bin-source: " << vm["bin-source"].as<string>() << endl;
-    load_sample(ac, vm["bin-source"].as<string>());
+    ac = load_sample<KEY_TYPE, string>(vm["bin-source"].as<string>());
     cerr << "Loaded." << endl;
   } else {
     if (!vm.count("interspace-size"))
@@ -209,16 +209,18 @@ int main(int argc, char **argv)
 }
 
 template<class Tk, class Tf>
-void load_sample(const AreaContainer<Tk, Tf> *ac, const string filename)
+AreaContainer<Tk, Tf> *load_sample(const string filename)
 {
-  ofstream ifs(filename.c_str());
-  boost::archive::binary_oarchive ia(ifs);
+  AreaContainer<Tk, Tf> *ac;
+  ifstream ifs(filename.c_str());
+  boost::archive::binary_iarchive ia(ifs);
   ia.register_type< Item<Tk, Tf> >();
   ia.register_type< Interspace<Tk, Tf> >();
   ia.register_type< Area<Tk, Tf> >();
   ia.register_type< AreaContainer<Tk, Tf> >();
-  ia << ac;
+  ia >> ac;
   ifs.close();
+  return ac;
 }
 
 template<class Tk, class Tf>

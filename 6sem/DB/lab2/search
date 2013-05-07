@@ -7,5 +7,5 @@ aa = a1.select{ |i| a2.include? i }
 
 puts aa.join("/n")
 
-aa.each{ |a| puts "\n#{a.split[1]}:\n", `./vsam_str -t ./base2.txt -r ./base_tail.txt -s 200 -f #{a.split[1]} 2>/dev/null`.to_s }
-aa.each{ |a| puts "\n#{a.split[2]}:\n", `./vsam_num -t ./base1.txt -r ./base_tail.txt -s 200 -f #{a.split[2]} 2>/dev/null`.to_s }
+aa.each{ |a| puts "\n#{a.split[1]}:\n", `./vsam_str -b ./dump_str.bin -f #{a.split[1]} 2>/dev/null`.to_s }
+aa.each{ |a| puts "\n#{a.split[2]}:\n", `./vsam_num -b ./dump_num.bin -f #{a.split[2]} 2>/dev/null`.to_s }

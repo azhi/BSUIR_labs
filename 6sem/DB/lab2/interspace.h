@@ -207,7 +207,7 @@ void Interspace<Tk, Tf>::serialize(Archive &ar, const unsigned version)
   ar & BOOST_SERIALIZATION_NVP(max_key_item);
   ar & BOOST_SERIALIZATION_NVP(max_key);
   ar & BOOST_SERIALIZATION_NVP(free);
-  ar & BOOST_SERIALIZATION_NVP(*items);
+  ar & BOOST_SERIALIZATION_NVP(items);
 }
 
 #endif // __INTERSPACE_H_

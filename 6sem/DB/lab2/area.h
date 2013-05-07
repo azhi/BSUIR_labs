@@ -220,7 +220,7 @@ void Area<Tk, Tf>::serialize(Archive &ar, const unsigned version)
   ar & BOOST_SERIALIZATION_NVP(interspace_length);
   ar & BOOST_SERIALIZATION_NVP(max_key);
   ar & BOOST_SERIALIZATION_NVP(max_key_item);
-  ar & BOOST_SERIALIZATION_NVP(*interspace_index);
+  ar & BOOST_SERIALIZATION_NVP(interspace_index);
 }
 
 

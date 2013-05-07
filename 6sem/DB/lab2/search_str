@@ -1,16 +1,21 @@
 #!/bin/bash
 
-[ -a ./dump.bin ] ||
+[ -e ./dump.bin ] ||
   ../lab1/core/hash -t ../lab1/base.txt -k analyze -p 100000 --dump dump.bin
 
-if [ "num" = "${0##*_}" ]
+if [ ! -e ./dump_${0##*_}.bin ]
 then
-  base=./base1.txt
-else
-  base=./base2.txt
+  if [ "num" = "${0##*_}" ]
+  then
+      base=./base1.txt
+  else
+      base=./base2.txt
+  fi
+
+  ./vsam_${0##*_} -t $base -r ./base_tail.txt -s 200 --dump ./dump_${0##*_}.bin 2>/dev/null
 fi
 
-keys=$(./vsam_${0##*_} -t $base -r ./base_tail.txt -s 200 -f $1 2>/dev/null | sed s/^.*\ //)
+keys=$(./vsam_${0##*_} -b ./dump_${0##*_}.bin -f $1 2>/dev/null | sed s/^.*\ //)
 
 for key in $keys
 do
