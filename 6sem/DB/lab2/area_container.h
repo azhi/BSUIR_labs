@@ -114,7 +114,7 @@ template<class Tk, class Tf>
 template<class Archive>
 void AreaContainer<Tk, Tf>::serialize(Archive &ar, const unsigned version)
 {
-  ar & BOOST_SERIALIZATION_NVP(area_index);
+  ar & BOOST_SERIALIZATION_NVP(*area_index);
 }
 
 template<class Tk, class Tf>
