@@ -186,6 +186,7 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
   key_item.field = Tf();
 
   interspace_iterator it;
+  interspace_iterator empty_interspace = interspace_index->end();
   for (it = interspace_index->begin(); it < interspace_index->end(); ++it)
   {
     Item<Tk, Tf> interspace_max_key_item;
@@ -193,17 +194,15 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
     interspace_max_key_item.field = Tf();
     if ( (*it)->is_free() )
     {
-      interspace_iterator next_el = next(it);
-      if ( next_el == interspace_index->end() || key_compare(key_item.key, (*it)->get_max_key()) )
-        break;
-      else
-        continue;
+      if (empty_interspace == interspace_index->end())
+        empty_interspace = it;
+      continue;
     }
     if ( item_comparer<Tk, Tf>(key_item, interspace_max_key_item) )
       break;
   }
-  if ( (*it)->is_free() )
-    *it = interspace;
+  if (empty_interspace != interspace_index->end())
+    (*empty_interspace)->set_items(interspace->get_items());
   else
     interspace_index->insert(it, interspace);
 }

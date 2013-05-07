@@ -34,6 +34,8 @@ class Interspace
     Interspace<Tk, Tf> *divide();
     std::string to_json() const;
 
+    void set_items(vector< Item<Tk, Tf> > *items);
+    vector< Item<Tk, Tf> > *get_items();
     Tk get_max_key();
     void set_max_key(Tk val);
     bool is_free();
@@ -87,8 +89,24 @@ Interspace<Tk, Tf>::Interspace(unsigned length)
 
 template<class Tk, class Tf>
 Interspace<Tk, Tf>::Interspace(unsigned length, vector< Item<Tk, Tf> > *items)
-  : length(length), items(items)
+  : length(length)
 {
+  free = true;
+  set_items(items);
+}
+
+template<class Tk, class Tf>
+Interspace<Tk, Tf>::~Interspace()
+{
+  delete items;
+}
+
+template<class Tk, class Tf>
+void Interspace<Tk, Tf>::set_items(vector< Item<Tk, Tf> > *items)
+{
+  if (!free)
+    throw new std::logic_error("attempt to set items for non-free interspace");
+  this->items = items;
   items_iterator max_key_it = max_element(items->begin(), items->end(),
                              item_comparer<Tk, Tf>);
   max_key_item = *max_key_it;
@@ -97,9 +115,9 @@ Interspace<Tk, Tf>::Interspace(unsigned length, vector< Item<Tk, Tf> > *items)
 }
 
 template<class Tk, class Tf>
-Interspace<Tk, Tf>::~Interspace()
+vector< Item<Tk, Tf> > *Interspace<Tk, Tf>::get_items()
 {
-  delete items;
+  return items;
 }
 
 template<class Tk, class Tf>
