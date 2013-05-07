@@ -53,7 +53,6 @@ class Interspace
     typedef Item<Tk, Tf> TItem;
     typedef typename vector<TItem>::iterator items_iterator;
 
-    items_iterator get_middle_iterator();
 };
 
 template<class Tk, class Tf>
@@ -147,7 +146,7 @@ template<class Tk, class Tf>
 Interspace<Tk, Tf> *Interspace<Tk, Tf>::divide()
 {
   // Copy [size/2 .. last] elements to a new vector.
-  items_iterator middle = get_middle_iterator();
+  items_iterator middle = items->begin() + items->size() / 2;
   vector< Item<Tk, Tf> > *o_items =
     new vector< Item<Tk, Tf> >(middle, items->end());
   o_items->reserve(length);
@@ -179,24 +178,6 @@ std::string Interspace<Tk, Tf>::to_json() const
   }
   res += std::string("]}");
   return res;
-}
-
-template<class Tk, class Tf>
-typename vector< Item<Tk, Tf> >::iterator Interspace<Tk, Tf>::get_middle_iterator()
-{
-  items_iterator middle = items->begin() + items->size() / 2;
-  Tk key = middle->key;
-  while (middle < items->end() && middle->compare_to(key) == 0)
-    middle++;
-
-  if ( middle == items->end() ) {
-    middle = items->end() - 1 - items->size() / 2;
-    key = middle->key;
-    while (middle >= items->begin() && middle->compare_to(key) == 0)
-      middle--;
-  }
-
-  return middle;
 }
 
 template<class Tk, class Tf>

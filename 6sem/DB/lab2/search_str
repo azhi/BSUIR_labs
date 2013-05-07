@@ -1,7 +1,7 @@
 #!/bin/bash
 
 [ -e ./dump.bin ] ||
-  ../lab1/core/hash -t ../lab1/base.txt -k analyze -p 100000 --dump dump.bin
+  ../lab1/core/hash -t ../lab1/base.txt -k analyze -p 100000 --dump dump.bin 2>/dev/null
 
 if [ ! -e ./dump_${0##*_}.bin ]
 then

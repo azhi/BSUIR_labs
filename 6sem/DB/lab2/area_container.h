@@ -59,7 +59,19 @@ vector< Item<Tk, Tf> *> *AreaContainer<Tk, Tf>::find_item(Tk key)
   area_iterator lb = lower_bound(area_index->begin(), area_index->end(), key_area,
       compare);
 
-  return lb->find_item(key);
+  vector< Item<Tk, Tf> *> *res = lb->find_item(key);
+  lb++;
+  Item<Tk, Tf> area_max_key_item;
+  bool finish = false;
+  while (lb != area_index->end() && !finish)
+  {
+    vector< Item<Tk, Tf> *> *sub_res = lb->find_item(key);
+    if (sub_res != nullptr)
+      res->insert(res->end(), sub_res->begin(), sub_res->end());
+    lb++;
+    finish = key_compare(key, lb->get_max_key());
+  }
+  return res;
 }
 
 template<class Tk, class Tf>

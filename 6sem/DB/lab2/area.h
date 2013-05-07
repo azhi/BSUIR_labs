@@ -104,11 +104,22 @@ vector< Item<Tk, Tf> *> *Area<Tk, Tf>::find_item(Tk key)
     Item<Tk, Tf> interspace_max_key_item;
     interspace_max_key_item.key = (*it)->get_max_key();
     interspace_max_key_item.field = Tf();
-    if ( item_comparer<Tk, Tf>(key_item, interspace_max_key_item) )
+    if ( !item_comparer<Tk, Tf>(interspace_max_key_item, key_item) )
       break;
   }
 
-  return (*it)->find_item(key);
+  vector< Item<Tk, Tf> *> *res = (*it)->find_item(key);
+  it++;
+  bool finish = false;
+  while (it != interspace_index->end() && !finish)
+  {
+    vector< Item<Tk, Tf> *> *sub_res = (*it)->find_item(key);
+    if (sub_res != nullptr)
+      res->insert(res->end(), sub_res->begin(), sub_res->end());
+    it++;
+    finish = key_compare(key, (*it)->get_max_key());
+  }
+  return res;
 }
 
 template<class Tk, class Tf>
@@ -177,11 +188,17 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
   interspace_iterator it;
   for (it = interspace_index->begin(); it < interspace_index->end(); ++it)
   {
-    if ( (*it)->is_free() )
-      break;
     Item<Tk, Tf> interspace_max_key_item;
     interspace_max_key_item.key = (*it)->get_max_key();
     interspace_max_key_item.field = Tf();
+    if ( (*it)->is_free() )
+    {
+      interspace_iterator next_el = next(it);
+      if ( next_el == interspace_index->end() || key_compare(key_item.key, (*it)->get_max_key()) )
+        break;
+      else
+        continue;
+    }
     if ( item_comparer<Tk, Tf>(key_item, interspace_max_key_item) )
       break;
   }
