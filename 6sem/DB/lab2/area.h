@@ -221,7 +221,7 @@ void Area<Tk, Tf>::add_interspace(Interspace<Tk, Tf> *interspace)
     }
   }
   else
-    interspace_index->insert(it, interspace);
+    interspace_index->insert(found_it, interspace);
 }
 
 template<class Tk, class Tf>
