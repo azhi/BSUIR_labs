@@ -1,5 +1,5 @@
 CC=gcc
-#CFLAGS=-Wall -std=c99 -O0 -g -pg
+#CFLAGS=-Wall -std=c99 -O0 -g -pg -DDEBUG_WRITE
 CFLAGS=-Wall -std=c99 -O2 -fomit-frame-pointer -pipe -mtune=native
 TARGETS=enc dec
 

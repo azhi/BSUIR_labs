@@ -1,25 +1,26 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "common.h"
 
 struct {
-  unsigned short c[2];
-  unsigned char value;
+  uint16_t c[2];
+  uint8_t value;
 } ht[511];
 
 union {
-  unsigned long long num;
-  unsigned char arr[8];
+  uint64_t num;
+  uint8_t arr[8];
 } length;
 
-unsigned short last_free = 1;
+uint16_t last_free = 1;
 
-unsigned char r = 0, pos = 0;
+uint8_t r = 0, pos = 0;
 
 void read_node(FILE *fin, unsigned short node)
 {
-  unsigned char term = r & (1 << (7 - pos));
+  uint8_t term = r & (1 << (7 - pos));
   ++pos;
 
   if (pos == 8) {
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
     die("Sorry, cannot open file \"%s.\"\n", argv[2])
 
   // Getting length
-  for (unsigned char i = 0; i < 8; ++i)
+  for (uint8_t i = 0; i < 8; ++i)
     length.arr[i] = fgetc(fin);
 
   // Handling an (almost) empty file
@@ -85,14 +86,14 @@ int main(int argc, char *argv[])
 
   // Decoding
   while (length.num > 0) {
-    unsigned short htn = 0;
+    uint16_t htn = 0;
     while (ht[htn].c[0]) {
       if (pos == 8) {
         pos = 0;
         r = fgetc(fin);
       }
 
-      unsigned char term = r & (1 << (7 - pos));
+      uint8_t term = r & (1 << (7 - pos));
       ++pos;
       if (term)
         htn = ht[htn].c[1];
