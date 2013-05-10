@@ -2,6 +2,8 @@ require 'mathn'
 require File.join(File.dirname(__FILE__), 'extensions.rb')
 
 class RidMallerCode
+  attr_reader :g
+
   def initialize k, m
     @m = m
     @k = k
