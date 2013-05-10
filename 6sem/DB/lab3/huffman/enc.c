@@ -92,58 +92,69 @@ int main(int argc, char *argv[])
 
   // Dumping huffman tree
   unsigned char tn = al_sz-1, skip_0 = 0;
-  while (tn) {
-    unsigned short chld;
+  if (tn) {
+    r = 0;
+    pos = 1;
+    while (tn) {
+      unsigned short chld;
 
-    if (!skip_0)
-      chld = get_child(tn, 0);
-    else
-      chld = get_child(tn, 1);
+      if (!skip_0)
+        chld = get_child(tn, 0);
+      else
+        chld = get_child(tn, 1);
 
 #ifdef DEBUG_TREE_DUMP
-    printf("%d %.2x %d, r: %.2x, pos: %d\n", tn, chld, skip_0, r, pos);
+      printf("%d %.2x %d, r: %.2x, pos: %d\n", tn, chld, skip_0, r, pos);
 #endif
 
-    if (chld < 256) {
-      r <<= 1;
-      r ^= 1;
-      ++pos;
+      if (chld < 256) {
+        r <<= 1;
+        r ^= 1;
+        ++pos;
 
-      if (pos == 8) {
-        fputc(r, fout);
-        fputc(chld, fout);
-        pos = 0;
-        r = 0;
+        if (pos == 8) {
+          fputc(r, fout);
+          fputc(chld, fout);
+          pos = 0;
+          r = 0;
+        } else {
+          r <<= 8 - pos;
+          r ^= chld >> pos;
+          fputc(r, fout);
+          r = chld;
+        }
+
       } else {
-        r <<= 8 - pos;
-        r ^= chld >> pos;
-        fputc(r, fout);
-        r = chld;
+        r <<= 1;
+        ++pos;
+
+        if (pos == 8) {
+          fputc(r, fout);
+          pos = 0;
+          r = 0;
+        }
+
+        tn = chld - 255;
+        skip_0 = 0;
+        continue;
       }
 
-    } else {
-      r <<= 1;
-      ++pos;
-
-      if (pos == 8) {
-        fputc(r, fout);
-        pos = 0;
-        r = 0;
+      if (skip_0) {
+        unsigned char l;
+        do {
+          l = tn;
+          tn = ht[255 + tn].p;
+        } while (tn && ht[255 + l].code);
       }
-
-      tn = chld - 255;
-      skip_0 = 0;
-      continue;
+      skip_0 = 1;
     }
-
-    if (skip_0) {
-      unsigned char l;
-      do {
-        l = tn;
-        tn = ht[255 + tn].p;
-      } while (tn && ht[255 + l].code);
-    }
-    skip_0 = 1;
+  } else {
+    ch = 0;
+    while (!ht[ch].count)
+      ++ch;
+    fputc(0x80 | (ch >> 1), fout);
+    r = ch;
+    pos = 1;
   }
 
   // Encoding

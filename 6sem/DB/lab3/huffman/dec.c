@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
   }
 
   // Reading the tree
-  r = 0;
-  pos = 7;
+  r = fgetc(fin);
+  pos = 0;
   read_node(fin, 0);
 
   // Decoding
