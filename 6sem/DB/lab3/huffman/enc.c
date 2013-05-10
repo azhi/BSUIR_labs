@@ -13,7 +13,7 @@ struct {
 } ht[511];
 
 typedef struct {
-  uint8_t v[8];
+  uint8_t v[32];
 } my_uint256_t;
 
 union {
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 
     while (ht[s + 255].p) {
       uint8_t lc = ht[s + 255].code;
-      for (uint8_t i = 0; i < 8; ++i) {
+      for (uint8_t i = 0; i < 32; ++i) {
         uint8_t llc = (tc.v[i] & 0x80) >> 7;
         tc.v[i] <<= 1;
         tc.v[i] |= lc;
