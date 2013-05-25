@@ -1,0 +1,10 @@
+<!ELEMENT periodics (paper*) >
+<!ELEMENT paper (title, type, monthly, chars*) >
+<!ELEMENT title (#PCDATA) >
+<!ELEMENT type (#PCDATA) >
+<!ELEMENT monthly (#PCDATA) >
+<!ELEMENT chars (colored, size, glossy, hasIndex) >
+<!ELEMENT colored (#PCDATA) >
+<!ELEMENT size (#PCDATA) >
+<!ELEMENT glossy (#PCDATA) >
+<!ELEMENT hasIndex (#PCDATA) >

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE firearms SYSTEM "schema/firearms.dtd">
+<firearms>
+  <gun>
+    <model>TT</model>
+    <handy>true</handy>
+    <origin>USSR</origin>
+    <material>metal</material>
+    <TTP>
+      <range>close</range>
+      <aimRange>50</aimRange>
+      <hasCage>true</hasCage>
+      <hasOptics>false</hasOptics>
+    </TTP>
+  </gun>
+  <gun>
+    <model>AK-47</model>
+    <handy>false</handy>
+    <origin>USSR</origin>
+    <material>metal</material>
+    <TTP>
+      <range>long</range>
+      <aimRange>800</aimRange>
+      <hasCage>true</hasCage>
+      <hasOptics>false</hasOptics>
+    </TTP>
+  </gun>
+  <gun>
+    <model>M-16</model>
+    <handy>false</handy>
+    <origin>USA</origin>
+    <material>metal</material>
+    <TTP>
+      <range>middle</range>
+      <aimRange>800</aimRange>
+      <hasCage>true</hasCage>
+      <hasOptics>false</hasOptics>
+    </TTP>
+  </gun>
+  <gun>
+    <model>SVD</model>
+    <handy>false</handy>
+    <origin>USSR</origin>
+    <material>metal + wood</material>
+    <TTP>
+      <range> long </range>
+      <aimRange>1300</aimRange>
+      <hasCage>true</hasCage>
+      <hasOptics>true</hasOptics>
+    </TTP>
+  </gun>
+</firearms>

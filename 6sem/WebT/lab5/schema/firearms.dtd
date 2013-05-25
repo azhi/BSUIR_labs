@@ -1,0 +1,11 @@
+<!ELEMENT firearms (gun*) >
+<!ELEMENT gun (model, handy, origin, material, TTP*) >
+<!ELEMENT model (#PCDATA) >
+<!ELEMENT handy (#PCDATA) >
+<!ELEMENT origin (#PCDATA) >
+<!ELEMENT material (#PCDATA) >
+<!ELEMENT TTP (range, aimRange, hasCage, hasOptics) >
+<!ELEMENT range (#PCDATA) >
+<!ELEMENT aimRange (#PCDATA) >
+<!ELEMENT hasCage (#PCDATA) >
+<!ELEMENT hasOptics (#PCDATA) >

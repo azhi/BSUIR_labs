@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE periodics SYSTEM "schema/periodics.dtd">
+<periodics>
+  <paper>
+    <title>The Guardian</title>
+    <type>newspaper</type>
+    <monthly>true</monthly>
+    <chars>
+      <colored>true</colored>
+      <size>30</size>
+      <glossy>false</glossy>
+      <hasIndex>false</hasIndex>
+    </chars>
+  </paper>
+
+  <paper>
+    <title>Cosmopolitan</title>
+    <type>magazine</type>
+    <monthly>true</monthly>
+    <chars>
+      <colored>true</colored>
+      <size>100</size>
+      <glossy>true</glossy>
+      <hasIndex>true</hasIndex>
+    </chars>
+  </paper>
+
+  <paper>
+    <title>Some booklet</title>
+    <type>booklet</type>
+    <monthly>false</monthly>
+    <chars>
+      <colored>false</colored>
+      <size>1</size>
+      <glossy>false</glossy>
+      <hasIndex>false</hasIndex>
+    </chars>
+  </paper>
+
+  <paper>
+    <title>Some other booklet</title>
+    <type>booklet</type>
+    <monthly>false</monthly>
+    <chars>
+      <colored>false</colored>
+      <size>3</size>
+      <glossy>false</glossy>
+      <hasIndex>false</hasIndex>
+    </chars>
+  </paper>
+
+  <paper>
+    <title>The Times</title>
+    <type>newspaper</type>
+    <monthly>false</monthly>
+    <chars>
+      <colored>true</colored>
+      <size>20</size>
+      <glossy>false</glossy>
+      <hasIndex>false</hasIndex>
+    </chars>
+  </paper>
+</periodics>

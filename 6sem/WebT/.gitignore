@@ -1,0 +1,7 @@
+" build files
+bin
+
+" eclipse files
+.classpath
+.project
+.settings

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="periodics">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="paper" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="paper">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="title" />
+        <xs:element ref="type" />
+        <xs:element ref="monthly" />
+        <xs:element ref="chars" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="title" type="xs:string" />
+  <xs:element name="type">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:whiteSpace value="collapse"/>
+        <xs:enumeration value="newspaper"/>
+        <xs:enumeration value="magazine"/>
+        <xs:enumeration value="booklet"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="monthly" type="xs:boolean" />
+
+  <xs:element name="chars">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="colored" />
+        <xs:element ref="size" />
+        <xs:element ref="glossy" />
+        <xs:element ref="hasIndex" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="colored" type="xs:boolean" />
+  <xs:element name="size" type="xs:int" />
+  <xs:element name="glossy" type="xs:boolean" />
+  <xs:element name="hasIndex" type="xs:boolean" />
+</xs:schema>

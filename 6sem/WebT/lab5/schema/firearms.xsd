@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="firearms">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="gun" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="gun">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="model" />
+        <xs:element ref="handy" />
+        <xs:element ref="origin" />
+        <xs:element ref="material" />
+        <xs:element ref="TTP" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="model" type="xs:string" />
+  <xs:element name="handy" type="xs:boolean" />
+  <xs:element name="origin" type="xs:string" />
+  <xs:element name="material" type="xs:string" />
+
+  <xs:element name="TTP">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="range" />
+        <xs:element ref="aimRange" />
+        <xs:element ref="hasCage" />
+        <xs:element ref="hasOptics" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="range">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:whiteSpace value="collapse"/>
+        <xs:enumeration value="close"/>
+        <xs:enumeration value="middle"/>
+        <xs:enumeration value="long"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="aimRange" type="xs:int" />
+  <xs:element name="hasCage" type="xs:boolean" />
+  <xs:element name="hasOptics" type="xs:boolean" />
+</xs:schema>
