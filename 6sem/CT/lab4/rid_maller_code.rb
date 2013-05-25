@@ -1,5 +1,6 @@
 require 'mathn'
 require File.join(File.dirname(__FILE__), 'extensions.rb')
+require File.join(File.dirname(__FILE__), 'majority_decoder.rb')
 
 class RidMallerCode
   attr_reader :g
@@ -41,31 +42,6 @@ class RidMallerCode
   def decode msg
     raise "message should be a vector!" unless msg.kind_of?(Vector)
     raise "message length should be #{2 ** @m}!" unless msg.size == 2 ** @m
-    ks = []
-    (1...@k).to_a.reverse.each do |i|
-      gs = @g.row_vectors[1..-1]
-      gs.delete_at(i-1)
-      gs += gs.map{ |el| el.negate }
-
-      res = {0 => 0, 1 => 0}
-      gs.combination(@k-2).each do |ar|
-        unless ar.combination(2).any?{ |v1, v2| v1.to_a == v2.negate.to_a }
-          $stderr.puts ar.inspect
-          vec = ar.inject(Vector[* [1] * 2 ** @m ]){ |res, el| res.mul(el) }
-          guess = vec.mul(msg).count(1) % 2
-          res[guess] += 1
-        end
-      end
-      ks << res.max_by{ |k, v| v }.first
-    end
-
-    sum = Vector[* [0] * 2 ** @m ]
-    (0...@m).each do |i|
-      sum ^= ks.reverse[i] * @g.row_vectors[i+1]
-    end
-    sum ^= msg
-    ks << (sum.count(1) > sum.count(0) ? 1 : 0)
-
-    Vector[* ks.reverse]
+    MajorityDecoder.decode @g, msg
   end
 end
