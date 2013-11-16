@@ -1,0 +1,39 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    atk (2.0.2)
+      glib2 (= 2.0.2)
+    cairo (1.12.6)
+      pkg-config
+    coderay (1.0.9)
+    gdk_pixbuf2 (2.0.2)
+      glib2 (= 2.0.2)
+    glib2 (2.0.2)
+      pkg-config
+    gnuplot (2.6.2)
+    green_shoes (1.1.374)
+      gtk2
+    gtk2 (2.0.2)
+      atk (= 2.0.2)
+      gdk_pixbuf2 (= 2.0.2)
+      pango (= 2.0.2)
+    method_source (0.8.2)
+    mysql2 (0.3.13)
+    pango (2.0.2)
+      cairo (>= 1.12.5)
+      glib2 (= 2.0.2)
+    pkg-config (1.1.4)
+    pry (0.9.12.2)
+      coderay (~> 1.0.5)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    slop (3.4.6)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  gnuplot
+  green_shoes
+  mysql2
+  pry
