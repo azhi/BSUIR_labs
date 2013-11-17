@@ -36,6 +36,6 @@ Shoes.app :title => "BAA LAB #2", :height => 630 do
     end
 
     @img.clear
-    @img.append{ image File.read(outfile), :margin => 20 }
+    @img.append{ image outfile, :margin => 20 }
   end
 end
