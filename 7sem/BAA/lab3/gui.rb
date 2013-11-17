@@ -29,14 +29,14 @@ Shoes.app :title => "BAA LAB #3", :height => 630 do
       @prices = @prices.drop_while{ |pr| pr.first < @current_time - SHOW_TIME_INTERVAL }
     end
     @prices << [@current_time, get_new_prices]
-    outfile = File.expand_path("../tmp/graph.png", __FILE__)
+    outfile = File.expand_path("../tmp/graph.svg", __FILE__)
     Plotter.update_prices_graph(@prices, @time_offset, SHOW_TIME_INTERVAL, outfile)
     @img.clear
-    @img.append{ image outfile, :margin => 20 }
+    @img.append{ image File.read(outfile), :margin => 20 }
   end
   @prices = []
 
-  background "#FFF".."#333", :angle => 60
+  background "#eee"
 
   stack :margin => 5 do
     inscription 'Update interval: ' ; @interval = edit_line width: 200; @interval.text = '1'

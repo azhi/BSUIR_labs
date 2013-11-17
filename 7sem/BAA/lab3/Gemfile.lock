@@ -26,6 +26,9 @@ GEM
       coderay (~> 1.0)
       method_source (~> 0.8)
       slop (~> 3.4)
+    rsvg2 (2.0.2)
+      cairo (>= 1.10.0)
+      gdk_pixbuf2 (= 2.0.2)
     slop (3.4.7)
 
 PLATFORMS
@@ -35,3 +38,4 @@ DEPENDENCIES
   gnuplot
   green_shoes
   pry
+  rsvg2

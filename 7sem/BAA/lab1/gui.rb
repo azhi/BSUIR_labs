@@ -7,7 +7,7 @@ require File.join(File.dirname(__FILE__), 'db.rb')
 require File.join(File.dirname(__FILE__), 'plotter.rb')
 
 Shoes.app :title => "BAA LAB #1", :height => 630, :width => 900 do
-  background "#FFF".."#333", :angle => 60
+  background "#eee"
 
   flow do
     stack :margin => 5, :width => 250 do
@@ -56,8 +56,6 @@ Shoes.app :title => "BAA LAB #1", :height => 630, :width => 900 do
       image File.read(out_diagr_path), margin: 20#, width: 550, height: 270
       image File.read(out_graph_path), margin: 20#, width: 550, height: 270
     end
-  rescue Exception => e
-    binding.pry
   end
 
   def send_mail

@@ -6,7 +6,7 @@ class Plotter
 
     Gnuplot.open(true) do |gp|
       Gnuplot::Plot.new( gp ) do |plot|
-        plot.terminal "pngcairo size 550,350"
+        plot.terminal "svg size 550,350"
         plot.output outfile
 
         plot.xlabel "time"

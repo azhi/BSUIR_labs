@@ -5,7 +5,7 @@ require File.join(File.dirname(__FILE__), 'db.rb')
 require File.join(File.dirname(__FILE__), 'plotter.rb')
 
 Shoes.app :title => "BAA LAB #2", :height => 630 do
-  background "#FFF".."#333", :angle => 60
+  background "#eee"
 
   stack :margin => 5 do
     inscription 'From date: ' ; @from_date = edit_line width: 200; @from_date.text = '07.10.13'
@@ -30,11 +30,11 @@ Shoes.app :title => "BAA LAB #2", :height => 630 do
     if table_data.empty?
       outfile = File.expand_path("../tmp/no_data.png", __FILE__)
     else
-      outfile = File.expand_path("../tmp/diagr.png", __FILE__)
+      outfile = File.expand_path("../tmp/diagr.svg", __FILE__)
       Plotter.price_distribution_diagramm(table_data, outfile)
     end
 
     @img.clear
-    @img.append{ image outfile, :margin => 20 }
+    @img.append{ image File.read(outfile), :margin => 20 }
   end
 end

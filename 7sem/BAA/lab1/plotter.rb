@@ -25,6 +25,7 @@ class Plotter
         plot.xlabel "date"
         plot.timefmt '"%Y-%m-%dT%H:00:00+00:00"'
         plot.xdata 'time'
+        plot.xrange "['#{dates.first.to_datetime - 16 / 24.0}':'#{dates.last.to_datetime}']"
         plot.ylabel "amount x10^#{amount_scale_coeff}"
         plot.format 'x "%d.%m.%Y"'
         plot.xtic 'rotate by -60 font ",6"'
@@ -56,6 +57,7 @@ class Plotter
         plot.xlabel "date"
         plot.timefmt '"%Y-%m-%dT%H:00:00+00:00"'
         plot.xdata 'time'
+        plot.xrange "['#{dates.first.to_datetime - 16 / 24.0}':'#{dates.last.to_datetime}']"
         plot.ylabel "count, amount x10^#{amount_scale_coeff}"
         plot.format 'x "%d.%m.%Y"'
         plot.xtic 'rotate by -60 font ",6"'
