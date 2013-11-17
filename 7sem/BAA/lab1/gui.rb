@@ -45,16 +45,16 @@ Shoes.app :title => "BAA LAB #1", :height => 630, :width => 900 do
       out_diagr_path = File.expand_path("../tmp/no_data.png", __FILE__)
       out_graph_path = File.expand_path("../tmp/no_data.png", __FILE__)
     else
-      out_diagr_path = File.expand_path("../tmp/diagr.png", __FILE__)
-      out_graph_path = File.expand_path("../tmp/graph.png", __FILE__)
+      out_diagr_path = File.expand_path("../tmp/diagr.svg", __FILE__)
+      out_graph_path = File.expand_path("../tmp/graph.svg", __FILE__)
       Plotter.new(initial_amount_sum, table_data).
               profit_diagramm(out_diagr_path).
               profit_sum_graph(out_graph_path)
     end
     @img.clear
     @img.append do
-      image out_diagr_path, :margin => 20
-      image out_graph_path, :margin => 20
+      image File.read(out_diagr_path), margin: 20#, width: 550, height: 270
+      image File.read(out_graph_path), margin: 20#, width: 550, height: 270
     end
   rescue Exception => e
     binding.pry
@@ -66,13 +66,13 @@ Shoes.app :title => "BAA LAB #1", :height => 630, :width => 900 do
       from         'system@baa_labs.org'
       to           to_adr
       subject      'Profit diagramm'
-      add_file     File.expand_path("../tmp/diagr.png", __FILE__)
-      add_file     File.expand_path("../tmp/graph.png", __FILE__)
+      add_file     File.expand_path("../tmp/diagr.svg", __FILE__)
+      add_file     File.expand_path("../tmp/graph.svg", __FILE__)
     end
     html_part = Mail::Part.new do
       content_type 'text/html; charset=UTF-8'
-      body         "<img src=#{mail.attachments.inline['diagr.png'].url} /><br />\
-                    <img src=#{mail.attachments.inline['graph.png'].url}>"
+      body         "<img src=#{mail.attachments.inline['diagr.svg'].url} /><br />\
+                    <img src=#{mail.attachments.inline['graph.svg'].url}>"
     end
     mail.html_part = html_part
     mail.deliver!

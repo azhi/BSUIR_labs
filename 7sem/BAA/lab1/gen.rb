@@ -1,6 +1,8 @@
 require 'date'
 require File.join(File.dirname(__FILE__), 'db.rb')
 
+DB.query('CREATE TABLE IF NOT EXISTS pnl_tbl (date DATE, deal_count BIGINT(20), amount DOUBLE);')
+
 rand = Random.new
 (Date.parse('13-09-01')..Date.today).each do |date|
   dc = rand.rand(0..100)

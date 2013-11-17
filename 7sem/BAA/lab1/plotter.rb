@@ -19,7 +19,7 @@ class Plotter
 
     Gnuplot.open(true) do |gp|
       Gnuplot::Plot.new( gp ) do |plot|
-        plot.terminal "pngcairo size 550,270"
+        plot.terminal "svg size 550,270"
         plot.output outfile
 
         plot.xlabel "date"
@@ -50,7 +50,7 @@ class Plotter
 
     Gnuplot.open(true) do |gp|
       Gnuplot::Plot.new( gp ) do |plot|
-        plot.terminal "pngcairo size 550,270"
+        plot.terminal "svg size 550,270"
         plot.output outfile
 
         plot.xlabel "date"
