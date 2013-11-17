@@ -86,8 +86,10 @@ int main(int argc, char *argv[])
     fputc(length.arr[i], fout);
 
   if (length.num <= 1L) {
-    if (length.num > 0L)
+    if (length.num > 0L) {
+      rewind(fin);
       fputc(fgetc(fin), fout);
+    }
 
     fclose(fout);
     fclose(fin);

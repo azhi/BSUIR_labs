@@ -25,7 +25,6 @@ const
   buflength=31;
   diclength=255;
 
-
 procedure description(var a : PChar);
 begin
   a:='lz77 compression library';

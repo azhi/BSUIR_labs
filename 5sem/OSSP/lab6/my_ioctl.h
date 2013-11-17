@@ -21,7 +21,7 @@
 /* CTL Codes above 0x800 are free for your custom use
    Note: using METHOD_BUFFERED = we're lazy and we don't care about a bit of overhead */
 
-#define IOCTL_EXAMPLE  CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_EXAMPLE CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 typedef enum MyIOCode {
   MCODE_QUIT = 0,

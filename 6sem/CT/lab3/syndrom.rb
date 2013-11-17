@@ -12,7 +12,7 @@ class Integer
   end
 end
 
-class MatrixChiper
+class MatrixCoder
   attr_reader :k, :r, :h, :g
 
   def encode(m)
@@ -28,7 +28,7 @@ class MatrixChiper
   end
 end
 
-class RepeatChiper < MatrixChiper
+class RepeatCoder < MatrixCoder
   def initialize(k)
     @k = k
     @r = k
@@ -41,7 +41,7 @@ class RepeatChiper < MatrixChiper
   end
 end
 
-class OddChiper < MatrixChiper
+class OddCoder < MatrixCoder
   def initialize(k)
     @k = k
     @r = 1
@@ -58,7 +58,7 @@ class OddChiper < MatrixChiper
   end
 end
 
-class RectangleChiper < MatrixChiper
+class RectangleCoder < MatrixCoder
   def initialize(a, b)
     @a = a
     @b = b
@@ -85,7 +85,7 @@ class RectangleChiper < MatrixChiper
   end
 end
 
-class TriangleChiper < MatrixChiper
+class TriangleCoder < MatrixCoder
   def initialize(a)
     @a = a
     @k = a * (a + 1) / 2
@@ -122,7 +122,7 @@ class TriangleChiper < MatrixChiper
   end
 end
 
-class HammingChiper < MatrixChiper
+class HammingCoder < MatrixCoder
   def initialize(k)
     @k = k
     @r = (1..2**k).find{ |r| k+r >= 1 << (r-1) and k+r < 1 << r }
@@ -168,13 +168,12 @@ class HammingChiper < MatrixChiper
   end
 
   def decode(c)
-    c.to_s(2).rjust(k+r, ?0).split('').select.
-      with_index{ |t, i| (i+1).to_s(2).count('1') != 1 }.join.to_i(2) ^
-      calc_syndrom(c)
+    (c ^ calc_syndrom(c)).to_s(2).rjust(k+r, ?0).split('').select.
+      with_index{ |t, i| (i+1).to_s(2).count('1') != 1 }.join.to_i(2)
   end
 end
 
-class ExtendedHammingChiper < HammingChiper
+class ExtendedHammingCoder < HammingCoder
   def initialize(k)
     super
     @r += 1
@@ -201,7 +200,7 @@ end
 
 def calc_ext_ham_vel
   (1..14).map{ |k|
-    eh = ExtendedHammingChiper.new(k)
+    eh = ExtendedHammingCoder.new(k)
     (1...(1 << k)).map{ |i|
       k.to_f / Math.log2(eh.encode(i)).ceil
     }.reduce(:+) / (1 << k)

@@ -32,6 +32,7 @@ Shoes.app :title => "BAA LAB #2", :height => 630 do
     else
       outfile = File.expand_path("../tmp/diagr.svg", __FILE__)
       Plotter.price_distribution_diagramm(table_data, outfile)
+      outfile = File.read(outfile)
     end
 
     @img.clear

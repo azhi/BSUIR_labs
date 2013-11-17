@@ -50,11 +50,13 @@ Shoes.app :title => "BAA LAB #1", :height => 630, :width => 900 do
       Plotter.new(initial_amount_sum, table_data).
               profit_diagramm(out_diagr_path).
               profit_sum_graph(out_graph_path)
+      out_diagr_path = File.read(out_diagr_path)
+      out_graph_path = File.read(out_graph_path)
     end
     @img.clear
     @img.append do
-      image File.read(out_diagr_path), margin: 20#, width: 550, height: 270
-      image File.read(out_graph_path), margin: 20#, width: 550, height: 270
+      image out_diagr_path, margin: 20#, width: 550, height: 270
+      image out_graph_path, margin: 20#, width: 550, height: 270
     end
   end
 
