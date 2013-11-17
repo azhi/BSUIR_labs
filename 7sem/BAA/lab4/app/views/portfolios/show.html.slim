@@ -1,0 +1,9 @@
+p
+  strong Name:
+  = @portfolio.name
+
+=' link_to 'Edit', edit_portfolio_path(@portfolio)
+'|
+=' link_to 'History', history_portfolio_path(@portfolio)
+'|
+= link_to 'Back', portfolios_path

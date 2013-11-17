@@ -1,0 +1,36 @@
+h1 Listing deals
+
+table
+  tr
+    th Name
+    th Portfolio
+    th Date
+    th Type
+    th Contractor
+    th Price
+    th Actions
+
+  - @deals.each do |deal|
+    tr class=(deal.deleted? ? 'deleted' : '')
+      td = deal.name
+      td = deal.portfolio.name
+      td = deal.date.to_date
+      td = deal.buy_sell
+      td = deal.contractor
+      td = deal.price
+      td
+        =' link_to 'Show', deal
+        - unless deal.deleted?
+          '|
+          =' link_to 'Edit', edit_deal_path(deal) 
+          '|
+          = link_to 'Destroy', deal, data: {confirm: 'Are you sure?'}, :method => :delete
+
+br
+
+- if params[:all].present?
+  = link_to 'View only active Deals', {all: nil}
+- else
+  = link_to 'View all Deals (includes deleted)', {all: true}
+br
+= link_to 'New Deal', new_deal_path

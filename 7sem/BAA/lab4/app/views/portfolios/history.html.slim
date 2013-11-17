@@ -1,0 +1,22 @@
+table
+  thead
+    th Event
+    th Date
+    th User
+    th Name
+    th Deleted
+  tbody
+    - @portfolio.versions.each_cons(2) do |version_before, version_after|
+      tr
+        - portfolio_version = version_after.reify
+        td = portfolio_version.deleted? && !version_before.reify.deleted? ? 'delete' : version_before.event
+        td = version_before.created_at
+        td = User.find(version_before.whodunnit).try(:email)
+        td = portfolio_version.name
+        td = portfolio_version.deleted? ? 'Yes' : 'No'
+    tr
+      td = @portfolio.deleted? && !@portfolio.versions.last.reify.deleted? ? 'delete' : @portfolio.versions.last.event
+      td = @portfolio.versions.last.created_at
+      td = User.find(@portfolio.versions.last.whodunnit).try(:email)
+      td = @portfolio.name
+      td = @portfolio.deleted? ? 'Yes' : 'No'

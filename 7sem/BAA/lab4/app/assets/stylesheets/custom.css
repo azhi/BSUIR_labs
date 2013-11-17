@@ -1,0 +1,89 @@
+section {
+  margin-top: 3em;
+  font-size: 120%;
+  padding: 20px;
+  background: #fff;
+}
+
+header {
+  height: 50px;
+}
+
+header h3 {
+  float: left;
+  background-color: white;
+  padding: 0 0.7em;
+}
+
+nav {
+  float: right;
+  background-color: white;
+  padding: 0 0.7em;
+  white-space: nowrap;
+}
+
+nav ul {
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li {
+  list-style-type: none;
+  display: inline-block;
+  padding: 0.2em 0;
+  margin-left: 5px;
+}
+
+.round {
+  -moz-border-radius: 20px;
+  -webkit-border-radius: 20px;
+  border-radius: 20px;
+}
+
+table tr.deleted {
+  text-decoration: line-through;
+}
+
+table {
+  border-collapse:collapse;
+}
+
+table th {
+  background-color: #dfd;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+div.field {
+  width: 400px;
+}
+
+div.field input, div.field select {
+  float: right;
+}
+
+.input {
+  margin-bottom: 10px;
+}
+
+.error {
+  margin-left: 5px;
+  background: #FF9999;
+  padding: 3px;
+}
+
+.button {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  color: #fff;
+  background: #9C99FF;
+  font-size: 90%;
+  font-weight: bold;
+  padding: 3px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}

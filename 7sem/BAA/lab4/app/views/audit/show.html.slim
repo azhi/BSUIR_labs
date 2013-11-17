@@ -1,0 +1,19 @@
+table
+  thead
+    th Item type
+    th Item id
+    th Event
+    th Date
+    th Change
+  tbody
+    - @versions.each do |version|
+      - version_before = version.reify
+      - version_after = version.next ? version.next.reify : version.item_type.constantize.find(version.item_id)
+      tr
+        td = version.item_type
+        td = version.item_id
+        td = version_after.deleted? && !version_before.deleted? ? 'delete' : version.event
+        td = version.created_at
+        td == attribute_diff(version_before.try(:attributes) || {}, version_after.attributes)
+
+

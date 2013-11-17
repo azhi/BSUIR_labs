@@ -1,0 +1,26 @@
+h1 Listing portfolios
+
+table
+  tr
+    th Name
+    th Actions
+
+  - @portfolios.each do |portfolio|
+    tr class=(portfolio.deleted? ? 'deleted' : '')
+      td = portfolio.name
+      td
+        =' link_to 'Show', portfolio
+        - unless portfolio.deleted?
+          '|
+          =' link_to 'Edit', edit_portfolio_path(portfolio)
+          '|
+          = link_to 'Destroy', portfolio, data: {confirm: 'Are you sure?'}, :method => :delete
+
+br
+
+- if params[:all].present?
+  = link_to 'View only active Portfolios', {all: nil}
+- else
+  = link_to 'View all Portfolios (includes deleted)', {all: true}
+br
+= link_to 'New Portfolio', new_portfolio_path

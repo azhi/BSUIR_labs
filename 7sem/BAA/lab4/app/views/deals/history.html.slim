@@ -1,0 +1,37 @@
+table
+  thead
+    th Event
+    th Date
+    th User
+    th Name
+    th Portfolio
+    th Date
+    th Type
+    th Contractor
+    th Price
+    th Deleted
+  tbody
+    - @deal.versions.each_cons(2) do |version_before, version_after|
+      tr
+        - deal_version = version_after.reify
+        td = deal_version.deleted? && !version_before.reify.deleted? ? 'delete' : version_before.event
+        td = version_before.created_at
+        td = User.find(version_before.whodunnit).try(:email)
+        td = deal_version.name
+        td = deal_version.portfolio.name
+        td = deal_version.date.to_date
+        td = deal_version.buy_sell
+        td = deal_version.contractor
+        td = deal_version.price
+        td = deal_version.deleted? ? 'Yes' : 'No'
+    tr
+      td = @deal.deleted? && !@deal.versions.last.reify.deleted? ? 'delete' : @deal.versions.last.event
+      td = @deal.versions.last.created_at
+      td = User.find(@deal.versions.last.whodunnit).try(:email)
+      td = @deal.name
+      td = @deal.portfolio.name
+      td = @deal.date.to_date
+      td = @deal.buy_sell
+      td = @deal.contractor
+      td = @deal.price
+      td = @deal.deleted? ? 'Yes' : 'No'

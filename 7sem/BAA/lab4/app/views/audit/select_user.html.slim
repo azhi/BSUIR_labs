@@ -1,0 +1,5 @@
+h1 Please, select user to audit
+= form_tag audit_user_path do
+  = select_tag :id, options_for_select(User.all.map{ |u| [u.email, u.id] })
+  br
+  = submit_tag 'Audit'

@@ -1,0 +1,27 @@
+- if @deal.deleted?
+  p
+    strong Warning! This deal was destroyed.
+p
+  strong Name:
+  = @deal.name
+p
+  strong Portfolio:
+  = @deal.portfolio.name
+p
+  strong Date:
+  = @deal.date.to_date
+p
+  strong Type:
+  = @deal.buy_sell
+p
+  strong Contractor:
+  = @deal.contractor
+p
+  strong Price:
+  = @deal.price
+
+=' link_to 'Edit', edit_deal_path(@deal)
+'|
+=' link_to 'History', history_deal_path(@deal)
+'|
+= link_to 'Back', deals_path
