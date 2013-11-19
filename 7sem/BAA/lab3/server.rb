@@ -14,7 +14,7 @@ timeout = ARGV[1].to_i
 @gen_thread = Thread.new do
   random = Random.new
   loop {
-    @prices.map!{ |pr| random.rand < PR_FLIP_CHANCE ? pr + random.rand(DELTA_PRICE_RANGE) : pr }
+    @prices.map!{ |pr| random.rand < PR_FLIP_CHANCE ? [0, pr + random.rand(DELTA_PRICE_RANGE)].max : pr }
     sleep(timeout)
   }
 end
