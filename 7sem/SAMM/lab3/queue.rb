@@ -27,7 +27,7 @@ class Queue
     @summary_time_in_queue += @current_n
   end
 
-  def is_empty?
+  def empty?
     @current_n.zero?
   end
 end

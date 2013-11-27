@@ -29,7 +29,7 @@ class MSS
     channels.each{ |c| c.step }
     queue.step
     free_channel = channels.find{ |c| !c.busy? }
-    if free_channel && !queue.is_empty?
+    if free_channel && !queue.empty?
       queue.rem
       free_channel.add
     end
