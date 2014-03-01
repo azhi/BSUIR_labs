@@ -1,0 +1,9 @@
+GEM
+  specs:
+    gnuplot (2.6.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  gnuplot

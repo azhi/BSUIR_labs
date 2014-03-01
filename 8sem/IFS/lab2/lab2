@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require File.join(File.dirname(__FILE__), 'text_search.rb')
+
+texts = Dir['texts/*']
+sample_text = ARGV[0]
+
+matched_texts = TextSearch.new(texts, sample_text).search
+
+if matched_texts.empty?
+  puts "No similar texts found."
+else
+  matched_texts.each do |text|
+    puts "Text in file #{text[:filename]} matches sample text with #{text[:matched_percentage].round(3) * 100}% keyword matches (#{text[:matched].join(', ')})"
+  end
+end
