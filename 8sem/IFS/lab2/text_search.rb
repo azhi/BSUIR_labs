@@ -7,9 +7,11 @@ class TextSearch
   def initialize(texts_filenames, pattern_text_filename)
     @pattern_text_filename = pattern_text_filename
     @texts_keywords = texts_filenames.map do |filename|
-      {filename: filename, keywords: Zipf.new(filename).keywords}
+      language = filename.end_with?('.en.txt') ? :en : :ru
+      {filename: filename, keywords: Zipf.new(filename, language).keywords}
     end
-    @search_keywords = Zipf.new(pattern_text_filename).keywords
+    language = pattern_text_filename.end_with?('.en.txt') ? :en : :ru
+    @search_keywords = Zipf.new(pattern_text_filename, language).keywords
   end
 
 

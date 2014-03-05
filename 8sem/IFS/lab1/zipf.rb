@@ -1,12 +1,16 @@
 require File.join(File.dirname(__FILE__), 'mystem_wrapper')
 
 class Zipf
-  attr_reader :text
+  attr_reader :text, :language
 
-  STOP_WORDS = %w[а без более бы был была были было быть в вам вас весь во вот все всего всех вы г где да даже для до его ее если есть еще же за здесь и из из-за или им их к как какой-то ко когда который кто ли либо мне может мы на надо наш не него нее нет ни них но ну о об однако он она они оно от очень по под при про с со т так также такой там те тем то того тоже той только том тот ты тут у уж уже хотя чего чей чем что чтобы чье чья эта эти это этот я]
+  STOP_WORDS = {
+    ru: %w[а без более бы был была были было быть в вам вас весь во вот все всего всех вы г где да даже для до его ее если есть еще же за здесь и из из-за или им их к как какой-то ко когда который кто ли либо мне может мы на надо наш не него нее нет ни них но ну о об однако он она они оно от очень по под при про с со т так также такой там те тем то того тоже той только том тот ты тут у уж уже хотя чего чей чем что чтобы чье чья эта эти это этот я],
+    en: %w[a about above after again against all am an and any are aren't as at be because been before being below between both but by can't cannot could couldn't did didn't do does doesn't doing don't down during each few for from further had hadn't has hasn't have haven't having he he'd he'll he's her here here's hers herself him himself his how how's i i'd i'll i'm i've if in into is isn't it it's its itself let's me more most mustn't my myself no nor not of off on once only or other ought our ours ourselves out over own same shan't she she'd she'll she's should shouldn't so some such than that that's the their theirs them themselves then there there's these they they'd they'll they're they've this those through to too under until up very was wasn't we we'd we'll we're we've were weren't what what's when when's where where's which while who who's whom why why's with won't would wouldn't you you'd you'll you're you've your yours yourself yourselves]
+  }
 
-  def initialize(filename)
+  def initialize(filename, language = :ru)
     @text = File.read(filename)
+    @language = language.to_sym
   end
 
   def law1(filter_stop_words = false)
@@ -62,8 +66,12 @@ class Zipf
 
   private
     def normalize_words(filter_stop_words = false)
-      normalized_words = MystemWrapper.new(text).normalized_words
-      normalized_words = normalized_words.select{ |word| !STOP_WORDS.include?(word) } if filter_stop_words
+      normalized_words = language == :ru ?
+                           MystemWrapper.new(text).normalized_words :
+                           text.gsub(/[~!@#$%^&*()_+=\/?.,<>'";:\[\]{}]/, '').split(' ').
+                                map{ |word| !word.empty? ? word : nil }.
+                                compact.map(&:downcase)
+      normalized_words = normalized_words.select{ |word| !STOP_WORDS[language].include?(word) } if filter_stop_words
       normalized_words
     end
 end

@@ -3,18 +3,17 @@
 require File.join(File.dirname(__FILE__), 'zipf.rb')
 require File.join(File.dirname(__FILE__), 'plotter.rb')
 
+language = ARGV[1].sub('--lang=', '')
+filename = ARGV[2]
 if ARGV[0] == '--law1'
-  filename = ARGV[1]
-  zipf = Zipf.new(filename)
+  zipf = Zipf.new(filename, language)
   zipf.avg_C
   law_freqs = zipf.law1
   Plotter.plot_for_law1(law_freqs)
 elsif ARGV[0] == '--law2'
-  filename = ARGV[1]
-  freq_word_counts = Zipf.new(filename).law2
+  freq_word_counts = Zipf.new(filename, language).law2
   Plotter.plot_for_law2(freq_word_counts)
 elsif ARGV[0] == '--keywords'
-  filename = ARGV[1]
-  keywords = Zipf.new(filename).keywords
+  keywords = Zipf.new(filename, language).keywords
   puts keywords.join(', ')
 end

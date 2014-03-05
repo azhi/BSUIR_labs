@@ -1,0 +1,46 @@
+Chicago Pile-1
+From Wikipedia, the free encyclopedia
+  (Redirected from Chicago Pile)
+Site of the First Self Sustaining Nuclear Reaction
+U.S. National Register of Historic Places
+U.S. National Historic Landmark
+Chicago Landmark
+
+Drawing of the reactor
+Chicago Pile-1 is located in Chicago
+
+Chicago Pile-1 (CP-1) was the world's first artificial nuclear reactor. The construction of CP-1 was part of the Manhattan Project, and was carried out by the Metallurgical Laboratory at the University of Chicago. It was built under the west viewing stands of the original Stagg Field. The first man-made self-sustaining nuclear chain reaction was initiated in CP-1 on 2 December 1942, under the supervision of Enrico Fermi. Fermi described the apparatus as "a crude pile of black bricks and wooden timbers." Made of a large amount of graphite and uranium, with "control rods" of cadmium, indium, and silver, unlike most subsequent reactors, it had no radiation shield and no cooling system.
+The site is now a National Historic Landmark and a Chicago Landmark.
+Contents
+1 Reactor
+2 First nuclear chain reaction
+3 Later operation
+4 Significance and commemoration
+5 See also
+6 Notes
+7 External links
+Reactor
+
+The reactor was a "pile" of uranium pellets and graphite blocks, assembled under the supervision of the renowned physicist Enrico Fermi, in collaboration with Leó Szilárd, discoverer of the chain reaction, and assisted by Martin Whittaker, Walter Zinn, and George Weil. It contained a critical mass of fissile material (when moderated by the graphite), together with control rods. The shape of the pile was intended to be roughly spherical, but as work proceeded Fermi calculated that critical mass could be achieved without finishing the entire pile as planned.
+CP-1 was originally to be built in Red Gate Woods, a forest preserve outside the city, but a labor strike prevented this. So Fermi built the "pile" under the west stands of Stagg Field, the University's abandoned football stadium, in a space that had been used as a rackets court. In the pile, the neutron-producing uranium pellets were separated from one another by graphite blocks. Some of the free neutrons produced by the natural decay of uranium would be absorbed by other uranium atoms, causing nuclear fission of those atoms and the release of additional free neutrons. The graphite between the uranium pellets was a neutron moderator; it slowed the neutrons, increasing the chance they would be absorbed. Fermi described the apparatus as "a crude pile of black bricks and wooden timbers."
+The controls were rods made of cadmium, indium, and silver. Cadmium and indium absorb neutrons; silver becomes radioactive when irradiated by neutrons, which is used for measuring their flux. When the rods were inserted into the pile, the cadmium absorbed free neutrons, preventing the chain reaction. As the rods were withdrawn, more neutrons would strike uranium atoms, until a self-sustaining chain reaction developed. Re-inserting the rods would dampen the reaction.
+The pile required an enormous amount of graphite and uranium. At the time, there was a limited source of pure uranium. Frank Spedding of Iowa State University was able to produce only two short tons of pure uranium. Westinghouse Lamp Plant supplied another three short tons of uranium metal, which it produced in a rush with a makeshift process. A large square balloon was constructed by Goodyear Tire to encase the pile.
+First nuclear chain reaction
+
+On 2 December 1942, CP-1 was ready for a demonstration. Before a group of dignitaries, George Weil worked the final control rod while Fermi carefully monitored the neutron activity. The pile "went critical" (reached a self-sustaining reaction) at 15:25. Fermi shut it down 28 minutes later.
+After the chain reaction was observed, Arthur Compton, head of the Metallurgical Laboratory, notified James Conant, chairman of the National Defense Research Committee, by telephone. The conversation was in an impromptu code:
+Compton: The Italian navigator has landed in the New World.
+Conant: How were the natives?
+Compton: Very friendly.
+Unlike most reactors that have been built since, CP-1 had no radiation shielding and no cooling system of any kind. Fermi had convinced Arthur Compton that his calculations were reliable enough to rule out a runaway chain reaction or an explosion. But, as the official historians of the Atomic Energy Commission later noted, the "gamble" remained in conducting "a possibly catastrophic experiment in one of the most densely populated areas of the nation!"
+Later operation
+
+Operation of CP-1 was terminated in February 1943. The pile was then dismantled and moved to Red Gate Woods. There it was reconstructed using the original materials, plus an enlarged radiation shield, and renamed Chicago Pile-2 (CP-2). CP-2 began operation in March 1943 and was later buried at the same site, now known as the Site A/Plot M Disposal Site. CP-2 and other activities at the Red Gate Woods site led to it becoming the first site of Argonne National Laboratory.
+
+
+Henry Moore's Nuclear Energy
+Significance and commemoration
+
+The site of CP-1 was designated as a National Historic Landmark on 18 February 1965. When the National Register of Historic Places was created in 1966, it was immediately added to that as well. The site was named a Chicago Landmark on 27 October 1971. It is one of the four Registered Chicago Historic Places on the initial National Register.
+The site of the old Stagg Field is now occupied by the University's Regenstein Library. A Henry Moore sculpture, Nuclear Energy, stands in a small quadrangle just outside the Library, to commemorate the nuclear experiment.
+A small graphite block from CP-1 can be seen at the Bradbury Science Museum in Los Alamos, New Mexico; another is currently on display at the Museum of Science and Industry in Chicago.

@@ -11,6 +11,6 @@ if matched_texts.empty?
   puts "No similar texts found."
 else
   matched_texts.each do |text|
-    puts "Text in file #{text[:filename]} matches sample text with #{text[:matched_percentage].round(3) * 100}% keyword matches (#{text[:matched].join(', ')})"
+    puts "Text in file #{text[:filename]} matches sample text with #{(text[:matched_percentage] * 100).round(1)}% keyword matches (#{text[:matched].join(', ')})"
   end
 end
