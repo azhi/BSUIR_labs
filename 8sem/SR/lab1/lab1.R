@@ -1,6 +1,5 @@
 f <- function(lambda) function(t) lambda * exp(-lambda*t)
 F <- function(lambda) function(t) 1 - exp(-lambda * t)
-F2 <- function(lambda) function(t) integrate(f(lambda), lower=0, upper=t)$value
 m <- function(lambda) 1 / lambda
 D <- function(lambda) 1 / lambda ^ 2
 median <- function(lambda) - log(0.5) / lambda
@@ -19,9 +18,10 @@ colors <- c("black", "red", "blue", "green", "yellow")
 pdf("out.pdf")
 plot_samples(f, lambdas, colors, c(0,5), c(0,3), "f(t)", "topright")
 plot_samples(F, lambdas, colors, c(0,5), c(0,1), "F(t)", "bottomright")
-# plot_samples(F2, lambdas, colors, c(0,5), c(0,1), "F2(t)", "bottomright")
 plot(m, 0, 3, main="m(lambda)", ylab="m(lambda)", xlab="lambda")
 plot(D, 0, 3, main="D(lambda)", ylab="D(lambda)", xlab="lambda")
 plot(median, 0, 3, main="median(lambda)", ylab="median(lambda)", xlab="lambda")
+plot(c(0,5), type="n", main="mod(lambda)", ylab="mod(lambda)", xlab="lambda")
+abline(h=0.0)
 plot(c(0,5), type="n", main="assymetric(lambda)", ylab="assymetric(lambda)", xlab="lambda")
 abline(h=2.0)
