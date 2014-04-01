@@ -1,5 +1,5 @@
-require File.join(File.dirname(__FILE__), '../lab1/zipf.rb')
-require File.join(File.dirname(__FILE__), '../../../5sem/MADM/lab4/perceptron.rb')
+require_relative '../lab1/zipf'
+require_relative '../../../5sem/MADM/lab4/perceptron'
 require 'set'
 require 'pry'
 

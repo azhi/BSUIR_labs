@@ -30,8 +30,8 @@ class Zipf
   def keywords
     law_freqs = law1(true)
     middle = law_freqs.size / 2
-    left = [0, middle - 4].max
-    right = [law_freqs.size, middle + 4].min
+    left = [0, middle - 8].max
+    right = [law_freqs.size, middle + 8].min
     law_freqs.map{ |law_freq| law_freq[:word] }[left..right]
   end
 
