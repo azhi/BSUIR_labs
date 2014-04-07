@@ -2,11 +2,13 @@ export DC=dmd
 SHELL=/bin/bash
 TIME=time
 
-.PHONY: all clean gen test
+.PHONY: all clean gen perf test
 
 all: hash tree
 
 gen: ins_batch.txt search_batch.txt
+
+perf: hash_perf.dat # tree_perf.dat
 
 hash:
 	$(DC) hash.d
@@ -18,7 +20,7 @@ ins_batch.txt:
 	./gen.sh add 50000 $@
 
 search_batch.txt:
-	./gen.sh find 280000 $@
+	./gen.sh find 250000 $@
 
 hash_perf.dat: hash ins_batch.txt search_batch.txt
 	$(TIME) sh -c "./hash --file $@ --batch ins_batch.txt"
