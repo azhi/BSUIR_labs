@@ -15,7 +15,7 @@ th_freqs <- sapply(1:(length(breaks)-1), function(i) F(breaks[i+1]) - F(breaks[i
 pdf("out.pdf")
 break_labels <- breaks[2:length(breaks)]
 th_break_xs <- sapply(1:(length(breaks) - 1), function(i) breaks[i] + break_diffs[i] / 2 )
-barplot(freqs, names.arg=break_labels, width=break_diffs[1], space=0, main="Distribution histogramm", xlab="t", ylab="freq")
+barplot(freqs, names.arg=break_labels, width=break_diffs[1], space=0, main="Distribution histogram", xlab="t", ylab="freq")
 lines(th_break_xs, th_freqs, col="red")
 
 m <- mean(sequence)
