@@ -8,7 +8,7 @@ all: hash tree
 
 gen: ins_batch.txt search_batch.txt
 
-perf: hash_perf.dat # tree_perf.dat
+perf: hash_perf.dat tree_perf.dat
 
 hash:
 	$(DC) hash.d
