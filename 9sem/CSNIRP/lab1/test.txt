@@ -1,0 +1,1 @@
+../../../8sem/IFS/lab1/texts/wiki_eye.txt
