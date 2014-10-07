@@ -14,10 +14,7 @@ $(OBJECTS): $(C_SOURCES)
 	$(CC) $(CFLAGS) $< -o $@
 
 test: $(EXECUTABLE)
-	rm test_out.txt test_diff.txt
-	wine $(EXECUTABLE) --encode 12345678 test.txt test_out.txt
-	wine $(EXECUTABLE) --decode 12345678 test_out.txt test_diff.txt
-	cmp test{,_diff}.txt && echo 'OK'
+	/bin/bash test.sh
 
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
