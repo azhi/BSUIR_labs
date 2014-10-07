@@ -25,11 +25,14 @@ void map_file_into_memory(char* path, DWORD file_access, DWORD file_create,
                           HANDLE* file, HANDLE* file_mapping, PBYTE* data,
                           DWORD* size);
 
-HCRYPTKEY generate_key(HCRYPTPROV provider, ALG_ID algid, LPTSTR password);
 
+void prepare_gen_key_crypt(struct AlgDescriptor alg_descriptor, enum Mode mode, const char* key_file,
+                             HCRYPTPROV* prov, HCRYPTKEY* key);
+
+void save_encrypted_session_key(const char* out_key_file_name, HCRYPTPROV prov, HCRYPTKEY key);
 void prepare_password_crypt(struct AlgDescriptor alg_descriptor, char* password,
                              HCRYPTPROV* prov, HCRYPTKEY* key);
-void finalize_password_crypt(HCRYPTPROV prov, HCRYPTKEY key);
+void finalize_crypt(HCRYPTPROV prov, HCRYPTKEY key);
 
 DWORD do_crypt(struct AlgDescriptor alg_descriptor, HCRYPTKEY key, enum Mode mode,
               PBYTE in_data, PBYTE out_data,

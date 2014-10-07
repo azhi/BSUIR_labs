@@ -46,7 +46,108 @@ void map_file_into_memory(char* path, DWORD file_access, DWORD file_create,
     *size = GetFileSize(*file, NULL);
 }
 
-HCRYPTKEY generate_key(HCRYPTPROV provider, ALG_ID algid, LPTSTR password)
+HCRYPTKEY get_user_key(HCRYPTPROV prov, BOOL allow_create)
+{
+  HCRYPTKEY user_key;
+  if (!CryptGetUserKey(prov, AT_KEYEXCHANGE, &user_key)) {
+    DWORD last_error = GetLastError();
+    if (last_error == NTE_NO_KEY && allow_create) {
+      fprintf(stderr, "No user key found. Trying to build one...");
+      if (!CryptGenKey(prov, AT_KEYEXCHANGE, 0, &user_key)) {
+        fprintf(stderr, "Cannot generate user key. Error code: %lu\n",
+                GetLastError());
+        exit(-1);
+      } else {
+        if (!CryptGetUserKey(prov, AT_KEYEXCHANGE, &user_key)) {
+          fprintf(stderr, "Cannot get user key. Error code: %lu\n",
+                  GetLastError());
+          exit(-1);
+        }
+      }
+    } else {
+      fprintf(stderr, "Cannot get user key. Error code: %lu\n",
+              last_error);
+      exit(-1);
+    }
+  }
+  return user_key;
+}
+
+
+HCRYPTKEY load_encrypted_session_key(const char* key_file_name, HCRYPTPROV prov)
+{
+  HCRYPTKEY user_key = get_user_key(prov, FALSE);
+
+  DWORD key_size = 260;
+  BYTE key_blob[key_size];
+
+  FILE* key_file = fopen(key_file_name, "rb");
+  key_size = fread(key_blob, 1, key_size, key_file);
+  fclose(key_file);
+
+  HCRYPTKEY key;
+  if (!CryptImportKey(prov, key_blob, key_size, user_key, 0, &key)) {
+    fprintf(stderr, "Cannot import session key. Error code: %lu\n",
+            GetLastError());
+    exit(-1);
+  }
+
+  return key;
+}
+
+void save_encrypted_session_key(const char* key_file_name, HCRYPTPROV prov, HCRYPTKEY key)
+{
+  HCRYPTKEY user_key = get_user_key(prov, TRUE);
+
+  DWORD key_size = 260;
+  BYTE key_blob[key_size];
+  if (!CryptExportKey(key, user_key, SIMPLEBLOB, 0, key_blob, &key_size)) {
+    fprintf(stderr, "Cannot export session key. Error code: %lu\n",
+            GetLastError());
+    exit(-1);
+  }
+
+  FILE* key_file = fopen(key_file_name, "wb");
+  fwrite(key_blob, 1, key_size, key_file);
+  fclose(key_file);
+}
+
+
+void prepare_gen_key_crypt(struct AlgDescriptor alg_descriptor, enum Mode mode, const char* key_file,
+                             HCRYPTPROV* prov, HCRYPTKEY* key)
+{
+  // try create new key storage
+  if (!CryptAcquireContext(prov, 0, alg_descriptor.provider_name, alg_descriptor.provider_type,
+                           CRYPT_NEWKEYSET)) {
+    DWORD last_error = GetLastError();
+    if (last_error == NTE_EXISTS) {
+      // open existing key storage
+      if (!CryptAcquireContext(prov, 0, alg_descriptor.provider_name, alg_descriptor.provider_type,
+                                 0)) {
+        last_error = GetLastError();
+      } else {
+        last_error = 0;
+      }
+    }
+    if (last_error != 0) {
+      fprintf(stderr, "Cannot acquire crypt context. Error code: %lu\n",
+              last_error);
+      exit(-1);
+    }
+  }
+
+  if (mode == ENCODE) {
+    if (!CryptGenKey(*prov, alg_descriptor.algid, CRYPT_EXPORTABLE, key)) {
+      fprintf(stderr, "Cannot generate key. Error code: %lu\n",
+              GetLastError());
+      exit(-1);
+    }
+  } else {
+    *key = load_encrypted_session_key(key_file, *prov);
+  }
+}
+
+HCRYPTKEY generate_hash_key(HCRYPTPROV provider, ALG_ID algid, LPTSTR password)
 {
   HCRYPTHASH hash;
 
@@ -67,8 +168,6 @@ HCRYPTKEY generate_key(HCRYPTPROV provider, ALG_ID algid, LPTSTR password)
 void prepare_password_crypt(struct AlgDescriptor alg_descriptor, char* password,
                              HCRYPTPROV* prov, HCRYPTKEY* key)
 {
-  BOOL res;
-
   if (!CryptAcquireContext(prov, 0, alg_descriptor.provider_name, alg_descriptor.provider_type,
                            CRYPT_VERIFYCONTEXT)) {
     fprintf(stderr, "Cannot acquire crypt context. Error code: %lu\n",
@@ -76,7 +175,7 @@ void prepare_password_crypt(struct AlgDescriptor alg_descriptor, char* password,
     exit(-1);
   }
 
-  *key = generate_key(*prov, alg_descriptor.algid, password);
+  *key = generate_hash_key(*prov, alg_descriptor.algid, password);
   if (key == 0) {
     fprintf(stderr, "Cannot generate key. Error code: %lu\n",
             GetLastError());
@@ -84,7 +183,7 @@ void prepare_password_crypt(struct AlgDescriptor alg_descriptor, char* password,
   }
 }
 
-void finalize_password_crypt(HCRYPTPROV prov, HCRYPTKEY key)
+void finalize_crypt(HCRYPTPROV prov, HCRYPTKEY key)
 {
   CryptDestroyKey(key);
   CryptReleaseContext(prov,0);

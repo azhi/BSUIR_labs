@@ -7,7 +7,7 @@
 int main(int argc, char *argv[])
 {
   if (argc != 6) {
-    fprintf(stderr, "Usage: %s --encode|--decode <alg_name> <password> <input file> <output file>", argv[0]);
+    fprintf(stderr, "Usage: %s --encode|--decode <alg_name> <key_file> <input_file> <output_file>", argv[0]);
     return -1;
   }
 
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
   } else if (strncmp(argv[1], "--decode", 9) == 0) {
     mode = DECODE;
   } else {
-    fprintf(stderr, "Usage: %s --encode|--decode <alg_name> <password> <input file> <output file>", argv[0]);
+    fprintf(stderr, "Usage: %s --encode|--decode <alg_name> <key_file> <input_file> <output_file>", argv[0]);
     return -1;
   }
 
@@ -34,16 +34,20 @@ int main(int argc, char *argv[])
   HANDLE out_file_mapping = 0;
   PBYTE out_data = NULL;
   DWORD out_size = in_size + alg_descriptor.block_size;
-  map_file_into_memory(argv[5], GENERIC_READ | GENERIC_WRITE, CREATE_ALWAYS, PAGE_READWRITE, FILE_MAP_WRITE, out_size,
+  char* out_file_name = argv[5];
+  map_file_into_memory(out_file_name, GENERIC_READ | GENERIC_WRITE, CREATE_ALWAYS, PAGE_READWRITE, FILE_MAP_WRITE, out_size,
                        &out_file, &out_file_mapping, &out_data, NULL);
+
+  char* key_file_name = argv[3];
 
   HCRYPTPROV prov;
   HCRYPTKEY key;
-  prepare_password_crypt(alg_descriptor, argv[3], &prov, &key);
+  prepare_gen_key_crypt(alg_descriptor, mode, key_file_name, &prov, &key);
   DWORD actual_out_size = do_crypt(alg_descriptor, key, mode, in_data, out_data, in_size, out_size);
+  strip_out_file(out_file, actual_out_size);
+  save_encrypted_session_key(key_file_name, prov, key);
   finalize_crypt(prov, key);
 
-  strip_out_file(out_file, actual_out_size);
 
   UnmapViewOfFile(in_data);
   CloseHandle(in_file_mapping);
