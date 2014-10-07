@@ -3,18 +3,20 @@ CFLAGS=-c -std=c11
 LDFLAGS=
 C_SOURCES=$(wildcard *.c)
 OBJECTS=$(C_SOURCES:.c=.o)
-EXECUTABLE=lab1.exe
+PASSWORD_EXECUTABLE=password_crypt.exe
 
-all: $(C_SOURCES) $(EXECUTABLE)
+all: $(C_SOURCES) $(PASSWORD_EXECUTABLE)
 
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
+$(PASSWORD_EXECUTABLE): crypt.o password_crypt.o
+	$(CC) crypt.o password_crypt.o -o $@ $(LDFLAGS)
 
-$(OBJECTS): $(C_SOURCES)
+%.c.:
 	$(CC) $(CFLAGS) $< -o $@
 
-test: $(EXECUTABLE)
-	/bin/bash test.sh
+password_test: $(PASSWORD_EXECUTABLE)
+	/bin/bash password_test.sh
+
+test: password_test
 
 clean:
-	rm -f $(OBJECTS) $(EXECUTABLE)
+	rm -f $(OBJECTS) $(PASSWORD_EXECUTABLE)

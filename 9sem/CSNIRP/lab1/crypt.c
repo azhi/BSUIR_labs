@@ -1,22 +1,4 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-
-#include <windows.h>
-#include <wincrypt.h>
-
-enum Mode {
-  ENCODE,
-  DECODE
-};
-
-struct AlgDescriptor {
-  const char* name;
-  LPCTSTR provider_name;
-  DWORD provider_type;
-  ALG_ID algid;
-  DWORD block_size;
-};
+#include "crypt.h"
 
 const short ALG_COUNT = 8;
 const struct AlgDescriptor alg_descriptors[] = {
@@ -64,7 +46,8 @@ void map_file_into_memory(char* path, DWORD file_access, DWORD file_create,
     *size = GetFileSize(*file, NULL);
 }
 
-HCRYPTKEY generate_key(HCRYPTPROV provider, ALG_ID algid, LPTSTR password) {
+HCRYPTKEY generate_key(HCRYPTPROV provider, ALG_ID algid, LPTSTR password)
+{
   HCRYPTHASH hash;
 
   if (!CryptCreateHash(provider, CALG_SHA, 0, 0, &hash))
@@ -81,7 +64,34 @@ HCRYPTKEY generate_key(HCRYPTPROV provider, ALG_ID algid, LPTSTR password) {
   return (res ? key : 0);
 }
 
-DWORD do_crypt(struct AlgDescriptor alg_descriptor, char* password, enum Mode mode,
+void prepare_password_crypt(struct AlgDescriptor alg_descriptor, char* password,
+                             HCRYPTPROV* prov, HCRYPTKEY* key)
+{
+  BOOL res;
+
+  if (!CryptAcquireContext(prov, 0, alg_descriptor.provider_name, alg_descriptor.provider_type,
+                           CRYPT_VERIFYCONTEXT)) {
+    fprintf(stderr, "Cannot acquire crypt context. Error code: %lu\n",
+            GetLastError());
+    exit(-1);
+  }
+
+  *key = generate_key(*prov, alg_descriptor.algid, password);
+  if (key == 0) {
+    fprintf(stderr, "Cannot generate key. Error code: %lu\n",
+            GetLastError());
+    exit(-1);
+  }
+}
+
+void finalize_password_crypt(HCRYPTPROV prov, HCRYPTKEY key)
+{
+  CryptDestroyKey(key);
+  CryptReleaseContext(prov,0);
+}
+
+
+DWORD do_crypt(struct AlgDescriptor alg_descriptor, HCRYPTKEY key, enum Mode mode,
               PBYTE in_data, PBYTE out_data,
               DWORD in_size, DWORD out_size)
 {
@@ -89,22 +99,7 @@ DWORD do_crypt(struct AlgDescriptor alg_descriptor, char* password, enum Mode mo
   size_t buf_size = block_size != 0 ? block_size : 128;
 
   BOOL res;
-  HCRYPTPROV prov;
   DWORD actual_out_size;
-
-  if (!CryptAcquireContext(&prov, 0, alg_descriptor.provider_name, alg_descriptor.provider_type,
-                           CRYPT_VERIFYCONTEXT)) {
-    fprintf(stderr, "Cannot acquire crypt context. Error code: %lu\n",
-            GetLastError());
-    exit(-1);
-  }
-
-  HCRYPTKEY key = generate_key(prov, alg_descriptor.algid, password);
-  if (key == 0) {
-    fprintf(stderr, "Cannot generate key. Error code: %lu\n",
-            GetLastError());
-    exit(-1);
-  }
 
   for (DWORD i = 0; i < in_size; i += buf_size) {
 
@@ -137,9 +132,6 @@ DWORD do_crypt(struct AlgDescriptor alg_descriptor, char* password, enum Mode mo
     }
   }
 
-  CryptDestroyKey(key);
-  CryptReleaseContext(prov,0);
-
   return actual_out_size;
 }
 
@@ -151,50 +143,3 @@ void strip_out_file(HANDLE out_file, DWORD actual_out_size)
   }
 }
 
-
-int main (int argc, char *argv[])
-{
-  if (argc != 6) {
-    fprintf(stderr, "Usage: %s --encode|--decode <alg_name> <password> <input file> <output file>", argv[0]);
-    return -1;
-  }
-
-  enum Mode mode;
-  if (strncmp(argv[1], "--encode", 9) == 0) {
-    mode = ENCODE;
-  } else if (strncmp(argv[1], "--decode", 9) == 0) {
-    mode = DECODE;
-  } else {
-    fprintf(stderr, "Usage: %s --encode|--decode <alg_name> <password> <input file> <output file>", argv[0]);
-    return -1;
-  }
-
-  struct AlgDescriptor alg_descriptor = find_alg_descriptor_by_name(argv[2]);
-
-  HANDLE in_file = 0;
-  HANDLE in_file_mapping = 0;
-  PBYTE in_data = NULL;
-  DWORD in_size = 0;
-  map_file_into_memory(argv[4], GENERIC_READ, OPEN_EXISTING, PAGE_READONLY, FILE_MAP_READ, 0,
-                       &in_file, &in_file_mapping, &in_data, &in_size);
-
-  HANDLE out_file = 0;
-  HANDLE out_file_mapping = 0;
-  PBYTE out_data = NULL;
-  DWORD out_size = in_size + alg_descriptor.block_size;
-  map_file_into_memory(argv[5], GENERIC_READ | GENERIC_WRITE, CREATE_ALWAYS, PAGE_READWRITE, FILE_MAP_WRITE, out_size,
-                       &out_file, &out_file_mapping, &out_data, NULL);
-
-  DWORD actual_out_size = do_crypt(alg_descriptor, argv[3], mode, in_data, out_data, in_size, out_size);
-  strip_out_file(out_file, actual_out_size);
-
-  UnmapViewOfFile(in_data);
-  CloseHandle(in_file_mapping);
-  CloseHandle(in_file);
-
-  UnmapViewOfFile(out_data);
-  CloseHandle(out_file_mapping);
-  CloseHandle(out_file);
-
-  return 0;
-}
