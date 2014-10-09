@@ -45,7 +45,8 @@ int main(int argc, char *argv[])
   prepare_gen_key_crypt(alg_descriptor, mode, key_file_name, &prov, &key);
   DWORD actual_out_size = do_crypt(alg_descriptor, key, mode, in_data, out_data, in_size, out_size);
   strip_out_file(out_file, actual_out_size);
-  save_encrypted_session_key(key_file_name, prov, key);
+  if (mode == ENCODE)
+    save_encrypted_session_key(key_file_name, prov, key);
   finalize_crypt(prov, key);
 
 
