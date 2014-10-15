@@ -189,6 +189,72 @@ void finalize_crypt(HCRYPTPROV prov, HCRYPTKEY key)
   CryptReleaseContext(prov,0);
 }
 
+void calc_hmac(HCRYPTPROV prov, HCRYPTKEY key, PBYTE in_data, DWORD in_size, BYTE** res, DWORD* res_len)
+{
+  HCRYPTHASH hash;
+  if (!CryptCreateHash(prov, CALG_HMAC, key, 0, &hash)) {
+    fprintf(stderr, "Error in CryptCreateHash 0x%08x \n",
+      GetLastError());
+    exit(-1);
+  }
+
+  HMAC_INFO   HmacInfo;
+  ZeroMemory(&HmacInfo, sizeof(HmacInfo));
+  HmacInfo.HashAlgid = CALG_MD5;
+
+  if (!CryptSetHashParam(hash, HP_HMAC_INFO, (BYTE*)&HmacInfo, 0)) {
+    fprintf(stderr, "Error in CryptSetHashParam 0x%08x \n",
+      GetLastError());
+    exit(-1);
+  }
+
+  if (!CryptHashData(hash, in_data, in_size, 0))
+  {
+    printf("Error in CryptHashData 0x%08x \n",
+      GetLastError());
+    exit(-1);
+  }
+
+  if (!CryptGetHashParam(hash, HP_HASHVAL, NULL, res_len, 0))
+  {
+    fprintf(stderr, "Error in CryptGetHashParam 0x%08x \n",
+      GetLastError());
+    exit(-1);
+  }
+  *res = (BYTE*) malloc(*res_len);
+
+  if (!CryptGetHashParam(hash, HP_HASHVAL, *res, res_len, 0))
+  {
+    printf("Error in CryptGetHashParam 0x%08x \n", GetLastError());
+    exit(-1);
+  }
+}
+
+void save_hmac(HCRYPTPROV prov, HCRYPTKEY key, const char* hmac_file_name, PBYTE in_data, DWORD in_size)
+{
+  BYTE *hmac = NULL;
+  DWORD hmac_len;
+  calc_hmac(prov, key, in_data, in_size, &hmac, &hmac_len);
+
+  FILE* hmac_file = fopen(hmac_file_name, "wb");
+  fwrite(hmac, 1, hmac_len, hmac_file);
+  fclose(hmac_file);
+  free(hmac);
+}
+
+BOOL check_hmac(HCRYPTPROV prov, HCRYPTKEY key, const char* hmac_file_name, PBYTE in_data, DWORD in_size)
+{
+  BYTE *s_hmac = (BYTE*) malloc(1024);
+
+  FILE* hmac_file = fopen(hmac_file_name, "rb");
+  DWORD s_hmac_len = fread(s_hmac, 1, 1024, hmac_file);
+  fclose(hmac_file);
+
+  BYTE *hmac = NULL;
+  DWORD hmac_len;
+  calc_hmac(prov, key, in_data, in_size, &hmac, &hmac_len);
+  return (s_hmac_len == hmac_len && memcmp(s_hmac, hmac, hmac_len) == 0);
+}
 
 DWORD do_crypt(struct AlgDescriptor alg_descriptor, HCRYPTKEY key, enum Mode mode,
               PBYTE in_data, PBYTE out_data,

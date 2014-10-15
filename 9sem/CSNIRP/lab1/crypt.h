@@ -34,6 +34,9 @@ void prepare_password_crypt(struct AlgDescriptor alg_descriptor, char* password,
                              HCRYPTPROV* prov, HCRYPTKEY* key);
 void finalize_crypt(HCRYPTPROV prov, HCRYPTKEY key);
 
+void save_hmac(HCRYPTPROV prov, HCRYPTKEY key, const char* hmac_file_name, PBYTE in_data, DWORD in_size);
+BOOL check_hmac(HCRYPTPROV prov, HCRYPTKEY key, const char* hmac_file_name, PBYTE in_data, DWORD in_size);
+
 DWORD do_crypt(struct AlgDescriptor alg_descriptor, HCRYPTKEY key, enum Mode mode,
               PBYTE in_data, PBYTE out_data,
               DWORD in_size, DWORD out_size);
