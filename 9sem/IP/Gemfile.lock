@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    gnuplot (2.6.2)
     rmagick (2.13.3)
     slop (3.6.0)
 
@@ -8,5 +9,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  gnuplot
   rmagick
   slop
