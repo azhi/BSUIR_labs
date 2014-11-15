@@ -10,7 +10,7 @@ module Utils
         if ENV['DEBUG']
           $stderr.puts("Adjusting brightness from #{fmin.round}..#{fmax.round} to #{gmin.round}..#{gmax.round}")
         end
-        image.image_data = image.image_data.map do |r, g, b|
+        image.image_data.map! do |r, g, b|
           if grayscaled
             o = (r - fmin) / (fmax - fmin).to_f * (gmax - gmin) + gmin
             o = o.round

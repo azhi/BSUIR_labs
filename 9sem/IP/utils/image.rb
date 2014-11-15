@@ -1,5 +1,7 @@
 module Utils
   class Image
+    attr_accessor :areas
+    attr_accessor :areas_descriptors
     attr_reader :image
 
     def initialize(path)
@@ -18,24 +20,26 @@ module Utils
       image.rows
     end
 
+    def out_of_bounds?(x, y)
+      x < 0 || x >= height ||
+        y < 0 || y >= width
+    end
+
     def original_image_data
       image.export_pixels(0, 0, image.columns, image.rows, "RGB").each_slice(3)
     end
 
     def image_data
-      @image_data ||= original_image_data
+      @image_data ||= original_image_data.to_a
     end
 
     def image_data=(image_data)
-      @recache_out = true
       @image_data = image_data
     end
 
     def build_out_image
-      return @out_image if @out_image && !@recache_out
       @out_image = Magick::Image.new(image.columns, image.rows)
       @out_image.import_pixels(0, 0, image.columns, image.rows, "RGB", image_data.flatten, Magick::QuantumPixel)
-      @recache_out = false
       @out_image
     end
 

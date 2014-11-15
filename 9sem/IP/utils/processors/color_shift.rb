@@ -5,7 +5,7 @@ module Utils
     class ColorShift < Base
       def run!(options)
         %i[r g b].each{ |k| options[k] ||= 0 }
-        image.image_data = image.image_data.map do |r, g, b|
+        image.image_data.map! do |r, g, b|
           r += options[:r]
           g += options[:g]
           b += options[:b]
