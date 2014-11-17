@@ -5,9 +5,7 @@
 
 #include "crypt.h"
 
-const int AS_PORT = 5555;
-const int TGS_PORT = 5556;
-const int R_PORT = 5557;
+#define FAIL_IF_RESP_EMPTY(resp_len) if(resp_len == 0){printf("Got empty response from server, authentication failed.\n"); exit(-1);}
 
 void append_self_to_users_file(const char *path, struct User user)
 {
@@ -23,7 +21,7 @@ void append_self_to_users_file(const char *path, struct User user)
   fclose(users_file);
 }
 
-void get_key_blob(HCRYPTPROV prov, char* password, LPTSTR *res, DWORD *res_len)
+void get_key_blob(HCRYPTPROV prov, char* password, BYTE **res, DWORD *res_len)
 {
   HCRYPTHASH hash;
 
@@ -44,7 +42,7 @@ void get_key_blob(HCRYPTPROV prov, char* password, LPTSTR *res, DWORD *res_len)
       GetLastError());
     exit(-1);
   }
-  *res = (LPTSTR) malloc(*res_len + 1);
+  *res = (BYTE*) malloc(*res_len + 1);
 
   if (!CryptGetHashParam(hash, HP_HASHVAL, *res, res_len, 0))
   {
@@ -103,12 +101,14 @@ void close_socket(SOCKET sock)
 }
 
 void communicate_with_as(const char *host, const char *name, HCRYPTPROV prov, HCRYPTKEY user_key,
-                         HCRYPTKEY* session_key, LPTSTR *encrypted_mandate, DWORD *encrypted_mandate_size)
+                         HCRYPTKEY* session_key, BYTE **encrypted_tgs_mandate, DWORD *encrypted_tgs_mandate_size)
 {
+  printf("Initializing connection to AS\n");
   SOCKET s = connect_to_server(host, AS_PORT);
 
   int retVal = 0;
 
+  printf("Sending name: %s\n", name);
   retVal = send(s, name, strlen(name), 0);
   if (retVal == SOCKET_ERROR) {
     fprintf(stderr, "Unable to send\n");
@@ -117,7 +117,7 @@ void communicate_with_as(const char *host, const char *name, HCRYPTPROV prov, HC
   }
 
   const int buf_len = 10240;
-  char buf[10240];
+  char buf[buf_len];
   size_t msg_len = 0;
   msg_len = retVal = recv(s, buf, buf_len, 0);
   if (retVal == SOCKET_ERROR) {
@@ -125,13 +125,14 @@ void communicate_with_as(const char *host, const char *name, HCRYPTPROV prov, HC
     WSACleanup();
     exit(-1);
   }
+  FAIL_IF_RESP_EMPTY(retVal);
 
   printf("Got 1st part from AS (session key). Encrypted: ");
   print_hex_binary(buf, msg_len);
-  do_crypt(user_key, DECODE, buf, buf, msg_len, msg_len);
+  DWORD actual_length = do_crypt(user_key, DECODE, buf, buf, msg_len, msg_len);
   printf("Decrypted: ");
-  print_hex_binary(buf, msg_len);
-  get_key_from_binary(buf, msg_len, prov, session_key);
+  print_hex_binary(buf, actual_length);
+  get_key_from_binary(buf, actual_length, prov, session_key);
 
   msg_len = retVal = recv(s, buf, buf_len, 0);
   if (retVal == SOCKET_ERROR) {
@@ -139,14 +140,132 @@ void communicate_with_as(const char *host, const char *name, HCRYPTPROV prov, HC
     WSACleanup();
     exit(-1);
   }
+  FAIL_IF_RESP_EMPTY(retVal);
 
-  printf("Got 1st part from AS (encrypted mandate): ");
+  printf("Got 2nd part from AS (encrypted TGS mandate): ");
   print_hex_binary(buf, msg_len);
-  *encrypted_mandate_size = msg_len;
-  *encrypted_mandate = (LPTSTR) malloc(msg_len);
-  memcmp(*encrypted_mandate, buf, msg_len);
+  *encrypted_tgs_mandate_size = msg_len;
+  *encrypted_tgs_mandate = (BYTE*) malloc(msg_len);
+  memcpy(*encrypted_tgs_mandate, buf, msg_len);
 
   close_socket(s);
+}
+
+void communicate_with_tgs(const char *host, char *name, HCRYPTPROV prov, HCRYPTKEY session_key,
+                          BYTE *encrypted_tgs_mandate, DWORD encrypted_tgs_mandate_size, HCRYPTKEY *r_key,
+                          BYTE **encrypted_r_mandate, DWORD *encrypted_r_mandate_size)
+{
+  printf("Initializing connection to TGS\n");
+  SOCKET s = connect_to_server(host, TGS_PORT);
+
+  int retVal = 0;
+  const int buf_len = 10240;
+  char buf[buf_len];
+
+  struct Authenticator auth = {name, time(NULL)};
+  DWORD msg_len = create_authenticator(buf, auth, session_key);
+
+  printf("Sending authenticator: ");
+  print_hex_binary(buf, msg_len);
+  retVal = send(s, buf, msg_len, 0);
+  if (retVal == SOCKET_ERROR) {
+    fprintf(stderr, "Unable to send\n");
+    WSACleanup();
+    exit(-1);
+  }
+
+  printf("Sending TGS mandate: ");
+  print_hex_binary(encrypted_tgs_mandate, encrypted_tgs_mandate_size);
+  retVal = send(s, encrypted_tgs_mandate, encrypted_tgs_mandate_size, 0);
+  if (retVal == SOCKET_ERROR) {
+    fprintf(stderr, "Unable to send\n");
+    WSACleanup();
+    exit(-1);
+  }
+
+  msg_len = retVal = recv(s, buf, buf_len, 0);
+  if (retVal == SOCKET_ERROR) {
+    fprintf(stderr, "Unable to recv\n");
+    WSACleanup();
+    exit(-1);
+  }
+  FAIL_IF_RESP_EMPTY(retVal);
+
+  printf("Got 1st part from TGS (session key). Encrypted: ");
+  print_hex_binary(buf, msg_len);
+  DWORD actual_length = do_crypt(session_key, DECODE, buf, buf, msg_len, msg_len);
+  printf("Decrypted: ");
+  print_hex_binary(buf, actual_length);
+  get_key_from_binary(buf, actual_length, prov, r_key);
+
+  msg_len = retVal = recv(s, buf, buf_len, 0);
+  if (retVal == SOCKET_ERROR) {
+    fprintf(stderr, "Unable to recv\n");
+    WSACleanup();
+    exit(-1);
+  }
+  FAIL_IF_RESP_EMPTY(retVal);
+
+  printf("Got 2nd part from TGS (encrypted RS mandate): ");
+  print_hex_binary(buf, msg_len);
+  *encrypted_r_mandate_size = msg_len;
+  *encrypted_r_mandate = (BYTE*) malloc(msg_len);
+  memcpy(*encrypted_r_mandate, buf, msg_len);
+
+  close_socket(s);
+}
+
+void communicate_with_r(const char *host, char *name, HCRYPTPROV prov, HCRYPTKEY session_key,
+                        BYTE *encrypted_r_mandate, DWORD encrypted_r_mandate_size)
+{
+  printf("Initializing connection to RS\n");
+  SOCKET s = connect_to_server(host, R_PORT);
+
+  int retVal = 0;
+  const int buf_len = 10240;
+  char buf[buf_len];
+
+  struct Authenticator auth = {name, time(NULL)};
+  DWORD msg_len = create_authenticator(buf, auth, session_key);
+
+  printf("Sending authenticator: ");
+  print_hex_binary(buf, msg_len);
+  retVal = send(s, buf, msg_len, 0);
+  if (retVal == SOCKET_ERROR) {
+    fprintf(stderr, "Unable to send\n");
+    WSACleanup();
+    exit(-1);
+  }
+
+  printf("Sending RS mandate: ");
+  print_hex_binary(encrypted_r_mandate, encrypted_r_mandate_size);
+  retVal = send(s, encrypted_r_mandate, encrypted_r_mandate_size, 0);
+  if (retVal == SOCKET_ERROR) {
+    fprintf(stderr, "Unable to send\n");
+    WSACleanup();
+    exit(-1);
+  }
+
+  msg_len = retVal = recv(s, buf, buf_len, 0);
+  if (retVal == SOCKET_ERROR) {
+    fprintf(stderr, "Unable to recv\n");
+    WSACleanup();
+    exit(-1);
+  }
+  FAIL_IF_RESP_EMPTY(retVal);
+
+  printf("Got encrypted timestamp: ");
+  print_hex_binary(buf, msg_len);
+  msg_len = do_crypt(session_key, DECODE, buf, buf, msg_len, msg_len);
+  printf("Decrypted binary: ");
+  print_hex_binary(buf, msg_len);
+  time_t *resp_time = (time_t*) buf;
+  printf("Decrypted time: %d\n", *resp_time);
+  if (auth.now + 1 == *resp_time) {
+    printf("AUTH SUCCESS!\n");
+  } else {
+    printf("Got wrong time from server (%d + 1 != %d), authentication failed.\n", auth.now, *resp_time);
+  }
 }
 
 int main(int argc, char *argv[])
@@ -162,7 +281,7 @@ int main(int argc, char *argv[])
   if (strcmp(argv[1], "--append-self") == 0) {
     struct User user;
     user.name = argv[3];
-    LPTSTR key = NULL;
+    BYTE *key = NULL;
     DWORD key_size = 0;
     get_key_blob(prov, argv[4], &key, &key_size);
     user.key = key;
@@ -170,18 +289,30 @@ int main(int argc, char *argv[])
 
     append_self_to_users_file(argv[2], user);
   } else if (strcmp(argv[1], "--authenticate") == 0) {
-    LPTSTR key_blob = NULL;
+    BYTE *key_blob = NULL;
     DWORD key_size = 0;
     get_key_blob(prov, argv[4], &key_blob, &key_size);
 
     HCRYPTKEY user_key;
     get_key_from_binary(key_blob, key_size, prov, &user_key);
 
-    HCRYPTKEY session_key;
-    LPTSTR encrypted_mandate = NULL;
-    DWORD encrypted_mandate_size = 0;
-    communicate_with_as(argv[2], argv[3], prov, user_key, &session_key, &encrypted_mandate, &encrypted_mandate_size);
+    HCRYPTKEY tgs_session_key;
+    BYTE *encrypted_tgs_mandate = NULL;
+    DWORD encrypted_tgs_mandate_size = 0;
+    communicate_with_as(argv[2], argv[3], prov, user_key,
+                        &tgs_session_key, &encrypted_tgs_mandate,
+                        &encrypted_tgs_mandate_size);
 
+    HCRYPTKEY r_session_key;
+    BYTE *encrypted_r_mandate = NULL;
+    DWORD encrypted_r_mandate_size = 0;
+    communicate_with_tgs(argv[2], argv[3], prov, tgs_session_key,
+                         encrypted_tgs_mandate, encrypted_tgs_mandate_size,
+                         &r_session_key, &encrypted_r_mandate,
+                         &encrypted_r_mandate_size);
+
+    communicate_with_r(argv[2], argv[3], prov, r_session_key,
+                       encrypted_r_mandate, encrypted_r_mandate_size);
   } else {
     fprintf(stderr, "Usage: %s [--append-self <users_file> | --authenticate <server_host> <server_port>] <name> <password>\n", argv[0]);
     return -1;

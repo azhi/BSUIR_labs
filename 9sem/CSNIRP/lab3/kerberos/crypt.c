@@ -33,7 +33,7 @@ void get_key_from_binary(BYTE* binary, DWORD binary_len, HCRYPTPROV prov, HCRYPT
   CryptDestroyHash(hash);
 }
 
-void generate_session_key(HCRYPTPROV prov, HCRYPTKEY export_key, DWORD *key_size, BYTE *key_blob)
+void generate_session_key(HCRYPTPROV prov, DWORD *key_size, BYTE *key_blob)
 {
   HCRYPTKEY key;
 
@@ -43,11 +43,30 @@ void generate_session_key(HCRYPTPROV prov, HCRYPTKEY export_key, DWORD *key_size
     exit(-1);
   }
 
-  if (!CryptExportKey(key, export_key, SIMPLEBLOB, 0, key_blob, key_size)) {
+  DWORD plain_text_key_size = 0;
+
+  if (!CryptExportKey(key, 0, PLAINTEXTKEYBLOB, 0, 0, &plain_text_key_size)) {
+    fprintf(stderr, "Cannot get session key length. Error code: %lu\n",
+            GetLastError());
+    exit(-1);
+  }
+
+  struct MKeyBlob *plain_text_key_blob = malloc(plain_text_key_size);
+
+  if (!CryptExportKey(key, 0, PLAINTEXTKEYBLOB, 0, (BYTE*) plain_text_key_blob, &plain_text_key_size)) {
     fprintf(stderr, "Cannot export session key. Error code: %lu\n",
             GetLastError());
     exit(-1);
   }
+
+  DWORD actual_key_size = plain_text_key_blob->dwKeySize;
+  if (actual_key_size > *key_size) {
+    fprintf(stderr, "Not enough space for key in buffer (%d < %d)\n",
+            *key_size, actual_key_size);
+    exit(-1);
+  }
+  *key_size = actual_key_size;
+  memcpy(key_blob, plain_text_key_blob->rgbKeyData, *key_size);
 }
 
 DWORD create_mandate(BYTE *res, struct Mandate mandate, HCRYPTKEY server_key)
@@ -65,12 +84,14 @@ DWORD create_mandate(BYTE *res, struct Mandate mandate, HCRYPTKEY server_key)
   memcpy(res + res_len, &mandate.expires, sizeof(mandate.expires));
   res_len += sizeof(mandate.expires);
 
-  memcpy(res + res_len, mandate.session_key_size, sizeof(mandate.session_key_size));
+  memcpy(res + res_len, &mandate.session_key_size, sizeof(mandate.session_key_size));
   res_len += sizeof(mandate.session_key_size);
 
   memcpy(res + res_len, mandate.session_key_blob, mandate.session_key_size);
   res_len += mandate.session_key_size;
 
+  printf("Mandate plain: ");
+  print_hex_binary(res, res_len);
   res_len = do_crypt(server_key, ENCODE, res, res, res_len, res_len);
   return res_len;
 }
@@ -78,7 +99,10 @@ DWORD create_mandate(BYTE *res, struct Mandate mandate, HCRYPTKEY server_key)
 struct Mandate parse_mandate(BYTE *src, DWORD src_len, HCRYPTKEY server_key)
 {
   struct Mandate res;
+
   src_len = do_crypt(server_key, DECODE, src, src, src_len, src_len);
+  printf("Decrypted: ");
+  print_hex_binary(src, src_len);
 
   DWORD i = 0;
 
@@ -96,14 +120,54 @@ struct Mandate parse_mandate(BYTE *src, DWORD src_len, HCRYPTKEY server_key)
   res.user_name[user_name_length] = '\0';
   i += user_name_length;
 
-  memcpy((BYTE*) res.expires, src + i, sizeof(time_t));
+  memcpy((BYTE*) &res.expires, src + i, sizeof(time_t));
   i += sizeof(time_t);
 
-  memcpy((BYTE*) res.session_key_size, src + i, sizeof(DWORD));
+  memcpy((BYTE*) &res.session_key_size, src + i, sizeof(DWORD));
   i += sizeof(DWORD);
 
   memcpy(res.session_key_blob, src + i, res.session_key_size);
   i += res.session_key_size;
+
+  return res;
+}
+
+DWORD create_authenticator(BYTE *res, struct Authenticator auth, HCRYPTKEY session_key)
+{
+  DWORD res_len = 0;
+
+  res[res_len++] = (BYTE) strlen(auth.user_name);
+  memcpy(res + res_len, auth.user_name, strlen(auth.user_name));
+  res_len += strlen(auth.user_name);
+
+  memcpy(res + res_len, &auth.now, sizeof(auth.now));
+  res_len += sizeof(auth.now);
+
+  printf("Authenticator plain: ");
+  print_hex_binary(res, res_len);
+
+  res_len = do_crypt(session_key, ENCODE, res, res, res_len, res_len);
+  return res_len;
+}
+
+struct Authenticator parse_authenticator(BYTE *src, DWORD src_len, HCRYPTKEY session_key)
+{
+  struct Authenticator res;
+  src_len = do_crypt(session_key, DECODE, src, src, src_len, src_len);
+  printf("Decrypted: ");
+  print_hex_binary(src, src_len);
+
+  DWORD i = 0;
+
+  BYTE user_name_length = src[i];
+  i += 1;
+  res.user_name = malloc(user_name_length + 1);
+  memcpy(res.user_name, src + i, user_name_length);
+  res.user_name[user_name_length] = '\0';
+  i += user_name_length;
+
+  memcpy((BYTE*) &res.now, src + i, sizeof(time_t));
+  i += sizeof(time_t);
 
   return res;
 }
@@ -161,7 +225,7 @@ DWORD do_crypt(HCRYPTKEY key, enum Mode mode,
 
 void create_prov(HCRYPTPROV* prov)
 {
-  if (!CryptAcquireContext(prov, 0, MS_ENHANCED_PROV, PROV_RSA_AES,
+  if (!CryptAcquireContext(prov, 0, MS_ENH_RSA_AES_PROV, PROV_RSA_AES,
                            CRYPT_VERIFYCONTEXT)) {
     fprintf(stderr, "Cannot acquire crypt context. Error code: %lu\n",
             GetLastError());
