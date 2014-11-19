@@ -31,6 +31,7 @@ opts = Slop.parse(help: true) do
 
   on 'infile=', 'input file'
   on 'outfile=', 'output file'
+  on 'binaryzation-threshold=', 'binaryzation threshold as percent of quantum range', as: Float, default: 0.7
   on 'cluster-count=', 'count of object types in image', as: Integer
   on 'classify-by=', 'attributes used for classification (area, perimeter, density, elongation)', as: Array, default: [:area, :perimeter, :density, :elongation]
 end
@@ -43,7 +44,7 @@ processors_spec = [
                                        min_intens_percentile: 1,
                                        max_intens_percentile: 99,
                                        grayscaled: true}],
-  [Utils::Processors::Binaryzation, {brightness_threshold: ::Magick::QuantumRange * 0.7}],
+  [Utils::Processors::Binaryzation, {brightness_threshold: ::Magick::QuantumRange * opts['binaryzation-threshold']}],
   # [Utils::Processors::Areas, {modify_image: true, area_colors: DISTINCT_COLORS}]
   [Utils::Processors::Areas, {}],
   [Utils::Processors::Classification, {attributes: opts['classify-by'], cluster_count: opts['cluster-count'], object_colors: DISTINCT_COLORS}]

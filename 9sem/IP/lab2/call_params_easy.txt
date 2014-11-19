@@ -1,5 +1,5 @@
---infile images/lab2/easy/P0001471.jpg --outfile images/lab2/easy/P0001471_out.png --cluster-count 4 --classify-by density,elongation
---infile images/lab2/easy/P0001469.jpg --outfile images/lab2/easy/P0001469_out.png --cluster-count 4 --classify-by area,perimeter,density
+--infile images/lab2/easy/P0001460.jpg --outfile images/lab2/easy/P0001460_out.png --binaryzation-threshold 0.6 --cluster-count 2
+--infile images/lab2/easy/P0001461.jpg --outfile images/lab2/easy/P0001461_out.png --binaryzation-threshold 0.6 --cluster-count 2 --classify-by area,perimeter,density
 --infile images/lab2/easy/P0001468.jpg --outfile images/lab2/easy/P0001468_out.png --cluster-count 2
---infile images/lab2/easy/P0001461.jpg --outfile images/lab2/easy/P0001461_out.png --cluster-count 2 --classify-by area,perimeter,density
---infile images/lab2/easy/P0001460.jpg --outfile images/lab2/easy/P0001460_out.png --cluster-count 2
+--infile images/lab2/easy/P0001469.jpg --outfile images/lab2/easy/P0001469_out.png --binaryzation-threshold 0.6 -cluster-count 4 --classify-by area,perimeter,density
+--infile images/lab2/easy/P0001471.jpg --outfile images/lab2/easy/P0001471_out.png --binaryzation-threshold 0.6 --cluster-count 4 --classify-by density,elongation

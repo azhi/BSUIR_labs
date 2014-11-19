@@ -1,0 +1,5 @@
+--infile images/lab2/hard/P0001464.jpg --outfile images/lab2/hard/P0001464_out.png --cluster-count 3
+--infile images/lab2/hard/P0001465.jpg --outfile images/lab2/hard/P0001465_out.png --binaryzation-threshold 0.8 --cluster-count 2
+--infile images/lab2/hard/P0001467.jpg --outfile images/lab2/hard/P0001467_out.png --binaryzation-thershold 0.9 --cluster-count 2
+--infile images/lab2/hard/P0001470.jpg --outfile images/lab2/hard/P0001470_out.png --cluster-count 4 --classify-by area,perimeter,density
+--infile images/lab2/hard/P0001472.jpg --outfile images/lab2/hard/P0001472_out.png --binaryzation-threshold 0.8 --cluster-count 4

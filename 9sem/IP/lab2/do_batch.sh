@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pwd=$(dirname $0)
-call_params_file=$pwd/call_params_easy.txt
+call_params_file=$pwd/call_params_$1.txt
 while read line
 do
   COMMAND="bundle exec ruby lab2/lab2.rb $line"
