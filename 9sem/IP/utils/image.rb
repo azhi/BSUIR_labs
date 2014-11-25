@@ -4,8 +4,13 @@ module Utils
     attr_accessor :areas_descriptors
     attr_reader :image
 
-    def initialize(path)
-      @image = Magick::Image.read(path).first
+    def initialize(path, data = nil, width = nil, height = nil)
+      if path
+        @image = Magick::Image.read(path).first
+      else
+        @image = Magick::Image.new(width, height)
+        @image.import_pixels(0, 0, width, height, "RGB", data.flatten, Magick::QuantumPixel)
+      end
     end
 
     def pixel_count
@@ -41,6 +46,18 @@ module Utils
       @out_image = Magick::Image.new(image.columns, image.rows)
       @out_image.import_pixels(0, 0, image.columns, image.rows, "RGB", image_data.flatten, Magick::QuantumPixel)
       @out_image
+    end
+
+    def clone
+      self.class.new(nil, image_data.flatten, width, height)
+    end
+
+    def image_diff(other)
+      raise ArgumentError unless self.width == other.width && self.height == other.height
+      diff = image_data.zip(other.image_data).map do |(y, _, _), (o_y, _, _)|
+        y - o_y
+      end
+      diff
     end
 
     def histogramm(grayscaled = false)

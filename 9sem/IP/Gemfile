@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 
+gem 'rake-compiler'
 gem 'rmagick'
 gem 'slop'
 gem 'gnuplot'
