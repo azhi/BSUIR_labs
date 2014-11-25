@@ -7,26 +7,19 @@ require_relative 'grayscale'
 module Utils
   module Processors
     class BlobDetector < Base
-      SCALES = 7
+      OCTAVE_SCALES = [6, 4, 3]
+      OCTAVE_COUNT = 3
+      GAUSSIAN_DIFFERENCE_CONSTANT = 1.6
+      INITIAL_SIGMA = Math.exp(1) * GAUSSIAN_DIFFERENCE_CONSTANT
+
       BRIGHTNESS_THRESHOLD = 10000
       BLOB_COLOR = [QRange, 0.0, 0.0]
 
       def run!
         grayscaled_image = image.clone
         Grayscale.new(grayscaled_image).run!
-        gaussians = build_gaussians(grayscaled_image)
-        dogs = gaussians.each_cons(2).map do |(sigma1, image1), (_sigma2, image2)|
-          diff = image1.image_diff(image2)
-
-          if ENV['DEBUG']
-            image_data = diff.map{ |e| e < 0 ? [-e, 0, -e] : [0, e, e] }
-            current_image = Magick::Image.new(image.width, image.height)
-            current_image.import_pixels(0, 0, image.width, image.height, "RGB", image_data.flatten, Magick::QuantumPixel)
-            current_image.write(File.join(File.dirname(__FILE__), "../../images/diff/#{sigma1.round(2)}.png"))
-          end
-
-          [sigma1, diff]
-        end.to_h
+        octaves = build_gaussians(grayscaled_image)
+        dogs = get_dogs(octaves)
         blobs = get_blobs(dogs)
         puts "Blobs count: #{blobs.count}" if ENV['DEBUG']
         blobs.each do |(x, y, sigma)|
@@ -38,16 +31,42 @@ module Utils
       end
 
       def build_gaussians(grayscaled_image)
-        sigma = Math.exp(1)
-        images = {}
-        (SCALES + 1).times do |t|
-          puts "Sigma: #{sigma.round(2)}" if ENV['DEBUG']
-          current_image = images[sigma.round(2)] = grayscaled_image.clone
-          Gaussian.new(current_image).run!(sigma: sigma)
-          current_image.save(File.join(File.dirname(__FILE__), "../../images/blur/#{sigma.round(2)}.png")) if ENV['DEBUG']
-          sigma *= 1.6
+        octaves = []
+        OCTAVE_COUNT.times do |octave|
+          puts "-" * 15 + " #{octave + 1} octave " + "-" * 15 if ENV['DEBUG']
+          sigma = INITIAL_SIGMA * (octave + 1)
+          images = {}
+          (OCTAVE_SCALES[octave] + 1).times do
+            puts "Sigma: #{sigma.round(2)}" if ENV['DEBUG']
+            current_image = images[sigma.round(2)] = grayscaled_image.clone
+            Gaussian.new(current_image).run!(sigma: sigma)
+            current_image.save(File.join(File.dirname(__FILE__), "../../images/blur/#{sigma.round(2)}.png")) if ENV['DEBUG']
+            sigma *= GAUSSIAN_DIFFERENCE_CONSTANT
+          end
+          octaves << images
         end
-        images
+        octaves
+      end
+
+      def get_dogs(octaves)
+        res = {}
+        octaves.each do |gaussians|
+          octave_dogs = gaussians.each_cons(2).map do |(sigma1, image1), (_sigma2, image2)|
+            diff = image1.image_diff(image2)
+
+            if ENV['DEBUG']
+              image_data = diff.map{ |e| e < 0 ? [-e, 0, -e] : [0, e, e] }
+              current_image = Magick::Image.new(image.width, image.height)
+              current_image.import_pixels(0, 0, image.width, image.height, "RGB", image_data.flatten, Magick::QuantumPixel)
+              current_image.write(File.join(File.dirname(__FILE__), "../../images/diff/#{sigma1.round(2)}.png"))
+            end
+
+            [sigma1, diff]
+          end.to_h
+          res = res.merge octave_dogs
+        end
+        res = res.sort_by{ |sigma, _diff| sigma }.to_h
+        res
       end
 
       def get_blobs(dogs)
