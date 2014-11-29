@@ -1,17 +1,19 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    colorize (0.7.3)
     gnuplot (2.6.2)
     rake (10.3.2)
     rake-compiler (0.9.3)
       rake
-    rmagick (2.13.3)
+    rmagick (2.13.4)
     slop (3.6.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  colorize
   gnuplot
   rake-compiler
   rmagick
