@@ -9,8 +9,13 @@ opts = Slop.parse(help: true) do
 
   on 'infile=', 'input file'
   on 'outfile=', 'output file'
+  on 'enable-area-filter', 'enable area filter'
+  on 'dog-brightness-threshold=', 'DoG brightness threshold', as: Integer, default: 10_000
 end
 
 image = Utils::Image.new(opts[:infile])
-Utils::Processors::BlobDetector.new(image).run!
+Utils::Processors::BlobDetector.new(image).run!(
+  dog_brightness_threshold: opts['dog-brightness-threshold'],
+  enable_area_filter: opts['enable-area-filter']
+)
 image.save(opts[:outfile])
